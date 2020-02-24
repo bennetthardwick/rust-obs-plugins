@@ -1,0 +1,8 @@
+[package]
+name = "obs-rs"
+version = "0.1.0"
+authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
+edition = "2018"
+
+[dependencies]
+obs-sys = { path = "../obs-sys", version = "0.1.0" }

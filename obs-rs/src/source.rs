@@ -120,7 +120,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     Box::into_raw(data) as *mut c_void
 }
 
-impl<T: Sourceable, D: Default> SourceInfoBuilder<T, D> {
+impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
     pub(crate) fn new(id: &'static str, source_type: SourceType) -> Self {
         Self {
             __source: PhantomData,
@@ -182,28 +182,28 @@ impl<T: Sourceable, D: Default> SourceInfoBuilder<T, D> {
     }
 }
 
-impl<T: Sourceable + GetNameSource, D: Default> SourceInfoBuilder<T, D> {
+impl<T: Sourceable + GetNameSource, D> SourceInfoBuilder<T, D> {
     pub fn with_get_name(mut self) -> Self {
         self.info.get_name = Some(get_name::<T>);
         self
     }
 }
 
-impl<D: Default, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
+impl<D, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
     pub fn with_get_width(mut self) -> Self {
         self.info.get_width = Some(get_width::<D, T>);
         self
     }
 }
 
-impl<D: Default, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
+impl<D, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
     pub fn with_get_height(mut self) -> Self {
         self.info.get_width = Some(get_height::<D, T>);
         self
     }
 }
 
-impl<D: Default, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
+impl<D, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
     pub fn with_create(mut self) -> Self {
         self.info.create = Some(create::<D, T>);
         self

@@ -1,16 +1,18 @@
 use obs_sys::{
-    obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER,
-    obs_source_type_OBS_SOURCE_TYPE_TRANSITION
+    obs_source_info, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
 };
 
+use std::marker::PhantomData;
+use std::os::raw::c_char;
+
+#[derive(Clone, Copy)]
 pub enum SourceType {
     INPUT,
     SCENE,
     FILTER,
-    TRANSITION
+    TRANSITION,
 }
 
 impl SourceType {
@@ -24,55 +26,152 @@ impl SourceType {
     }
 }
 
-pub trait Source {
-    fn get_id(&self) -> &'static str;
+pub struct SourceContext {}
 
+pub struct SettingsContext {}
+
+pub struct AudioRenderContext {}
+
+pub struct VideoRenderContext {}
+
+pub struct PropertiesContext {}
+
+pub struct EnumActiveContext {}
+pub struct EnumAllContext {}
+
+pub struct SourceInfo {
+    info: obs_source_info,
 }
 
-// id: *const c_char
-// type_: obs_source_type
-// output_flags: u32
-// get_name: Option<unsafe extern "C" fn(type_data: *mut c_void) -> *const c_char>
-// create: Option<unsafe extern "C" fn(settings: *mut obs_data_t, source: *mut obs_source_t) -> *mut c_void>
-// destroy: Option<unsafe extern "C" fn(data: *mut c_void)>
-// get_width: Option<unsafe extern "C" fn(data: *mut c_void) -> u32>
-// get_height: Option<unsafe extern "C" fn(data: *mut c_void) -> u32>
-// get_defaults: Option<unsafe extern "C" fn(settings: *mut obs_data_t)>
-// get_properties: Option<unsafe extern "C" fn(data: *mut c_void) -> *mut obs_properties_t>
-// update: Option<unsafe extern "C" fn(data: *mut c_void, settings: *mut obs_data_t)>
-// activate: Option<unsafe extern "C" fn(data: *mut c_void)>
-// deactivate: Option<unsafe extern "C" fn(data: *mut c_void)>
-// show: Option<unsafe extern "C" fn(data: *mut c_void)>
-// hide: Option<unsafe extern "C" fn(data: *mut c_void)>
-// video_tick: Option<unsafe extern "C" fn(data: *mut c_void, seconds: f32)>
-// video_render: Option<unsafe extern "C" fn(data: *mut c_void, effect: *mut gs_effect_t)>
-// filter_video: Option<unsafe extern "C" fn(data: *mut c_void, frame: *mut obs_source_frame) -> *mut obs_source_frame>
-// filter_audio: Option<unsafe extern "C" fn(data: *mut c_void, audio: *mut obs_audio_data) -> *mut obs_audio_data>
-// enum_active_sources: Option<unsafe extern "C" fn(data: *mut c_void, enum_callback: obs_source_enum_proc_t, param: *mut c_void)>
-// save: Option<unsafe extern "C" fn(data: *mut c_void, settings: *mut obs_data_t)>
-// load: Option<unsafe extern "C" fn(data: *mut c_void, settings: *mut obs_data_t)>
-// mouse_click: Option<unsafe extern "C" fn(data: *mut c_void, event: *const obs_mouse_event, type_: i32, mouse_up: bool, click_count: u32)>
-// mouse_move: Option<unsafe extern "C" fn(data: *mut c_void, event: *const obs_mouse_event, mouse_leave: bool)>
-// mouse_wheel: Option<unsafe extern "C" fn(data: *mut c_void, event: *const obs_mouse_event, x_delta: c_int, y_delta: c_int)>
-// focus: Option<unsafe extern "C" fn(data: *mut c_void, focus: bool)>
-// key_click: Option<unsafe extern "C" fn(data: *mut c_void, event: *const obs_key_event, key_up: bool)>
-// filter_remove: Option<unsafe extern "C" fn(data: *mut c_void, source: *mut obs_source_t)>
-// type_data: *mut c_void
-// free_type_data: Option<unsafe extern "C" fn(type_data: *mut c_void)>
-// audio_render: Option<unsafe extern "C" fn(data: *mut c_void, ts_out: *mut u64, audio_output: *mut obs_source_audio_mix, mixers: u32, channels: size_t, sample_rate: size_t) -> bool>
-// enum_all_sources: Option<unsafe extern "C" fn(data: *mut c_void, enum_callback: obs_source_enum_proc_t, param: *mut c_void)>
-// transition_start: Option<unsafe extern "C" fn(data: *mut c_void)>
-// transition_stop: Option<unsafe extern "C" fn(data: *mut c_void)>
-// get_defaults2: Option<unsafe extern "C" fn(type_data: *mut c_void, settings: *mut obs_data_t)>
-// get_properties2: Option<unsafe extern "C" fn(data: *mut c_void, type_data: *mut c_void) -> *mut obs_properties_t>
-// audio_mix: Option<unsafe extern "C" fn(data: *mut c_void, ts_out: *mut u64, audio_output: *mut audio_output_data, channels: size_t, sample_rate: size_t) -> bool>
-// icon_type: obs_icon_type
-// media_play_pause: Option<unsafe extern "C" fn(data: *mut c_void, pause: bool)>
-// media_restart: Option<unsafe extern "C" fn(data: *mut c_void)>
-// media_stop: Option<unsafe extern "C" fn(data: *mut c_void)>
-// media_next: Option<unsafe extern "C" fn(data: *mut c_void)>
-// media_previous: Option<unsafe extern "C" fn(data: *mut c_void)>
-// media_get_duration: Option<unsafe extern "C" fn(data: *mut c_void) -> i64>
-// media_get_time: Option<unsafe extern "C" fn(data: *mut c_void) -> i64>
-// media_set_time: Option<unsafe extern "C" fn(data: *mut c_void, miliseconds: i64)>
-// media_get_state: Option<unsafe extern "C" fn(data: *mut c_void) -> obs_media_state>
+pub mod traits {
+    use super::SourceType;
+
+    pub trait Sourceable {
+        fn get_id() -> &'static str;
+        fn get_type() -> SourceType;
+    }
+
+    pub trait GetNameSource {
+        fn get_name() -> &'static str;
+    }
+
+    pub trait GetWidthSource<D> {
+        fn get_width(data: &D) -> u32;
+    }
+
+    pub trait GetHeightSource {
+        fn get_height() -> u32;
+    }
+}
+
+use traits::*;
+
+pub struct SourceInfoBuilder<T: Sourceable, D> {
+    __source: PhantomData<T>,
+    __data: PhantomData<D>,
+    info: obs_source_info, // id: &'static str,
+                           // source_type: SourceType,
+                           // output_flags: u32,
+                           // get_name: Option<Box<dyn Fn() -> &'static str>>,
+                           // create: Box<dyn Fn(&SettingsContext, SourceContext) -> S>,
+                           // get_width: Option<Box<dyn Fn(&S) -> u32>>,
+                           // get_height: Option<Box<dyn Fn(&S) -> u32>>,
+                           // update: Option<Box<dyn Fn(&mut S, &SettingsContext)>>,
+                           // video_render: Option<Box<dyn Fn(&mut S, &mut VideoRenderContext)>>,
+                           // audio_render: Option<Box<dyn Fn(&mut S, &mut AudioRenderContext)>>,
+                           // get_properties: Option<Box<dyn Fn(&mut S, &mut PropertiesContext)>>,
+                           // enum_active_sources: Option<Box<dyn Fn(&mut S, &mut EnumActiveContext)>>,
+                           // enum_all_sources: Option<Box<dyn Fn(&mut S, &mut EnumAllContext)>>,
+                           // transition_start: Option<Box<dyn Fn(&mut S)>>,
+                           // transition_stop: Option<Box<dyn Fn(&mut S)>>
+}
+
+pub unsafe extern "C" fn get_name<F: GetNameSource>(
+    type_data: *mut ::std::os::raw::c_void,
+) -> *const c_char {
+    let name = F::get_name();
+    name.as_bytes().as_ptr() as *const c_char
+}
+
+pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+) -> u32 {
+    let d: &mut D = &mut *(data as *mut D);
+    F::get_width(&d)
+}
+
+impl<T: Sourceable, D: Default> SourceInfoBuilder<T, D> {
+    pub(crate) fn new(id: &'static str, source_type: SourceType) -> Self {
+        Self {
+            __source: PhantomData,
+            __data: PhantomData,
+            info: obs_source_info {
+                id: T::get_id().as_bytes().as_ptr() as *const c_char,
+                type_: source_type.to_native(),
+                output_flags: 0,
+                get_name: None,
+                create: None,
+                destroy: None,
+                get_width: None,
+                get_height: None,
+                get_defaults: None,
+                get_properties: None,
+                update: None,
+                activate: None,
+                deactivate: None,
+                show: None,
+                hide: None,
+                video_tick: None,
+                video_render: None,
+                filter_video: None,
+                filter_audio: None,
+                enum_active_sources: None,
+                save: None,
+                load: None,
+                mouse_click: None,
+                mouse_move: None,
+                mouse_wheel: None,
+                focus: None,
+                key_click: None,
+                filter_remove: None,
+                type_data: std::ptr::null_mut(),
+                free_type_data: None,
+                audio_render: None,
+                enum_all_sources: None,
+                transition_start: None,
+                transition_stop: None,
+                get_defaults2: None,
+                get_properties2: None,
+                audio_mix: None,
+                icon_type: 0,
+                media_play_pause: None,
+                media_restart: None,
+                media_stop: None,
+                media_next: None,
+                media_previous: None,
+                media_get_duration: None,
+                media_get_time: None,
+                media_set_time: None,
+                media_get_state: None,
+            },
+        }
+    }
+
+    pub fn build(self) -> SourceInfo {
+        SourceInfo { info: self.info }
+    }
+}
+
+impl<T: Sourceable + GetNameSource, D: Default> SourceInfoBuilder<T, D> {
+    pub fn with_get_name(mut self) -> Self {
+        self.info.get_name = Some(get_name::<T>);
+        self
+    }
+}
+
+impl<D: Default, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
+    pub fn with_get_width(mut self) -> Self {
+        self.info.get_width = Some(get_width::<D, T>);
+        self
+    }
+}

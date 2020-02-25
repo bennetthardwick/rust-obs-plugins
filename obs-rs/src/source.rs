@@ -1,9 +1,10 @@
 use obs_sys::{
-    obs_source_info, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
-    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
-    obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+    obs_data_t, obs_source_info, obs_source_t, obs_source_type,
+    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
+    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
 };
 
+use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
 
@@ -26,9 +27,13 @@ impl SourceType {
     }
 }
 
-pub struct SourceContext {}
+pub struct SourceContext {
+    source: *mut obs_source_t,
+}
 
-pub struct SettingsContext {}
+pub struct SettingsContext {
+    settings: *mut obs_data_t,
+}
 
 pub struct AudioRenderContext {}
 
@@ -44,7 +49,7 @@ pub struct SourceInfo {
 }
 
 pub mod traits {
-    use super::SourceType;
+    use super::{SettingsContext, SourceContext, SourceType};
 
     pub trait Sourceable {
         fn get_id() -> &'static str;
@@ -61,6 +66,10 @@ pub mod traits {
 
     pub trait GetHeightSource<D> {
         fn get_height(data: &D) -> u32;
+    }
+
+    pub trait CreatableSource<D> {
+        fn create(settings: &SettingsContext, source: SourceContext) -> D;
     }
 }
 
@@ -86,21 +95,29 @@ pub struct SourceInfoBuilder<T: Sourceable, D> {
                            // transition_stop: Option<Box<dyn Fn(&mut S)>>
 }
 
-pub unsafe extern "C" fn get_name<F: GetNameSource>(
-    type_data: *mut ::std::os::raw::c_void,
-) -> *const c_char {
+pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
     let name = F::get_name();
     name.as_bytes().as_ptr() as *const c_char
 }
 
-pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut std::ffi::c_void) -> u32 {
+pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
     let d: &mut D = &mut *(data as *mut D);
     F::get_width(&d)
 }
 
-pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut std::ffi::c_void) -> u32 {
+pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
     let d: &mut D = &mut *(data as *mut D);
     F::get_height(&d)
+}
+
+pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
+    settings: *mut obs_data_t,
+    source: *mut obs_source_t,
+) -> *mut c_void {
+    let settings = SettingsContext { settings };
+    let source = SourceContext { source };
+    let data = Box::new(F::create(&settings, source));
+    Box::into_raw(data) as *mut c_void
 }
 
 impl<T: Sourceable, D: Default> SourceInfoBuilder<T, D> {
@@ -182,6 +199,13 @@ impl<D: Default, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
 impl<D: Default, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
     pub fn with_get_height(mut self) -> Self {
         self.info.get_width = Some(get_height::<D, T>);
+        self
+    }
+}
+
+impl<D: Default, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
+    pub fn with_create(mut self) -> Self {
+        self.info.create = Some(create::<D, T>);
         self
     }
 }

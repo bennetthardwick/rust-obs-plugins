@@ -59,8 +59,8 @@ pub mod traits {
         fn get_width(data: &D) -> u32;
     }
 
-    pub trait GetHeightSource {
-        fn get_height() -> u32;
+    pub trait GetHeightSource<D> {
+        fn get_height(data: &D) -> u32;
     }
 }
 
@@ -93,11 +93,14 @@ pub unsafe extern "C" fn get_name<F: GetNameSource>(
     name.as_bytes().as_ptr() as *const c_char
 }
 
-pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(
-    data: *mut ::std::os::raw::c_void,
-) -> u32 {
+pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut std::ffi::c_void) -> u32 {
     let d: &mut D = &mut *(data as *mut D);
     F::get_width(&d)
+}
+
+pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut std::ffi::c_void) -> u32 {
+    let d: &mut D = &mut *(data as *mut D);
+    F::get_height(&d)
 }
 
 impl<T: Sourceable, D: Default> SourceInfoBuilder<T, D> {
@@ -172,6 +175,13 @@ impl<T: Sourceable + GetNameSource, D: Default> SourceInfoBuilder<T, D> {
 impl<D: Default, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
     pub fn with_get_width(mut self) -> Self {
         self.info.get_width = Some(get_width::<D, T>);
+        self
+    }
+}
+
+impl<D: Default, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
+    pub fn with_get_height(mut self) -> Self {
+        self.info.get_width = Some(get_height::<D, T>);
         self
     }
 }

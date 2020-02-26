@@ -4,13 +4,15 @@ use super::{
     SourceType,
 };
 
+use crate::ObsString;
+
 pub trait Sourceable {
-    fn get_id() -> &'static str;
+    fn get_id() -> ObsString;
     fn get_type() -> SourceType;
 }
 
 pub trait GetNameSource {
-    fn get_name() -> &'static str;
+    fn get_name() -> ObsString;
 }
 
 pub trait GetWidthSource<D> {

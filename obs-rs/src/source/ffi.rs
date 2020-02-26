@@ -1,6 +1,6 @@
 use super::context::ActiveContext;
 use super::traits::*;
-use super::{ SettingsContext, SourceContext };
+use super::{SettingsContext, SourceContext};
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -12,8 +12,7 @@ use obs_sys::{
 };
 
 pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
-    let name = F::get_name();
-    name.as_bytes().as_ptr() as *const c_char
+    F::get_name().as_ptr() as *const c_char
 }
 
 pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {

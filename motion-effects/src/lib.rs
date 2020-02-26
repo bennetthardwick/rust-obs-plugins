@@ -1,7 +1,7 @@
 use obs_rs::{
-    obs_register_module,
-    source::{traits::*, SourceContext, SourceType},
-    LoadContext, Module, ModuleContext,
+    obs_register_module, obs_string,
+    source::{traits::*, SettingsContext, SourceContext, SourceType},
+    LoadContext, Module, ModuleContext, ObsString,
 };
 
 struct TransitionData {
@@ -12,18 +12,27 @@ struct MotionTransition {
     ctx: ModuleContext,
 }
 
-impl Sourceable for MotionTransition {
-    fn get_id() -> &'static str {
-        "motion-transition"
-    }
-    fn get_type() -> SourceType {
-        SourceType::TRANSITION
+impl GetNameSource for MotionTransition {
+    fn get_name() -> ObsString {
+        obs_string!("Motion")
     }
 }
 
-impl GetNameSource for MotionTransition {
-    fn get_name() -> &'static str {
-        "Motion"
+impl Sourceable for MotionTransition {
+    fn get_id() -> ObsString {
+        obs_string!("motion-transition")
+    }
+
+    fn get_type() -> SourceType {
+        SourceType::INPUT
+    }
+}
+
+struct Creatable {}
+
+impl CreatableSource<Creatable> for MotionTransition {
+    fn create(_: &SettingsContext, _: SourceContext) -> Creatable {
+        Creatable {}
     }
 }
 
@@ -37,11 +46,9 @@ impl Module for MotionTransition {
 
     fn load(&mut self, load_context: &mut LoadContext) -> bool {
         let source = load_context
-            .create_source_builder::<MotionTransition, ()>(
-                "motion-transition",
-                SourceType::TRANSITION,
-            )
+            .create_source_builder::<MotionTransition, Creatable>()
             .enable_get_name()
+            .enable_create()
             .build();
 
         load_context.register_source(source);
@@ -49,14 +56,14 @@ impl Module for MotionTransition {
         true
     }
 
-    fn description() -> &'static str {
-        "A great thing"
+    fn description() -> ObsString {
+        obs_string!("A great thing")
     }
-    fn name() -> &'static str {
-        "Motion Effects"
+    fn name() -> ObsString {
+        obs_string!("Motion Effects")
     }
-    fn author() -> &'static str {
-        "Benny"
+    fn author() -> ObsString {
+        obs_string!("Benny")
     }
 }
 

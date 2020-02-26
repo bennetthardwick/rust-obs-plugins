@@ -2,8 +2,10 @@ use crate::source::{
     traits::Sourceable, SettingsContext, SourceContext, SourceInfo, SourceInfoBuilder, SourceType,
 };
 use crate::ModuleContext;
+use crate::ObsString;
 use obs_sys::{obs_register_source_s, obs_source_info};
 use std::ffi::c_void;
+use std::ffi::CStr;
 use std::marker::PhantomData;
 
 pub use lazy_static::lazy_static;
@@ -21,12 +23,8 @@ impl LoadContext {
         }
     }
 
-    pub fn create_source_builder<T: Sourceable, D: Default>(
-        &self,
-        id: &'static str,
-        source_type: SourceType,
-    ) -> SourceInfoBuilder<T, D> {
-        SourceInfoBuilder::new(id, source_type)
+    pub fn create_source_builder<T: Sourceable, D>(&self) -> SourceInfoBuilder<T, D> {
+        SourceInfoBuilder::new()
     }
 
     pub fn register_source(&mut self, source: SourceInfo) {
@@ -57,9 +55,9 @@ pub trait Module {
     }
     fn unload(&mut self) {}
     fn post_load(&mut self) {}
-    fn description() -> &'static str;
-    fn name() -> &'static str;
-    fn author() -> &'static str;
+    fn description() -> ObsString;
+    fn name() -> ObsString;
+    fn author() -> ObsString;
 }
 
 #[macro_export]
@@ -111,17 +109,17 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_name() -> *const std::os::raw::c_char {
-            <$t>::name().as_bytes().as_ptr() as *const std::os::raw::c_char
+            <$t>::name().as_ptr() as *const std::os::raw::c_char
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_description() -> *const std::os::raw::c_char {
-            <$t>::description().as_bytes().as_ptr() as *const std::os::raw::c_char
+            <$t>::description().as_ptr() as *const std::os::raw::c_char
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_author() -> *const std::os::raw::c_char {
-            <$t>::description().as_bytes().as_ptr() as *const std::os::raw::c_char
+            <$t>::description().as_ptr() as *const std::os::raw::c_char
         }
     };
 }

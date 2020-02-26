@@ -10,6 +10,7 @@ use obs_sys::{
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
 };
 
+use crate::ObsString;
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -84,13 +85,13 @@ pub struct SourceInfoBuilder<T: Sourceable, D> {
 }
 
 impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
-    pub(crate) fn new(id: &'static str, source_type: SourceType) -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             __source: PhantomData,
             __data: PhantomData,
             info: obs_source_info {
-                id: T::get_id().as_bytes().as_ptr() as *const c_char,
-                type_: source_type.to_native(),
+                id: T::get_id().as_ptr() as *const c_char,
+                type_: T::get_type().to_native(),
                 output_flags: 0,
                 get_name: None,
                 create: None,
@@ -141,7 +142,9 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
     }
 
     pub fn build(self) -> SourceInfo {
-        SourceInfo { info: Box::new(self.info) }
+        SourceInfo {
+            info: Box::new(self.info),
+        }
     }
 }
 

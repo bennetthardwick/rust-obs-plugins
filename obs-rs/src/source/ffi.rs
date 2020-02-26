@@ -28,18 +28,15 @@ impl<D> From<D> for DataWrapper<D> {
 }
 
 pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
-    crate::info!("Getting name");
     F::get_name().as_ptr() as *const c_char
 }
 
 pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
-    crate::info!("Getting width");
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::get_width(&mut wrapper.data)
 }
 
 pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
-    crate::info!("Getting height");
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::get_height(&mut wrapper.data)
 }

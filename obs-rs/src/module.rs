@@ -74,7 +74,6 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_current_module() -> *mut $crate::obs_sys::obs_module_t {
-            $crate::info!("Getting current module!");
             if let Some(module) = &OBS_MODULE {
                 module.get_ctx().raw
             } else {
@@ -84,53 +83,45 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_ver() -> u32 {
-            $crate::info!("Getting version!");
             $crate::obs_sys::LIBOBS_API_MAJOR_VER
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_load() -> bool {
-            $crate::info!("Loading module!");
 
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
             let mut context = unsafe { $crate::LoadContext::new() };
             let ret = module.load(&mut context);
             LOAD_CONTEXT = Some(context);
 
-            $crate::info!("Loading complete!");
 
             ret
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_unload() {
-            $crate::info!("Unloading module.");
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
             module.unload();
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_post_load() {
-            $crate::info!("Post load module!");
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
             module.post_load();
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_name() -> *const std::os::raw::c_char {
-            $crate::info!("Getting module name");
             <$t>::name().as_ptr() as *const std::os::raw::c_char
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_description() -> *const std::os::raw::c_char {
-            $crate::info!("Getting module description");
             <$t>::description().as_ptr() as *const std::os::raw::c_char
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_author() -> *const std::os::raw::c_char {
-            $crate::info!("Getting module author");
             <$t>::author().as_ptr() as *const std::os::raw::c_char
         }
     };

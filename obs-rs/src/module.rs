@@ -105,8 +105,6 @@ macro_rules! obs_register_module {
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_unload() {
             $crate::info!("Unloading module.");
-
-            LOAD_CONTEXT = None;
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
             module.unload();
         }

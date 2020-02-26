@@ -58,8 +58,13 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
 ) -> *mut c_void {
     let settings = SettingsContext::from_raw(settings);
     let source = SourceContext { source };
-    let data = Box::new(F::create(&settings, source));
+    let data = Box::new(DataWrapper::from(F::create(&settings, source)));
     Box::into_raw(data) as *mut c_void
+}
+
+pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
+    let wrapper: Box<DataWrapper<D>> = Box::from_raw(data as *mut DataWrapper<D>);
+    drop(wrapper);
 }
 
 pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(

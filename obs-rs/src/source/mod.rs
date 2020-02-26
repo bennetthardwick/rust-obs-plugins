@@ -95,7 +95,7 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
                 output_flags: 0,
                 get_name: None,
                 create: Some(ffi::create_default_data::<D>),
-                destroy: None,
+                destroy: Some(ffi::destroy::<D>),
                 get_width: None,
                 get_height: None,
                 get_defaults: None,

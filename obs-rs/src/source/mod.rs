@@ -1,4 +1,5 @@
 mod ffi;
+mod context;
 
 pub mod traits;
 use traits::*;
@@ -40,14 +41,15 @@ pub struct SettingsContext {
     settings: *mut obs_data_t,
 }
 
-pub struct AudioRenderContext {}
+pub struct EnumActiveContext {
 
-pub struct VideoRenderContext {}
+}
 
-pub struct PropertiesContext {}
+pub struct EnumAllContext {
+}
 
-pub struct EnumActiveContext {}
-pub struct EnumAllContext {}
+pub struct PropertiesContext {
+}
 
 pub struct SourceInfo {
     info: obs_source_info,

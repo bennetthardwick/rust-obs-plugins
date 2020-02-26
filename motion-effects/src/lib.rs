@@ -35,9 +35,12 @@ impl Module for MotionTransition {
         &self.ctx
     }
 
-    fn load(&mut self, load_context: &LoadContext) -> bool {
+    fn load(&mut self, load_context: &mut LoadContext) -> bool {
         let source = load_context
-            .create_source_builder::<MotionTransition, ()>("motion-transition", SourceType::TRANSITION)
+            .create_source_builder::<MotionTransition, ()>(
+                "motion-transition",
+                SourceType::TRANSITION,
+            )
             .enable_get_name()
             .build();
 

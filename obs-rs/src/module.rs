@@ -2,18 +2,22 @@ use crate::source::{
     traits::Sourceable, SettingsContext, SourceContext, SourceInfo, SourceInfoBuilder, SourceType,
 };
 use crate::ModuleContext;
+use obs_sys::{obs_register_source_s, obs_source_info};
+use std::ffi::c_void;
 use std::marker::PhantomData;
 
 pub use lazy_static::lazy_static;
 
 pub struct LoadContext {
     __marker: PhantomData<()>,
+    sources: Vec<*mut obs_source_info>,
 }
 
 impl LoadContext {
     pub unsafe fn new() -> LoadContext {
         LoadContext {
             __marker: PhantomData,
+            sources: vec![],
         }
     }
 
@@ -25,13 +29,30 @@ impl LoadContext {
         SourceInfoBuilder::new(id, source_type)
     }
 
-    pub fn register_source(&self, source: SourceInfo) {}
+    pub fn register_source(&mut self, source: SourceInfo) {
+        let pointer = unsafe {
+            let pointer = source.into_raw();
+            obs_register_source_s(pointer, std::mem::size_of::<obs_source_info>() as u64);
+            pointer
+        };
+        self.sources.push(pointer);
+    }
+}
+
+impl Drop for LoadContext {
+    fn drop(&mut self) {
+        unsafe {
+            for pointer in self.sources.drain(..) {
+                drop(Box::from_raw(pointer))
+            }
+        }
+    }
 }
 
 pub trait Module {
     fn new(ctx: ModuleContext) -> Self;
     fn get_ctx(&self) -> &ModuleContext;
-    fn load(&mut self, load_context: &LoadContext) -> bool {
+    fn load(&mut self, load_context: &mut LoadContext) -> bool {
         true
     }
     fn unload(&mut self) {}
@@ -69,8 +90,8 @@ macro_rules! obs_register_module {
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_load() -> bool {
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
-            let context = unsafe { $crate::LoadContext::new() };
-            let ret = module.load(&context);
+            let mut context = unsafe { $crate::LoadContext::new() };
+            let ret = module.load(&mut context);
             LOAD_CONTEXT = Some(context);
             ret
         }

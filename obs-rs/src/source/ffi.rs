@@ -1,5 +1,6 @@
+use super::context::ActiveContext;
 use super::traits::*;
-use super::{SettingsContext, SourceContext};
+use super::{ SettingsContext, SourceContext };
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -16,22 +17,31 @@ pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *
 }
 
 pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
-    let d: &mut D = &mut *(data as *mut D);
-    F::get_width(&d)
+    let data: &mut D = &mut *(data as *mut D);
+    F::get_width(&data)
 }
 
 pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
-    let d: &mut D = &mut *(data as *mut D);
-    F::get_height(&d)
+    let data: &mut D = &mut *(data as *mut D);
+    F::get_height(&data)
 }
 
 pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
-    let settings = SettingsContext { settings };
+    let settings = SettingsContext::from_raw(settings);
     let source = SourceContext { source };
     let data = Box::new(F::create(&settings, source));
     Box::into_raw(data) as *mut c_void
 }
 
+pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
+    data: *mut c_void,
+    settings: *mut obs_data_t,
+) {
+    let active = ActiveContext::default();
+    let settings = SettingsContext::from_raw(settings);
+    let data: &mut D = &mut *(data as *mut D);
+    F::update(data, &settings, &active);
+}

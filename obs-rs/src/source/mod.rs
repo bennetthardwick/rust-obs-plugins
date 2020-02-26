@@ -1,5 +1,5 @@
-mod ffi;
 mod context;
+mod ffi;
 
 pub mod traits;
 use traits::*;
@@ -41,18 +41,26 @@ pub struct SettingsContext {
     settings: *mut obs_data_t,
 }
 
-pub struct EnumActiveContext {
-
+impl SettingsContext {
+    unsafe fn from_raw(settings: *mut obs_data_t) -> Self {
+        SettingsContext { settings }
+    }
 }
 
-pub struct EnumAllContext {
-}
+pub struct EnumActiveContext {}
 
-pub struct PropertiesContext {
-}
+pub struct EnumAllContext {}
+
+pub struct PropertiesContext {}
 
 pub struct SourceInfo {
-    info: obs_source_info,
+    info: Box<obs_source_info>,
+}
+
+impl SourceInfo {
+    pub unsafe fn into_raw(self) -> *mut obs_source_info {
+        Box::into_raw(self.info)
+    }
 }
 
 pub struct SourceInfoBuilder<T: Sourceable, D> {
@@ -133,7 +141,7 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
     }
 
     pub fn build(self) -> SourceInfo {
-        SourceInfo { info: self.info }
+        SourceInfo { info: Box::new(self.info) }
     }
 }
 

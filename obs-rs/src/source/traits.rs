@@ -1,7 +1,7 @@
 use super::context::ActiveContext;
 use super::{
-    EnumActiveContext, PropertiesContext, SettingsContext, SourceContext,
-    SourceType, EnumAllContext
+    EnumActiveContext, EnumAllContext, PropertiesContext, SettingsContext, SourceContext,
+    SourceType,
 };
 
 pub trait Sourceable {
@@ -26,7 +26,7 @@ pub trait CreatableSource<D> {
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut D, settings: &ActiveContext);
+    fn update(data: &mut D, settings: &SettingsContext, context: &ActiveContext);
 }
 
 pub trait VideoRenderSource<D> {

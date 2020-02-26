@@ -38,7 +38,7 @@ impl Module for MotionTransition {
     fn load(&mut self, load_context: &LoadContext) -> bool {
         let source = load_context
             .create_source_builder::<MotionTransition, ()>("motion-transition", SourceType::TRANSITION)
-            .with_get_name()
+            .enable_get_name()
             .build();
 
         load_context.register_source(source);

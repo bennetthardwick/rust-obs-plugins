@@ -1,3 +1,8 @@
+mod ffi;
+
+pub mod traits;
+use traits::*;
+
 use obs_sys::{
     obs_data_t, obs_source_info, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
@@ -48,33 +53,6 @@ pub struct SourceInfo {
     info: obs_source_info,
 }
 
-pub mod traits {
-    use super::{SettingsContext, SourceContext, SourceType};
-
-    pub trait Sourceable {
-        fn get_id() -> &'static str;
-        fn get_type() -> SourceType;
-    }
-
-    pub trait GetNameSource {
-        fn get_name() -> &'static str;
-    }
-
-    pub trait GetWidthSource<D> {
-        fn get_width(data: &D) -> u32;
-    }
-
-    pub trait GetHeightSource<D> {
-        fn get_height(data: &D) -> u32;
-    }
-
-    pub trait CreatableSource<D> {
-        fn create(settings: &SettingsContext, source: SourceContext) -> D;
-    }
-}
-
-use traits::*;
-
 pub struct SourceInfoBuilder<T: Sourceable, D> {
     __source: PhantomData<T>,
     __data: PhantomData<D>,
@@ -93,31 +71,6 @@ pub struct SourceInfoBuilder<T: Sourceable, D> {
                            // enum_all_sources: Option<Box<dyn Fn(&mut S, &mut EnumAllContext)>>,
                            // transition_start: Option<Box<dyn Fn(&mut S)>>,
                            // transition_stop: Option<Box<dyn Fn(&mut S)>>
-}
-
-pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
-    let name = F::get_name();
-    name.as_bytes().as_ptr() as *const c_char
-}
-
-pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
-    let d: &mut D = &mut *(data as *mut D);
-    F::get_width(&d)
-}
-
-pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
-    let d: &mut D = &mut *(data as *mut D);
-    F::get_height(&d)
-}
-
-pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
-    settings: *mut obs_data_t,
-    source: *mut obs_source_t,
-) -> *mut c_void {
-    let settings = SettingsContext { settings };
-    let source = SourceContext { source };
-    let data = Box::new(F::create(&settings, source));
-    Box::into_raw(data) as *mut c_void
 }
 
 impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
@@ -183,29 +136,29 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
 }
 
 impl<T: Sourceable + GetNameSource, D> SourceInfoBuilder<T, D> {
-    pub fn with_get_name(mut self) -> Self {
-        self.info.get_name = Some(get_name::<T>);
+    pub fn enable_get_name(mut self) -> Self {
+        self.info.get_name = Some(ffi::get_name::<T>);
         self
     }
 }
 
 impl<D, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
-    pub fn with_get_width(mut self) -> Self {
-        self.info.get_width = Some(get_width::<D, T>);
+    pub fn enable_get_width(mut self) -> Self {
+        self.info.get_width = Some(ffi::get_width::<D, T>);
         self
     }
 }
 
 impl<D, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
-    pub fn with_get_height(mut self) -> Self {
-        self.info.get_width = Some(get_height::<D, T>);
+    pub fn enable_get_height(mut self) -> Self {
+        self.info.get_width = Some(ffi::get_height::<D, T>);
         self
     }
 }
 
 impl<D, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
-    pub fn with_create(mut self) -> Self {
-        self.info.create = Some(create::<D, T>);
+    pub fn enable_create(mut self) -> Self {
+        self.info.create = Some(ffi::create::<D, T>);
         self
     }
 }

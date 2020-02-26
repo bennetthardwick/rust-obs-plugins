@@ -16,11 +16,11 @@ pub trait GetNameSource {
 }
 
 pub trait GetWidthSource<D> {
-    fn get_width(data: &D) -> u32;
+    fn get_width(data: &mut Option<D>) -> u32;
 }
 
 pub trait GetHeightSource<D> {
-    fn get_height(data: &D) -> u32;
+    fn get_height(data: &Option<D>) -> u32;
 }
 
 pub trait CreatableSource<D> {
@@ -28,33 +28,33 @@ pub trait CreatableSource<D> {
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut D, settings: &SettingsContext, context: &ActiveContext);
+    fn update(data: &mut Option<D>, settings: &SettingsContext, context: &mut ActiveContext);
 }
 
 pub trait VideoRenderSource<D> {
-    fn video_render(data: &mut D, context: &ActiveContext);
+    fn video_render(data: &mut Option<D>, context: &mut ActiveContext);
 }
 
 pub trait AudioRenderSource<D> {
-    fn audio_render(data: &mut D, context: &ActiveContext);
+    fn audio_render(data: &mut Option<D>, context: &mut ActiveContext);
 }
 
 pub trait GetPropertiesSource<D> {
-    fn get_properties(data: &mut D, context: &PropertiesContext);
+    fn get_properties(data: &mut Option<D>, context: &PropertiesContext);
 }
 
 pub trait EnumActiveSource<D> {
-    fn enum_active_sources(data: &mut D, context: &EnumActiveContext);
+    fn enum_active_sources(data: &mut Option<D>, context: &EnumActiveContext);
 }
 
 pub trait EnumAllSource<D> {
-    fn enum_all_sources(data: &mut D, context: &EnumAllContext);
+    fn enum_all_sources(data: &mut Option<D>, context: &EnumAllContext);
 }
 
 pub trait TransitionStartSource<D> {
-    fn transition_start(data: &mut D);
+    fn transition_start(data: &mut Option<D>);
 }
 
 pub trait TransitionStopSource<D> {
-    fn transition_stop(data: &mut D);
+    fn transition_stop(data: &mut Option<D>);
 }

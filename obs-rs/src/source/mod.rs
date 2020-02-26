@@ -94,7 +94,7 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
                 type_: T::get_type().to_native(),
                 output_flags: 0,
                 get_name: None,
-                create: None,
+                create: Some(ffi::create_default_data::<D>),
                 destroy: None,
                 get_width: None,
                 get_height: None,
@@ -175,3 +175,70 @@ impl<D, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
         self
     }
 }
+
+impl<D, T: Sourceable + UpdateSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_update(mut self) -> Self {
+        self.info.update = Some(ffi::update::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + VideoRenderSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_video_render(mut self) -> Self {
+        self.info.video_render = Some(ffi::video_render::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + AudioRenderSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_audio_render(mut self) -> Self {
+        self.info.audio_render = Some(ffi::audio_render::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + GetPropertiesSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_get_properties(mut self) -> Self {
+        self.info.get_properties = Some(ffi::get_properties::<D, T>);
+        self
+    }
+}
+
+//
+// pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
+//     data: *mut ::std::os::raw::c_void,
+// ) {
+//     let data: &mut D = &mut *(data as *mut D);
+//     let mut properties = PropertiesContext {};
+//     F::get_properties(data, &mut properties);
+// }
+//
+// pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
+//     data: *mut ::std::os::raw::c_void,
+// ) {
+//     let data: &mut D = &mut *(data as *mut D);
+//     let mut context = EnumActiveContext {};
+//     F::enum_active_sources(data, &mut context);
+// }
+//
+// pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
+//     data: *mut ::std::os::raw::c_void,
+// ) {
+//     let data: &mut D = &mut *(data as *mut D);
+//     let mut context = EnumAllContext {};
+//     F::enum_all_sources(data, &mut context);
+// }
+//
+// pub unsafe extern "C" fn transition_start<D, F: TransitionStartSource<D>>(
+//     data: *mut ::std::os::raw::c_void,
+// ) {
+//     let data: &mut D = &mut *(data as *mut D);
+//     F::transition_start(data);
+// }
+//
+// pub unsafe extern "C" fn transition_stop<D, F: TransitionStopSource<D>>(
+//     data: *mut ::std::os::raw::c_void,
+// ) {
+//     let data: &mut D = &mut *(data as *mut D);
+//     F::transition_stop(data);
+// }

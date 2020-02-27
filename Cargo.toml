@@ -11,6 +11,5 @@ edition = "2018"
 members = [
   "obs-rs",
   "obs-sys",
-  "obs-properties-derive",
   "motion-effects"
 ]

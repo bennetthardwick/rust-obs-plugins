@@ -1,7 +1,11 @@
 use obs_rs::{
-    obs_register_module, obs_string,
-    source::{properties::Properties, traits::*, SettingsContext, SourceContext, SourceType},
-    LoadContext, Module, ModuleContext, ObsString,
+    info, obs_register_module, obs_string,
+    source::{
+        properties::{Properties, SettingsContext},
+        traits::*,
+        SourceContext, SourceType,
+    },
+    warning, ActiveContext, LoadContext, Module, ModuleContext, ObsString,
 };
 
 struct TransitionData {
@@ -63,6 +67,22 @@ impl CreatableSource<D> for MotionTransition {
     }
 }
 
+impl UpdateSource<D> for MotionTransition {
+    fn update(data: &mut Option<D>, settings: &SettingsContext, context: &mut ActiveContext) {
+        if let Some(data) = data {
+            if let Some(acc_y) = settings.get_float(obs_string!("bezier_y")) {
+                data.acc_y = acc_y;
+            }
+
+            if let Some(acc_x) = settings.get_float(obs_string!("bezier_x")) {
+                data.acc_x = acc_x;
+            }
+        } else {
+            warning!("MotionTransition data was None");
+        }
+    }
+}
+
 impl Module for MotionTransition {
     fn new(ctx: ModuleContext) -> Self {
         Self { ctx }
@@ -77,6 +97,7 @@ impl Module for MotionTransition {
             .enable_get_name()
             .enable_create()
             .enable_get_properties()
+            .enable_update()
             .build();
 
         load_context.register_source(source);

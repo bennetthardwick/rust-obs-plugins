@@ -1,6 +1,6 @@
 use super::context::ActiveContext;
-use super::properties::Properties;
-use super::{EnumActiveContext, EnumAllContext, SettingsContext, SourceContext, SourceType};
+use super::properties::{ Properties, SettingsContext };
+use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
 use crate::ObsString;
 

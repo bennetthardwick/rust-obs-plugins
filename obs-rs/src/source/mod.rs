@@ -1,12 +1,12 @@
-mod context;
 mod ffi;
 
+pub mod context;
 pub mod properties;
 pub mod traits;
 use traits::*;
 
 use obs_sys::{
-    obs_data_t, obs_source_info, obs_source_t, obs_source_type,
+    obs_data_get_double, obs_data_t, obs_source_info, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
 };
@@ -37,16 +37,6 @@ impl SourceType {
 
 pub struct SourceContext {
     source: *mut obs_source_t,
-}
-
-pub struct SettingsContext {
-    settings: *mut obs_data_t,
-}
-
-impl SettingsContext {
-    unsafe fn from_raw(settings: *mut obs_data_t) -> Self {
-        SettingsContext { settings }
-    }
 }
 
 pub struct EnumActiveContext {}

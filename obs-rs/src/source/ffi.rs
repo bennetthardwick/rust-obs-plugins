@@ -1,7 +1,7 @@
 use super::context::ActiveContext;
-use super::properties::Properties;
+use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
-use super::{EnumActiveContext, EnumAllContext, SettingsContext, SourceContext};
+use super::{EnumActiveContext, EnumAllContext, SourceContext};
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -15,17 +15,24 @@ use obs_sys::{
 
 struct DataWrapper<D> {
     data: Option<D>,
+    properties: Vec<Property>,
 }
 
 impl<D> Default for DataWrapper<D> {
     fn default() -> Self {
-        Self { data: None }
+        Self {
+            data: None,
+            properties: vec![],
+        }
     }
 }
 
 impl<D> From<D> for DataWrapper<D> {
     fn from(data: D) -> Self {
-        Self { data: Some(data) }
+        Self {
+            data: Some(data),
+            properties: vec![],
+        }
     }
 }
 
@@ -55,10 +62,16 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
-    let settings = SettingsContext::from_raw(settings);
+    let mut wrapper = DataWrapper::default();
+    let settings = SettingsContext::from_raw(settings, &mut wrapper.properties);
+
     let source = SourceContext { source };
-    let data = Box::new(DataWrapper::from(F::create(&settings, source)));
-    Box::into_raw(data) as *mut c_void
+
+    let data = F::create(&settings, source);
+
+    wrapper.data = Some(data);
+
+    Box::into_raw(Box::new(wrapper)) as *mut c_void
 }
 
 pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
@@ -71,8 +84,8 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
     settings: *mut obs_data_t,
 ) {
     let mut active = ActiveContext::default();
-    let settings = SettingsContext::from_raw(settings);
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
+    let settings = SettingsContext::from_raw(settings, &mut data.properties);
     F::update(&mut data.data, &settings, &mut active);
 }
 
@@ -105,7 +118,7 @@ pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
 
-    let mut properties = Properties::from_raw(obs_properties_create());
+    let mut properties = Properties::from_raw(obs_properties_create(), &mut wrapper.properties);
 
     F::get_properties(&mut wrapper.data, &mut properties);
 

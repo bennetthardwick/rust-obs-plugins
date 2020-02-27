@@ -6,6 +6,7 @@ pub mod source;
 
 pub use context::ModuleContext;
 pub use module::*;
+pub use source::context::ActiveContext;
 
 pub mod string {
     pub struct ObsString(&'static str);
@@ -13,6 +14,10 @@ pub mod string {
     impl ObsString {
         pub unsafe fn from_str(string: &'static str) -> Self {
             Self(string)
+        }
+
+        pub fn as_str(&self) -> &'static str {
+            self.0
         }
 
         pub fn as_ptr(&self) -> *const std::os::raw::c_char {
@@ -28,12 +33,12 @@ pub mod string {
     }
 }
 
-pub mod log {
+mod log {
     #[macro_export]
     macro_rules! obs_log {
-        ($level:expr, $($arg:tt)*) => (
+        ($level:expr, $($arg:tt)*) => (unsafe {
             $crate::obs_sys::blog($level, format!("{}", format_args!($($arg)*)).as_ptr() as *const std::os::raw::c_char)
-        );
+        });
     }
 
     #[macro_export]

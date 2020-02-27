@@ -1,5 +1,6 @@
 use crate::source::{
-    traits::Sourceable, SettingsContext, SourceContext, SourceInfo, SourceInfoBuilder, SourceType,
+    properties::SettingsContext, traits::Sourceable, SourceContext, SourceInfo, SourceInfoBuilder,
+    SourceType,
 };
 use crate::ModuleContext;
 use crate::ObsString;

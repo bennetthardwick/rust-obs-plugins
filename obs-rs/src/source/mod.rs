@@ -18,6 +18,7 @@ use super::graphics::{
 };
 
 use crate::ObsString;
+use context::VideoRenderContext;
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -62,6 +63,7 @@ impl SourceContext {
 
     pub fn process_filter<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
         &mut self,
+        _render: &mut VideoRenderContext,
         effect: &mut GraphicsEffect,
         cx: u32,
         cy: u32,
@@ -75,6 +77,12 @@ impl SourceContext {
                 func(&mut context, effect);
                 obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
             }
+        }
+    }
+
+    pub fn update_source_settings(settings: &SettingsContext) {
+        unsafe {
+            obs_source_update(self.source, settings.as_raw());
         }
     }
 }
@@ -168,6 +176,11 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
                 media_get_state: None,
             },
         }
+    }
+
+    pub fn with_output_flags(mut self, flags: u32) -> Self {
+        self.info.output_flags = flags;
+        self
     }
 
     pub fn build(self) -> SourceInfo {

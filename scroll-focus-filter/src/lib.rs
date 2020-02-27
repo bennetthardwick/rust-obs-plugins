@@ -1,4 +1,5 @@
 use obs_rs::{
+    graphics::*,
     info, obs_register_module, obs_string,
     source::{
         properties::{Properties, SettingsContext},
@@ -9,7 +10,11 @@ use obs_rs::{
 };
 
 struct Data {
-    context: SourceContext,
+    source: SourceContext,
+    effect: GraphicsEffect,
+    mul_val: GraphicsEffectParam,
+    add_val: GraphicsEffectParam,
+    image: GraphicsEffectParam,
 }
 
 struct ScrollFocusFilter {
@@ -31,6 +36,34 @@ impl GetNameSource for ScrollFocusFilter {
     }
 }
 
+impl CreatableSource<Data> for ScrollFocusFilter {
+    fn create(settings: &SettingsContext, source: SourceContext) -> Data {
+        if let Some(mut effect) = GraphicsEffect::from_effect_string(
+            obs_string!(include_str!("./crop_filter.effect")),
+            obs_string!("crop_filter.effect"),
+        ) {
+            if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
+                if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
+                    if let Some(image) = effect.get_effect_param_by_name(obs_string!("image")) {
+                        source.update_source_settings(settings);
+                        return Data {
+                            source,
+                            effect,
+                            add_val,
+                            mul_val,
+                            image,
+                        };
+                    }
+                }
+            }
+
+            panic!("Failed to find correct effect params!");
+        } else {
+            panic!("Could not load crop filter effect!");
+        }
+    }
+}
+
 impl Module for ScrollFocusFilter {
     fn new(context: ModuleContext) -> Self {
         Self { context }
@@ -43,7 +76,8 @@ impl Module for ScrollFocusFilter {
         let source = load_context
             .create_source_builder::<ScrollFocusFilter, Data>()
             .enable_get_name()
-            // .enable_create()
+            .enable_create()
+            .with_output_flags(1)
             // .enable_get_properties()
             // .enable_update()
             // .enable_transition_start()

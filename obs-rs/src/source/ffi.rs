@@ -1,4 +1,4 @@
-use super::context::ActiveContext;
+use super::context::{ActiveContext, VideoRenderContext};
 use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
@@ -95,7 +95,8 @@ pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut active = ActiveContext::default();
-    F::video_render(&mut wrapper.data, &mut active);
+    let mut render = VideoRenderContext::default();
+    F::video_render(&mut wrapper.data, &mut active, &mut render);
 }
 
 pub unsafe extern "C" fn audio_render<D, F: AudioRenderSource<D>>(

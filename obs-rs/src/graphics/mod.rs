@@ -28,19 +28,21 @@ pub struct GraphicsEffect {
 }
 
 impl GraphicsEffect {
-    pub unsafe fn from_effect_string(value: ObsString) -> Option<Self> {
-        obs_enter_graphics();
-        let raw = gs_effect_create(value.as_ptr(), std::ptr::null_mut(), std::ptr::null_mut());
-        obs_leave_graphics();
+    pub fn from_effect_string(value: ObsString, name: ObsString) -> Option<Self> {
+        unsafe {
+            obs_enter_graphics();
+            let raw = gs_effect_create(value.as_ptr(), name.as_ptr(), std::ptr::null_mut());
+            obs_leave_graphics();
 
-        if !raw.is_null() {
-            None
-        } else {
-            Some(Self { raw })
+            if raw.is_null() {
+                None
+            } else {
+                Some(Self { raw })
+            }
         }
     }
 
-    pub fn get_effect_by_name(&mut self, name: ObsString) -> Option<GraphicsEffectParam> {
+    pub fn get_effect_param_by_name(&mut self, name: ObsString) -> Option<GraphicsEffectParam> {
         unsafe {
             let pointer = gs_effect_get_param_by_name(self.raw, name.as_ptr());
             if !pointer.is_null() {

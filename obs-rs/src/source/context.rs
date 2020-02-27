@@ -5,3 +5,11 @@ impl Default for ActiveContext {
         Self {}
     }
 }
+
+pub struct VideoRenderContext {}
+
+impl Default for VideoRenderContext {
+    fn default() -> Self {
+        Self {}
+    }
+}

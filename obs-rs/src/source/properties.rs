@@ -76,6 +76,10 @@ impl<'a> SettingsContext<'a> {
         }
     }
 
+    pub(crate) unsafe fn as_raw(&self) -> *mut obs_data_t {
+        self.settings
+    }
+
     pub fn get_float(&self, param: ObsString) -> Option<f64> {
         self.properties
             .iter()

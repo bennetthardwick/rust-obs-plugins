@@ -1,5 +1,5 @@
-use super::context::ActiveContext;
-use super::properties::{ Properties, SettingsContext };
+use super::context::{ActiveContext, VideoRenderContext};
+use super::properties::{Properties, SettingsContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
 use crate::ObsString;
@@ -30,7 +30,11 @@ pub trait UpdateSource<D> {
 }
 
 pub trait VideoRenderSource<D> {
-    fn video_render(data: &mut Option<D>, context: &mut ActiveContext);
+    fn video_render(
+        data: &mut Option<D>,
+        context: &mut ActiveContext,
+        render: &mut VideoRenderContext,
+    );
 }
 
 pub trait AudioRenderSource<D> {

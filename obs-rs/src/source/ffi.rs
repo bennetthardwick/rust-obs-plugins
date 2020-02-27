@@ -1,15 +1,16 @@
 use super::context::ActiveContext;
+use super::properties::Properties;
 use super::traits::*;
-use super::{EnumActiveContext, EnumAllContext, PropertiesContext, SettingsContext, SourceContext};
+use super::{EnumActiveContext, EnumAllContext, SettingsContext, SourceContext};
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
 
 use obs_sys::{
-    gs_effect_t, obs_data_t, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
-    obs_source_info, obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
-    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
-    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
+    gs_effect_t, obs_data_t, obs_properties, obs_properties_create, obs_source_audio_mix,
+    obs_source_enum_proc_t, obs_source_info, obs_source_t, obs_source_type,
+    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
+    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
 };
 
 struct DataWrapper<D> {
@@ -29,7 +30,7 @@ impl<D> From<D> for DataWrapper<D> {
 }
 
 pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
-    F::get_name().as_ptr() as *const c_char
+    F::get_name().as_ptr()
 }
 
 pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
@@ -103,9 +104,12 @@ pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
     data: *mut ::std::os::raw::c_void,
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut properties = PropertiesContext {};
+
+    let mut properties = Properties::from_raw(obs_properties_create());
+
     F::get_properties(&mut wrapper.data, &mut properties);
-    std::ptr::null_mut()
+
+    properties.into_raw()
 }
 
 pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(

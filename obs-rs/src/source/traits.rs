@@ -1,8 +1,6 @@
 use super::context::ActiveContext;
-use super::{
-    EnumActiveContext, EnumAllContext, PropertiesContext, SettingsContext, SourceContext,
-    SourceType,
-};
+use super::properties::Properties;
+use super::{EnumActiveContext, EnumAllContext, SettingsContext, SourceContext, SourceType};
 
 use crate::ObsString;
 
@@ -40,7 +38,7 @@ pub trait AudioRenderSource<D> {
 }
 
 pub trait GetPropertiesSource<D> {
-    fn get_properties(data: &mut Option<D>, context: &PropertiesContext);
+    fn get_properties(data: &mut Option<D>, properties: &mut Properties);
 }
 
 pub trait EnumActiveSource<D> {

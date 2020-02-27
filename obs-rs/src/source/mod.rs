@@ -1,6 +1,7 @@
 mod context;
 mod ffi;
 
+pub mod properties;
 pub mod traits;
 use traits::*;
 
@@ -52,8 +53,6 @@ pub struct EnumActiveContext {}
 
 pub struct EnumAllContext {}
 
-pub struct PropertiesContext {}
-
 pub struct SourceInfo {
     info: Box<obs_source_info>,
 }
@@ -90,7 +89,7 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
             __source: PhantomData,
             __data: PhantomData,
             info: obs_source_info {
-                id: T::get_id().as_ptr() as *const c_char,
+                id: T::get_id().as_ptr(),
                 type_: T::get_type().to_native(),
                 output_flags: 0,
                 get_name: None,

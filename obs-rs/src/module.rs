@@ -112,17 +112,17 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_name() -> *const std::os::raw::c_char {
-            <$t>::name().as_ptr() as *const std::os::raw::c_char
+            <$t>::name().as_ptr()
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_description() -> *const std::os::raw::c_char {
-            <$t>::description().as_ptr() as *const std::os::raw::c_char
+            <$t>::description().as_ptr()
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_author() -> *const std::os::raw::c_char {
-            <$t>::author().as_ptr() as *const std::os::raw::c_char
+            <$t>::author().as_ptr()
         }
     };
 }

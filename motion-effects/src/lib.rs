@@ -1,6 +1,6 @@
 use obs_rs::{
     obs_register_module, obs_string,
-    source::{traits::*, SettingsContext, SourceContext, SourceType},
+    source::{properties::Properties, traits::*, SettingsContext, SourceContext, SourceType},
     LoadContext, Module, ModuleContext, ObsString,
 };
 
@@ -30,6 +30,27 @@ impl Sourceable for MotionTransition {
 
 struct Creatable {}
 
+type D = Creatable;
+
+impl GetPropertiesSource<D> for MotionTransition {
+    fn get_properties(_data: &mut Option<D>, properties: &mut Properties) {
+        properties.add_float_slider(
+            obs_string!("bezier_x"),
+            obs_string!("Acceleration.X"),
+            -0.5,
+            0.5,
+            0.01,
+        );
+        properties.add_float_slider(
+            obs_string!("bezier_y"),
+            obs_string!("Acceleration.Y"),
+            -0.5,
+            0.5,
+            0.01,
+        );
+    }
+}
+
 impl CreatableSource<Creatable> for MotionTransition {
     fn create(_: &SettingsContext, _: SourceContext) -> Creatable {
         Creatable {}
@@ -49,6 +70,7 @@ impl Module for MotionTransition {
             .create_source_builder::<MotionTransition, Creatable>()
             .enable_get_name()
             .enable_create()
+            .enable_get_properties()
             .build();
 
         load_context.register_source(source);

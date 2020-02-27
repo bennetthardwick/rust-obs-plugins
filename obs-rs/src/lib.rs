@@ -15,8 +15,8 @@ pub mod string {
             Self(string)
         }
 
-        pub fn as_ptr(&self) -> *const u8 {
-            self.0.as_ptr()
+        pub fn as_ptr(&self) -> *const std::os::raw::c_char {
+            self.0.as_ptr() as *const std::os::raw::c_char
         }
     }
 
@@ -32,7 +32,7 @@ pub mod log {
     #[macro_export]
     macro_rules! obs_log {
         ($level:expr, $($arg:tt)*) => (
-            $crate::obs_sys::blog($level, format!("{}", format_args!($($arg)*)).as_ptr() as *const i8)
+            $crate::obs_sys::blog($level, format!("{}", format_args!($($arg)*)).as_ptr() as *const std::os::raw::c_char)
         );
     }
 

@@ -1,0 +1,12 @@
+[package]
+name = "scroll-focus-filter"
+version = "0.1.0"
+authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
+edition = "2018"
+
+[dependencies]
+obs-rs = { path = "../obs-rs", version = "0.1.0" }
+
+[lib]
+name = "scrollfocus"
+crate-type = ["cdylib"]

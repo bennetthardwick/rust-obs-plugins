@@ -9,8 +9,10 @@ use obs_rs::{
 };
 
 struct TransitionData {
+    context: SourceContext,
     acc_x: f64,
     acc_y: f64,
+    start_init: bool,
     scene_transitioning: bool,
     transitioning: bool,
 }
@@ -33,7 +35,7 @@ impl Sourceable for MotionTransition {
     }
 
     fn get_type() -> SourceType {
-        SourceType::INPUT
+        SourceType::TRANSITION
     }
 }
 
@@ -57,10 +59,12 @@ impl GetPropertiesSource<D> for MotionTransition {
 }
 
 impl CreatableSource<D> for MotionTransition {
-    fn create(_: &SettingsContext, _: SourceContext) -> D {
+    fn create(_: &SettingsContext, context: SourceContext) -> D {
         TransitionData {
+            context,
             acc_x: 0.,
             acc_y: 0.,
+            start_init: false,
             scene_transitioning: false,
             transitioning: false,
         }
@@ -83,6 +87,29 @@ impl UpdateSource<D> for MotionTransition {
     }
 }
 
+impl TransitionStartSource<D> for MotionTransition {
+    fn transition_start(data: &mut Option<D>) {
+        if let Some(data) = data {
+            data.start_init = true;
+        }
+    }
+}
+
+impl TransitionStopSource<D> for MotionTransition {
+    fn transition_stop(data: &mut Option<D>) {
+        if let Some(data) = data {
+            // remove active child
+            // remove active child
+            // release scene
+            // release scene
+            // release item list
+            // release item list
+
+            data.transitioning = false;
+        }
+    }
+}
+
 impl Module for MotionTransition {
     fn new(ctx: ModuleContext) -> Self {
         Self { ctx }
@@ -98,6 +125,8 @@ impl Module for MotionTransition {
             .enable_create()
             .enable_get_properties()
             .enable_update()
+            .enable_transition_start()
+            .enable_transition_stop()
             .build();
 
         load_context.register_source(source);

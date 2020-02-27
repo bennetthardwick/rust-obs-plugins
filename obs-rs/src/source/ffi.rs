@@ -6,9 +6,10 @@ use std::marker::PhantomData;
 use std::os::raw::c_char;
 
 use obs_sys::{
-    gs_effect_t, obs_data_t, obs_properties, obs_source_audio_mix, obs_source_info, obs_source_t,
-    obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
+    gs_effect_t, obs_data_t, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
+    obs_source_info, obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
 };
 
 struct DataWrapper<D> {
@@ -109,6 +110,8 @@ pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
 
 pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
     data: *mut ::std::os::raw::c_void,
+    _enum_callback: obs_source_enum_proc_t,
+    _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut context = EnumActiveContext {};
@@ -117,6 +120,8 @@ pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
 
 pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
     data: *mut ::std::os::raw::c_void,
+    _enum_callback: obs_source_enum_proc_t,
+    _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut context = EnumAllContext {};

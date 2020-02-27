@@ -204,41 +204,30 @@ impl<D, T: Sourceable + GetPropertiesSource<D>> SourceInfoBuilder<T, D> {
     }
 }
 
-//
-// pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
-//     data: *mut ::std::os::raw::c_void,
-// ) {
-//     let data: &mut D = &mut *(data as *mut D);
-//     let mut properties = PropertiesContext {};
-//     F::get_properties(data, &mut properties);
-// }
-//
-// pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
-//     data: *mut ::std::os::raw::c_void,
-// ) {
-//     let data: &mut D = &mut *(data as *mut D);
-//     let mut context = EnumActiveContext {};
-//     F::enum_active_sources(data, &mut context);
-// }
-//
-// pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
-//     data: *mut ::std::os::raw::c_void,
-// ) {
-//     let data: &mut D = &mut *(data as *mut D);
-//     let mut context = EnumAllContext {};
-//     F::enum_all_sources(data, &mut context);
-// }
-//
-// pub unsafe extern "C" fn transition_start<D, F: TransitionStartSource<D>>(
-//     data: *mut ::std::os::raw::c_void,
-// ) {
-//     let data: &mut D = &mut *(data as *mut D);
-//     F::transition_start(data);
-// }
-//
-// pub unsafe extern "C" fn transition_stop<D, F: TransitionStopSource<D>>(
-//     data: *mut ::std::os::raw::c_void,
-// ) {
-//     let data: &mut D = &mut *(data as *mut D);
-//     F::transition_stop(data);
-// }
+impl<D, T: Sourceable + EnumActiveSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_enum_active(mut self) -> Self {
+        self.info.enum_active_sources = Some(ffi::enum_active_sources::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + EnumAllSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_enum_all(mut self) -> Self {
+        self.info.enum_all_sources = Some(ffi::enum_all_sources::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + TransitionStartSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_transition_start(mut self) -> Self {
+        self.info.transition_start = Some(ffi::transition_start::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + TransitionStopSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_transition_stop(mut self) -> Self {
+        self.info.transition_stop = Some(ffi::transition_stop::<D, T>);
+        self
+    }
+}

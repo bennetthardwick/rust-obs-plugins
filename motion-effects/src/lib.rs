@@ -5,8 +5,13 @@ use obs_rs::{
 };
 
 struct TransitionData {
-    context: SourceContext,
+    acc_x: f64,
+    acc_y: f64,
+    scene_transitioning: bool,
+    transitioning: bool,
 }
+
+type D = TransitionData;
 
 struct MotionTransition {
     ctx: ModuleContext,
@@ -28,10 +33,6 @@ impl Sourceable for MotionTransition {
     }
 }
 
-struct Creatable {}
-
-type D = Creatable;
-
 impl GetPropertiesSource<D> for MotionTransition {
     fn get_properties(_data: &mut Option<D>, properties: &mut Properties) {
         properties.add_float_slider(
@@ -51,9 +52,14 @@ impl GetPropertiesSource<D> for MotionTransition {
     }
 }
 
-impl CreatableSource<Creatable> for MotionTransition {
-    fn create(_: &SettingsContext, _: SourceContext) -> Creatable {
-        Creatable {}
+impl CreatableSource<D> for MotionTransition {
+    fn create(_: &SettingsContext, _: SourceContext) -> D {
+        TransitionData {
+            acc_x: 0.,
+            acc_y: 0.,
+            scene_transitioning: false,
+            transitioning: false,
+        }
     }
 }
 
@@ -67,7 +73,7 @@ impl Module for MotionTransition {
 
     fn load(&mut self, load_context: &mut LoadContext) -> bool {
         let source = load_context
-            .create_source_builder::<MotionTransition, Creatable>()
+            .create_source_builder::<MotionTransition, D>()
             .enable_get_name()
             .enable_create()
             .enable_get_properties()

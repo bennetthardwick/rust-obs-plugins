@@ -8,8 +8,6 @@ use std::ffi::c_void;
 use std::ffi::CStr;
 use std::marker::PhantomData;
 
-pub use lazy_static::lazy_static;
-
 pub struct LoadContext {
     __marker: PhantomData<()>,
     sources: Vec<*mut obs_source_info>,
@@ -88,12 +86,10 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_load() -> bool {
-
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
             let mut context = unsafe { $crate::LoadContext::new() };
             let ret = module.load(&mut context);
             LOAD_CONTEXT = Some(context);
-
 
             ret
         }

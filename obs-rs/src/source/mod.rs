@@ -6,7 +6,8 @@ pub mod traits;
 use traits::*;
 
 use obs_sys::{
-    obs_data_get_double, obs_data_t, obs_source_info, obs_source_t, obs_source_type,
+    obs_data_get_double, obs_data_t, obs_filter_get_target, obs_source_info,
+    obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
 };
@@ -37,6 +38,22 @@ impl SourceType {
 
 pub struct SourceContext {
     source: *mut obs_source_t,
+}
+
+impl SourceContext {
+    pub fn do_with_target<F: FnOnce(&mut SourceContext)>(&mut self, func: F) {
+        unsafe {
+            let target = obs_filter_get_target(self.source);
+            let mut context = SourceContext { source: target };
+            func(&mut context);
+        }
+    }
+
+    pub fn skip_video_filter(&mut self) {
+        unsafe {
+            obs_source_skip_video_filter(self.source);
+        }
+    }
 }
 
 pub struct EnumActiveContext {}

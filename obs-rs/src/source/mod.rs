@@ -7,9 +7,14 @@ use traits::*;
 
 use obs_sys::{
     obs_data_get_double, obs_data_t, obs_filter_get_target, obs_source_info,
-    obs_source_skip_video_filter, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+    obs_source_process_filter_begin, obs_source_process_filter_end, obs_source_skip_video_filter,
+    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+};
+
+use super::graphics::{
+    GraphicsAllowDirectRendering, GraphicsColorFormat, GraphicsEffect, GraphicsEffectContext,
 };
 
 use crate::ObsString;
@@ -52,6 +57,24 @@ impl SourceContext {
     pub fn skip_video_filter(&mut self) {
         unsafe {
             obs_source_skip_video_filter(self.source);
+        }
+    }
+
+    pub fn process_filter<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
+        &mut self,
+        effect: &mut GraphicsEffect,
+        cx: u32,
+        cy: u32,
+        format: &GraphicsColorFormat,
+        direct: &GraphicsAllowDirectRendering,
+        func: F,
+    ) {
+        unsafe {
+            if (obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw())) {
+                let mut context = GraphicsEffectContext::new();
+                func(&mut context, effect);
+                obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
+            }
         }
     }
 }

@@ -1,9 +1,15 @@
 use obs_sys::{
     gs_address_mode, gs_address_mode_GS_ADDRESS_BORDER, gs_address_mode_GS_ADDRESS_CLAMP,
     gs_address_mode_GS_ADDRESS_MIRROR, gs_address_mode_GS_ADDRESS_MIRRORONCE,
-    gs_address_mode_GS_ADDRESS_WRAP, gs_effect_create, gs_effect_destroy,
-    gs_effect_get_param_by_name, gs_effect_t, gs_eparam_t, gs_sample_filter,
-    gs_sample_filter_GS_FILTER_ANISOTROPIC, gs_sample_filter_GS_FILTER_LINEAR,
+    gs_address_mode_GS_ADDRESS_WRAP, gs_color_format, gs_color_format_GS_A8,
+    gs_color_format_GS_BGRA, gs_color_format_GS_BGRX, gs_color_format_GS_DXT1,
+    gs_color_format_GS_DXT3, gs_color_format_GS_DXT5, gs_color_format_GS_R10G10B10A2,
+    gs_color_format_GS_R16, gs_color_format_GS_R16F, gs_color_format_GS_R32F,
+    gs_color_format_GS_R8, gs_color_format_GS_R8G8, gs_color_format_GS_RG16F,
+    gs_color_format_GS_RG32F, gs_color_format_GS_RGBA, gs_color_format_GS_RGBA16,
+    gs_color_format_GS_RGBA16F, gs_color_format_GS_RGBA32F, gs_color_format_GS_UNKNOWN,
+    gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_t, gs_eparam_t,
+    gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC, gs_sample_filter_GS_FILTER_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_MAG_LINEAR_MIP_POINT,
@@ -11,7 +17,8 @@ use obs_sys::{
     gs_sample_filter_GS_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_POINT_MAG_MIP_LINEAR, gs_sample_filter_GS_FILTER_POINT,
     gs_sampler_info, gs_samplerstate_create, gs_samplerstate_destroy, gs_samplerstate_t,
-    obs_enter_graphics, obs_leave_graphics,
+    obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
+    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
 };
 
 use super::ObsString;
@@ -42,6 +49,10 @@ impl GraphicsEffect {
                 None
             }
         }
+    }
+
+    pub unsafe fn as_ptr(&self) -> *mut gs_effect_t {
+        self.raw
     }
 }
 
@@ -172,6 +183,82 @@ impl Drop for GraphicsSamplerState {
             obs_enter_graphics();
             gs_samplerstate_destroy(self.raw);
             obs_leave_graphics();
+        }
+    }
+}
+
+pub struct GraphicsEffectContext {}
+
+impl GraphicsEffectContext {
+    pub unsafe fn new() -> Self {
+        Self {}
+    }
+}
+
+impl GraphicsEffectContext {}
+
+pub enum GraphicsColorFormat {
+    UNKNOWN,
+    A8,
+    R8,
+    RGBA,
+    BGRX,
+    BGRA,
+    R10G10B10A2,
+    RGBA16,
+    R16,
+    RGBA16F,
+    RGBA32F,
+    RG16F,
+    RG32F,
+    R16F,
+    R32F,
+    DXT1,
+    DXT3,
+    DXT5,
+    R8G8,
+}
+
+impl GraphicsColorFormat {
+    pub fn as_raw(&self) -> gs_color_format {
+        match self {
+            GraphicsColorFormat::UNKNOWN => gs_color_format_GS_UNKNOWN,
+            GraphicsColorFormat::A8 => gs_color_format_GS_A8,
+            GraphicsColorFormat::R8 => gs_color_format_GS_R8,
+            GraphicsColorFormat::RGBA => gs_color_format_GS_RGBA,
+            GraphicsColorFormat::BGRX => gs_color_format_GS_BGRX,
+            GraphicsColorFormat::BGRA => gs_color_format_GS_BGRA,
+            GraphicsColorFormat::R10G10B10A2 => gs_color_format_GS_R10G10B10A2,
+            GraphicsColorFormat::RGBA16 => gs_color_format_GS_RGBA16,
+            GraphicsColorFormat::R16 => gs_color_format_GS_R16,
+            GraphicsColorFormat::RGBA16F => gs_color_format_GS_RGBA16F,
+            GraphicsColorFormat::RGBA32F => gs_color_format_GS_RGBA32F,
+            GraphicsColorFormat::RG16F => gs_color_format_GS_RG16F,
+            GraphicsColorFormat::RG32F => gs_color_format_GS_RG32F,
+            GraphicsColorFormat::R16F => gs_color_format_GS_R16F,
+            GraphicsColorFormat::R32F => gs_color_format_GS_R32F,
+            GraphicsColorFormat::DXT1 => gs_color_format_GS_DXT1,
+            GraphicsColorFormat::DXT3 => gs_color_format_GS_DXT3,
+            GraphicsColorFormat::DXT5 => gs_color_format_GS_DXT5,
+            GraphicsColorFormat::R8G8 => gs_color_format_GS_R8G8,
+        }
+    }
+}
+
+pub enum GraphicsAllowDirectRendering {
+    NoDirectRendering,
+    AllowDirectRendering,
+}
+
+impl GraphicsAllowDirectRendering {
+    pub fn as_raw(&self) -> obs_allow_direct_render {
+        match self {
+            GraphicsAllowDirectRendering::NoDirectRendering => {
+                obs_allow_direct_render_OBS_NO_DIRECT_RENDERING
+            }
+            GraphicsAllowDirectRendering::AllowDirectRendering => {
+                obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING
+            }
         }
     }
 }

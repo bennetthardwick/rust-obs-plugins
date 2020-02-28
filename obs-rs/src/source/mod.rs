@@ -57,6 +57,10 @@ impl SourceContext {
         }
     }
 
+    pub fn id(&self) -> usize {
+        self.source as usize
+    }
+
     pub fn get_base_width(&self) -> u32 {
         unsafe { obs_source_get_base_width(self.source) }
     }
@@ -280,6 +284,13 @@ impl<D, T: Sourceable + TransitionStartSource<D>> SourceInfoBuilder<T, D> {
 impl<D, T: Sourceable + TransitionStopSource<D>> SourceInfoBuilder<T, D> {
     pub fn enable_transition_stop(mut self) -> Self {
         self.info.transition_stop = Some(ffi::transition_stop::<D, T>);
+        self
+    }
+}
+
+impl<D, T: Sourceable + VideoTickSource<D>> SourceInfoBuilder<T, D> {
+    pub fn enable_video_tick(mut self) -> Self {
+        self.info.video_tick = Some(ffi::video_tick::<D, T>);
         self
     }
 }

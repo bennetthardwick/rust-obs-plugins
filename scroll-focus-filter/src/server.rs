@@ -4,21 +4,34 @@ use xcb_util::{
     icccm::get_wm_class,
 };
 
+use xcb::{get_geometry, translate_coordinates};
+
 #[derive(Debug)]
 pub struct WindowSnapshot {
-    name: String,
-    class: String,
-    role: Option<String>,
+    pub x: f32,
+    pub y: f32,
+    pub width: f32,
+    pub height: f32,
+
+    pub root_width: f32,
+    pub root_height: f32,
 }
 
 pub struct ActiveWindow {
     connection: Rc<Connection>,
     screen: i32,
     pub window: xcb::Window,
+    root_width: f32,
+    root_height: f32,
 }
 
 impl ActiveWindow {
-    fn new(connection: Rc<Connection>, screen: i32) -> ActiveWindow {
+    fn new(
+        connection: Rc<Connection>,
+        screen: i32,
+        root_width: f32,
+        root_height: f32,
+    ) -> ActiveWindow {
         let window =
             Self::get_active_window(&connection, screen).expect("Could not get active window");
 
@@ -26,6 +39,8 @@ impl ActiveWindow {
             window,
             connection,
             screen,
+            root_width,
+            root_height,
         };
         active_window.start_listening();
 
@@ -63,14 +78,31 @@ impl ActiveWindow {
     }
 
     fn snapshot(&self) -> Result<WindowSnapshot> {
-        let name = get_wm_name(&self.connection, self.window).get_reply()?;
-        let class = get_wm_class(&self.connection, self.window).get_reply()?;
+        let geom = get_geometry(&self.connection, self.window).get_reply()?;
 
-        Ok(WindowSnapshot {
-            name: String::from(name.string()),
-            class: String::from(class.class()),
-            role: None,
-        })
+        let root_geom = get_geometry(&self.connection, geom.root()).get_reply()?;
+
+        let diff = translate_coordinates(
+            &self.connection,
+            self.window,
+            geom.root(),
+            geom.x(),
+            geom.y(),
+        )
+        .get_reply()?;
+
+        let snap = WindowSnapshot {
+            x: diff.dst_x() as f32,
+            y: diff.dst_y() as f32,
+            width: geom.width() as f32,
+            height: geom.height() as f32,
+            root_width: self.root_width,
+            root_height: self.root_height,
+        };
+
+        println!("Snap {:?}", snap);
+
+        Ok(snap)
     }
 }
 
@@ -96,25 +128,31 @@ impl Server {
 
         let connection = Rc::new(connection);
 
+        let screen = connection
+            .get_setup()
+            .roots()
+            .nth(default_screen as usize)
+            .unwrap();
+
         Ok(Server {
-            active: ActiveWindow::new(Rc::clone(&connection), default_screen),
+            active: ActiveWindow::new(
+                Rc::clone(&connection),
+                default_screen,
+                screen.width_in_pixels() as f32,
+                screen.height_in_pixels() as f32,
+            ),
             connection,
         })
     }
 
-    pub fn wait_for_event(&mut self) {
-        loop {
-            let event = self.connection.wait_for_event().unwrap();
-            match event.response_type() {
-                xcb::PROPERTY_NOTIFY => {
-                    self.active.update();
-                    println!("Snapshot: {:?}", self.active.snapshot());
-                    return;
-                }
-                code => {
-                    println!("Unknown event! {}", code);
-                }
-            };
+    pub fn wait_for_event(&mut self) -> Option<WindowSnapshot> {
+        let event = self.connection.wait_for_event().unwrap();
+        match event.response_type() {
+            xcb::PROPERTY_NOTIFY => {
+                self.active.update();
+                self.active.snapshot().ok()
+            }
+            _ => None,
         }
     }
 }

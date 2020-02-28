@@ -1,5 +1,7 @@
 mod server;
 
+use server::{Server, WindowSnapshot};
+
 use obs_rs::{
     graphics::*,
     info, obs_register_module, obs_string,
@@ -12,6 +14,17 @@ use obs_rs::{
     warning, ActiveContext, LoadContext, Module, ModuleContext, ObsString,
 };
 
+use crossbeam_channel::{unbounded, Receiver, Sender};
+use std::thread::JoinHandle;
+
+enum FilterMessage {
+    CloseConnection,
+}
+
+enum ServerMessage {
+    Snapshot(WindowSnapshot),
+}
+
 struct Data {
     source: SourceContext,
     effect: GraphicsEffect,
@@ -19,7 +32,21 @@ struct Data {
     add_val: GraphicsEffectParam,
     image: GraphicsEffectParam,
 
+    thread: Option<JoinHandle<()>>,
+    send: Sender<FilterMessage>,
+    receive: Receiver<ServerMessage>,
+
+    current: Vec2,
+    target: Vec2,
+
     zoom: f64,
+}
+
+impl Drop for Data {
+    fn drop(&mut self) {
+        self.send.send(FilterMessage::CloseConnection).unwrap();
+        self.thread.take().unwrap().join().unwrap();
+    }
 }
 
 struct ScrollFocusFilter {
@@ -53,6 +80,23 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
     }
 }
 
+impl VideoTickSource<Data> for ScrollFocusFilter {
+    fn video_tick(data: &mut Option<Data>, seconds: f32) {
+        if let Some(data) = data {
+            for message in data.receive.try_iter() {
+                match message {
+                    ServerMessage::Snapshot(snapshot) => {
+                        let x = (snapshot.x + (snapshot.width / 2.)) / snapshot.root_width;
+                        let y = (snapshot.y + (snapshot.height / 2.)) / snapshot.root_height;
+
+                        data.target.set(x, y);
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl VideoRenderSource<Data> for ScrollFocusFilter {
     fn video_render(
         data: &mut Option<Data>,
@@ -64,6 +108,9 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
             let source = &mut data.source;
             let param_add = &mut data.add_val;
             let param_mul = &mut data.mul_val;
+
+            let target = &mut data.target;
+
             let zoom = data.zoom;
 
             let mut cx: u32 = 0;
@@ -82,9 +129,12 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
                 GraphicsColorFormat::RGBA,
                 GraphicsAllowDirectRendering::NoDirectRendering,
                 |context, effect| {
-                    let amount = 1. - (zoom / 4.);
+                    let amount = zoom;
 
-                    param_add.set_vec2(context, &Vec2::new(0., 0.));
+                    param_add.set_vec2(
+                        context,
+                        &Vec2::new(target.x() - 0.5, target.y() - 0.5),
+                    );
                     param_mul.set_vec2(context, &Vec2::new(amount as f32, amount as f32));
                 },
             );
@@ -107,7 +157,29 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             0.
                         };
 
+                        let (send_filter, receive_filter) = unbounded::<FilterMessage>();
+                        let (send_server, receive_server) = unbounded::<ServerMessage>();
+
+                        let handle = std::thread::spawn(move || {
+                            let mut server = Server::new().unwrap();
+
+                            loop {
+                                if let Some(snapshot) = server.wait_for_event() {
+                                    send_server.send(ServerMessage::Snapshot(snapshot)).unwrap();
+                                }
+
+                                for msg in receive_filter.try_iter() {
+                                    match msg {
+                                        FilterMessage::CloseConnection => {
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
                         source.update_source_settings(settings);
+
                         return Data {
                             source,
                             effect,
@@ -115,6 +187,12 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             mul_val,
                             image,
                             zoom,
+                            thread: Some(handle),
+                            send: send_filter,
+                            receive: receive_server,
+
+                            current: Vec2::new(0.5, 0.5),
+                            target: Vec2::new(0.5, 0.5),
                         };
                     }
                 }
@@ -153,6 +231,7 @@ impl Module for ScrollFocusFilter {
             .enable_get_properties()
             .enable_update()
             .enable_video_render()
+            .enable_video_tick()
             .with_output_flags(1)
             .build();
 

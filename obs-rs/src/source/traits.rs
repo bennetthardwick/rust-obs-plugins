@@ -45,6 +45,10 @@ pub trait GetPropertiesSource<D> {
     fn get_properties(data: &mut Option<D>, properties: &mut Properties);
 }
 
+pub trait VideoTickSource<D> {
+    fn video_tick(data: &mut Option<D>, seconds: f32);
+}
+
 pub trait EnumActiveSource<D> {
     fn enum_active_sources(data: &mut Option<D>, context: &EnumActiveContext);
 }

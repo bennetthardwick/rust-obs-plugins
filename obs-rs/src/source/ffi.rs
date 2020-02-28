@@ -159,3 +159,8 @@ pub unsafe extern "C" fn transition_stop<D, F: TransitionStopSource<D>>(
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::transition_stop(&mut wrapper.data);
 }
+
+pub unsafe extern "C" fn video_tick<D, F: VideoTickSource<D>>(data: *mut ::std::os::raw::c_void, seconds: f32) {
+    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
+    F::video_tick(&mut wrapper.data, seconds);
+}

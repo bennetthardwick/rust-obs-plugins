@@ -8,9 +8,9 @@ use obs_sys::{
     gs_color_format_GS_R8, gs_color_format_GS_R8G8, gs_color_format_GS_RG16F,
     gs_color_format_GS_RG32F, gs_color_format_GS_RGBA, gs_color_format_GS_RGBA16,
     gs_color_format_GS_RGBA16F, gs_color_format_GS_RGBA32F, gs_color_format_GS_UNKNOWN,
-    gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_t, gs_eparam_t,
-    gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC, gs_sample_filter_GS_FILTER_LINEAR,
-    gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_set_vec2,
+    gs_effect_t, gs_eparam_t, gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC,
+    gs_sample_filter_GS_FILTER_LINEAR, gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_MAG_LINEAR_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_MAG_POINT_MIP_LINEAR,
@@ -18,7 +18,7 @@ use obs_sys::{
     gs_sample_filter_GS_FILTER_MIN_POINT_MAG_MIP_LINEAR, gs_sample_filter_GS_FILTER_POINT,
     gs_sampler_info, gs_samplerstate_create, gs_samplerstate_destroy, gs_samplerstate_t,
     obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
-    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
+    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
 };
 
 use super::ObsString;
@@ -75,6 +75,12 @@ pub struct GraphicsEffectParam {
 impl GraphicsEffectParam {
     pub unsafe fn from_raw(raw: *mut gs_eparam_t) -> Self {
         Self { raw }
+    }
+
+    pub fn set_vec2(&mut self, _context: &GraphicsEffectContext, value: &Vec2) {
+        unsafe {
+            gs_effect_set_vec2(self.raw, &value.raw);
+        }
     }
 }
 
@@ -262,5 +268,47 @@ impl GraphicsAllowDirectRendering {
                 obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING
             }
         }
+    }
+}
+
+pub struct Vec2 {
+    raw: vec2,
+}
+
+impl Vec2 {
+    pub fn new(x: f32, y: f32) -> Vec2 {
+        let mut v = Vec2 {
+            raw: vec2::default(),
+        };
+        v.set(x, y);
+        v
+    }
+
+    pub fn x(&self) -> f32 {
+        unsafe { self.raw.__bindgen_anon_1.__bindgen_anon_1.x }
+    }
+
+    pub fn y(&self) -> f32 {
+        unsafe { self.raw.__bindgen_anon_1.__bindgen_anon_1.y }
+    }
+
+    #[inline]
+    pub fn set(&mut self, x: f32, y: f32) {
+        self.raw.__bindgen_anon_1.__bindgen_anon_1.x = x;
+        self.raw.__bindgen_anon_1.__bindgen_anon_1.y = y;
+    }
+
+    pub fn as_ptr(&mut self) -> *mut vec2 {
+        &mut self.raw
+    }
+}
+
+impl Default for Vec2 {
+    fn default() -> Self {
+        let mut v = Vec2 {
+            raw: vec2::default(),
+        };
+        v.set(0., 0.);
+        v
     }
 }

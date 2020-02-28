@@ -6,6 +6,9 @@ edition = "2018"
 
 [dependencies]
 obs-rs = { path = "../obs-rs", version = "0.1.0" }
+crossbeam-channel = "0.4.2"
+xcb = "0.9.0"
+xcb-util = { version = "0.3.0", features = [ "ewmh", "icccm" ] }
 
 [lib]
 name = "scrollfocus"

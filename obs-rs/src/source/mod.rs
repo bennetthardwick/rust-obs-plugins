@@ -6,11 +6,12 @@ pub mod traits;
 use traits::*;
 
 use obs_sys::{
-    obs_data_get_double, obs_data_t, obs_filter_get_target, obs_source_info,
-    obs_source_process_filter_begin, obs_source_process_filter_end, obs_source_skip_video_filter,
-    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
-    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
-    obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+    obs_data_get_double, obs_data_t, obs_filter_get_target, obs_source_get_base_height,
+    obs_source_get_base_width, obs_source_info, obs_source_process_filter_begin,
+    obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
+    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
+    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+    obs_source_update,
 };
 
 use super::graphics::{
@@ -19,6 +20,7 @@ use super::graphics::{
 
 use crate::ObsString;
 use context::VideoRenderContext;
+use properties::SettingsContext;
 use std::ffi::c_void;
 use std::marker::PhantomData;
 use std::os::raw::c_char;
@@ -55,6 +57,14 @@ impl SourceContext {
         }
     }
 
+    pub fn get_base_width(&self) -> u32 {
+        unsafe { obs_source_get_base_width(self.source) }
+    }
+
+    pub fn get_base_height(&self) -> u32 {
+        unsafe { obs_source_get_base_height(self.source) }
+    }
+
     pub fn skip_video_filter(&mut self) {
         unsafe {
             obs_source_skip_video_filter(self.source);
@@ -67,8 +77,8 @@ impl SourceContext {
         effect: &mut GraphicsEffect,
         cx: u32,
         cy: u32,
-        format: &GraphicsColorFormat,
-        direct: &GraphicsAllowDirectRendering,
+        format: GraphicsColorFormat,
+        direct: GraphicsAllowDirectRendering,
         func: F,
     ) {
         unsafe {
@@ -80,7 +90,7 @@ impl SourceContext {
         }
     }
 
-    pub fn update_source_settings(settings: &SettingsContext) {
+    pub fn update_source_settings(&mut self, settings: &SettingsContext) {
         unsafe {
             obs_source_update(self.source, settings.as_raw());
         }

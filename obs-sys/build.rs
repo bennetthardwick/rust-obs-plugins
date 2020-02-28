@@ -15,6 +15,7 @@ fn main() {
         // bindings for.
         .header("wrapper.h")
         .blacklist_type("_bindgen_ty_2")
+        .derive_default(true)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))

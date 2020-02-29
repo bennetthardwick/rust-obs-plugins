@@ -39,13 +39,18 @@ struct Data {
     current: Vec2,
     target: Vec2,
 
-    zoom: f64,
+    current_zoom: f64,
+    target_zoom: f64,
+
+    screen_width: u32,
+    screen_height: u32,
+    screen_x: u32,
+    screen_y: u32,
 }
 
 impl Drop for Data {
     fn drop(&mut self) {
         self.send.send(FilterMessage::CloseConnection).unwrap();
-        self.thread.take().unwrap().join().unwrap();
     }
 }
 
@@ -77,6 +82,34 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
             2.,
             0.001,
         );
+        properties.add_int(
+            obs_string!("offset_x"),
+            obs_string!("Offset relative to top left screen - x"),
+            0,
+            3840 * 3,
+            1,
+        );
+        properties.add_int(
+            obs_string!("offset_y"),
+            obs_string!("Offset relative to top left screen - y"),
+            0,
+            3840 * 3,
+            1,
+        );
+        properties.add_int(
+            obs_string!("screen_width"),
+            obs_string!("Screen width"),
+            0,
+            3840 * 3,
+            1,
+        );
+        properties.add_int(
+            obs_string!("screen_height"),
+            obs_string!("Screen height"),
+            0,
+            3840 * 3,
+            1,
+        );
     }
 }
 
@@ -86,13 +119,36 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
             for message in data.receive.try_iter() {
                 match message {
                     ServerMessage::Snapshot(snapshot) => {
-                        let x = (snapshot.x + (snapshot.width / 2.)) / snapshot.root_width;
-                        let y = (snapshot.y + (snapshot.height / 2.)) / snapshot.root_height;
+                        let mut x = ((snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
+                            / (data.screen_width as f32))
+                            .max(0.25)
+                            .min(0.75)
+                            - 0.25;
+                        let mut y = ((snapshot.y + (snapshot.height / 2.)
+                            - (data.screen_y as f32))
+                            / (data.screen_height as f32))
+                            .max(0.25)
+                            .min(0.75)
+                            - 0.25;
 
-                        data.target.set(x, y);
+                        println!("X {}, Y {}", x, y);
+
+                        if x < 0. || x > 1. || y > 1. || y < 0. {
+                            x = 0.;
+                            y = 0.;
+                            data.target_zoom = 0.;
+                        }
+
+                        data.target
+                            .set(x * data.current_zoom as f32, y * data.current_zoom as f32);
                     }
                 }
             }
+
+            data.current.set(
+                data.current.x() + ((data.target.x() - data.current.x()) / 0.15) * seconds,
+                data.current.y() + ((data.target.y() - data.current.y()) / 0.15) * seconds,
+            )
         }
     }
 }
@@ -109,9 +165,9 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
             let param_add = &mut data.add_val;
             let param_mul = &mut data.mul_val;
 
-            let target = &mut data.target;
+            let current = &mut data.current;
 
-            let zoom = data.zoom;
+            let zoom = data.current_zoom;
 
             let mut cx: u32 = 0;
             let mut cy: u32 = 0;
@@ -131,10 +187,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
                 |context, effect| {
                     let amount = zoom;
 
-                    param_add.set_vec2(
-                        context,
-                        &Vec2::new(target.x() - 0.5, target.y() - 0.5),
-                    );
+                    param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
                     param_mul.set_vec2(context, &Vec2::new(amount as f32, amount as f32));
                 },
             );
@@ -151,11 +204,19 @@ impl CreatableSource<Data> for ScrollFocusFilter {
             if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
                 if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
                     if let Some(image) = effect.get_effect_param_by_name(obs_string!("image")) {
-                        let zoom = if let Some(zoom) = settings.get_float(obs_string!("zoom")) {
-                            zoom
-                        } else {
-                            0.
-                        };
+                        let zoom = settings.get_float(obs_string!("zoom")).unwrap_or(0.);
+
+                        let screen_width = settings
+                            .get_int(obs_string!("screen_width"))
+                            .unwrap_or(1920) as u32;
+                        let screen_height = settings
+                            .get_int(obs_string!("screen_height"))
+                            .unwrap_or(1080) as u32;
+
+                        let screen_x =
+                            settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
+                        let screen_y =
+                            settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
 
                         let (send_filter, receive_filter) = unbounded::<FilterMessage>();
                         let (send_server, receive_server) = unbounded::<ServerMessage>();
@@ -171,7 +232,8 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                                 for msg in receive_filter.try_iter() {
                                     match msg {
                                         FilterMessage::CloseConnection => {
-                                            return;
+                                            println!("Got close message");
+                                            break;
                                         }
                                     }
                                 }
@@ -186,13 +248,21 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             add_val,
                             mul_val,
                             image,
-                            zoom,
+
+                            current_zoom: zoom,
+                            target_zoom: zoom,
+
                             thread: Some(handle),
                             send: send_filter,
                             receive: receive_server,
 
                             current: Vec2::new(0.5, 0.5),
                             target: Vec2::new(0.5, 0.5),
+
+                            screen_height,
+                            screen_width,
+                            screen_x,
+                            screen_y,
                         };
                     }
                 }
@@ -209,7 +279,22 @@ impl UpdateSource<Data> for ScrollFocusFilter {
     fn update(data: &mut Option<Data>, settings: &SettingsContext, context: &mut ActiveContext) {
         if let Some(data) = data {
             if let Some(zoom) = settings.get_float(obs_string!("zoom")) {
-                data.zoom = zoom;
+                data.target_zoom = zoom;
+                data.current_zoom = zoom;
+            }
+
+            if let Some(screen_width) = settings.get_int(obs_string!("screen_width")) {
+                data.screen_width = screen_width as u32;
+            }
+
+            if let Some(screen_height) = settings.get_int(obs_string!("screen_height")) {
+                data.screen_height = screen_height as u32;
+            }
+            if let Some(screen_x) = settings.get_int(obs_string!("screen_x")) {
+                data.screen_x = screen_x as u32;
+            }
+            if let Some(screen_y) = settings.get_int(obs_string!("screen_y")) {
+                data.screen_y = screen_y as u32;
             }
         }
     }

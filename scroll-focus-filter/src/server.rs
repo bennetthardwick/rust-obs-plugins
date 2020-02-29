@@ -1,8 +1,5 @@
 use std::rc::Rc;
-use xcb_util::{
-    ewmh::{get_active_window, get_wm_name, Connection},
-    icccm::get_wm_class,
-};
+use xcb_util::ewmh::{get_active_window, Connection};
 
 use xcb::{get_geometry, translate_coordinates};
 
@@ -31,9 +28,8 @@ impl ActiveWindow {
         screen: i32,
         root_width: f32,
         root_height: f32,
-    ) -> ActiveWindow {
-        let window =
-            Self::get_active_window(&connection, screen).expect("Could not get active window");
+    ) -> Result<ActiveWindow> {
+        let window = Self::get_active_window(&connection, screen)?;
 
         let active_window = Self {
             window,
@@ -42,39 +38,47 @@ impl ActiveWindow {
             root_width,
             root_height,
         };
-        active_window.start_listening();
 
-        active_window
+        active_window.start_listening()?;
+
+        Ok(active_window)
     }
 
-    fn get_active_window(connection: &Connection, screen: i32) -> Option<xcb::Window> {
+    fn get_active_window(connection: &Connection, screen: i32) -> Result<xcb::Window> {
         let active = get_active_window(&connection, screen);
-        active.get_reply().ok()
+        Ok(active.get_reply()?)
     }
 
-    fn stop_listening(&self) {
+    fn stop_listening(&self) -> Result<()> {
         let mask = [(xcb::CW_EVENT_MASK, xcb::EVENT_MASK_NO_EVENT)];
         xcb::change_window_attributes_checked(&self.connection, self.window, &mask)
-            .request_check()
-            .unwrap();
+            .request_check()?;
+        Ok(())
     }
 
-    fn start_listening(&self) {
-        let mask = [(xcb::CW_EVENT_MASK, xcb::EVENT_MASK_PROPERTY_CHANGE)];
+    fn start_listening(&self) -> Result<()> {
+        let mask = [(
+            xcb::CW_EVENT_MASK,
+            xcb::EVENT_MASK_PROPERTY_CHANGE
+                | xcb::EVENT_MASK_FOCUS_CHANGE
+                | xcb::EVENT_MASK_STRUCTURE_NOTIFY
+                | xcb::EVENT_MASK_LEAVE_WINDOW,
+        )];
         xcb::change_window_attributes_checked(&self.connection, self.window, &mask)
-            .request_check()
-            .unwrap();
+            .request_check()?;
+        Ok(())
     }
 
-    fn update(&mut self) {
-        let window = Self::get_active_window(&self.connection, self.screen)
-            .expect("Could not get active window");
+    fn update(&mut self) -> Result<()> {
+        let window = Self::get_active_window(&self.connection, self.screen)?;
 
         if self.window != window {
-            self.stop_listening();
+            self.stop_listening().unwrap_or(());
             self.window = window;
-            self.start_listening();
+            self.start_listening()?;
         }
+
+        Ok(())
     }
 
     fn snapshot(&self) -> Result<WindowSnapshot> {
@@ -140,19 +144,20 @@ impl Server {
                 default_screen,
                 screen.width_in_pixels() as f32,
                 screen.height_in_pixels() as f32,
-            ),
+            )?,
             connection,
         })
     }
 
     pub fn wait_for_event(&mut self) -> Option<WindowSnapshot> {
-        let event = self.connection.wait_for_event().unwrap();
-        match event.response_type() {
-            xcb::PROPERTY_NOTIFY => {
-                self.active.update();
+        if let Some(_) = self.connection.wait_for_event() {
+            if (self.active.update().is_err()) {
+                None
+            } else {
                 self.active.snapshot().ok()
             }
-            _ => None,
+        } else {
+            None
         }
     }
 }

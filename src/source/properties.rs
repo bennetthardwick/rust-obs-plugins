@@ -1,6 +1,7 @@
 use super::ObsString;
 use obs_sys::{
     obs_data_get_double, obs_data_get_int, obs_data_get_json, obs_data_t,
+    obs_properties_add_float,
     obs_properties_add_float_slider, obs_properties_add_int, obs_properties_t,
 };
 use std::ffi::CStr;
@@ -55,6 +56,31 @@ impl<'a> Properties<'a> {
                 property_type: PropertyType::Float,
             });
             obs_properties_add_float_slider(
+                self.pointer,
+                name.as_ptr(),
+                description.as_ptr(),
+                min,
+                max,
+                step,
+            );
+        }
+        self
+    }
+
+    pub fn add_float(
+        &mut self,
+        name: ObsString,
+        description: ObsString,
+        min: f64,
+        max: f64,
+        step: f64,
+    ) -> &mut Self {
+        unsafe {
+            self.properties.push(Property {
+                name: name.as_str(),
+                property_type: PropertyType::Float,
+            });
+            obs_properties_add_float(
                 self.pointer,
                 name.as_ptr(),
                 description.as_ptr(),

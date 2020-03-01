@@ -78,7 +78,7 @@ impl GetNameSource for ScrollFocusFilter {
 }
 
 impl GetPropertiesSource<Data> for ScrollFocusFilter {
-    fn get_properties(data: &mut Option<Data>, properties: &mut Properties) {
+    fn get_properties(_data: &mut Option<Data>, properties: &mut Properties) {
         properties.add_float_slider(
             obs_string!("zoom"),
             obs_string!("Amount to zoom in window"),
@@ -128,11 +128,11 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
             for message in data.receive.try_iter() {
                 match message {
                     ServerMessage::Snapshot(snapshot) => {
-                        let mut x = ((snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
-                            / (data.screen_width as f32));
-                        let mut y = ((snapshot.y + (snapshot.height / 2.)
+                        let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
+                            / (data.screen_width as f32);
+                        let y = (snapshot.y + (snapshot.height / 2.)
                             - (data.screen_y as f32))
-                            / (data.screen_height as f32));
+                            / (data.screen_height as f32);
 
                         let target_x = (x - (0.5 * data.current_zoom as f32))
                             .min(1. - data.current_zoom as f32)
@@ -142,7 +142,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                             .min(1. - data.current_zoom as f32)
                             .max(0.);
 
-                        if (target_y != data.target.y() || target_x != data.target.x()) {
+                        if target_y != data.target.y() || target_x != data.target.x() {
                             data.progress = 0.;
 
                             data.from_zoom = data.current_zoom;
@@ -175,7 +175,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
 impl VideoRenderSource<Data> for ScrollFocusFilter {
     fn video_render(
         data: &mut Option<Data>,
-        context: &mut ActiveContext,
+        _context: &mut ActiveContext,
         render: &mut VideoRenderContext,
     ) {
         if let Some(data) = data {
@@ -203,7 +203,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
                 cy,
                 GraphicsColorFormat::RGBA,
                 GraphicsAllowDirectRendering::NoDirectRendering,
-                |context, effect| {
+                |context, _effect| {
                     param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
                     param_mul.set_vec2(context, &Vec2::new(zoom, zoom));
                 },
@@ -299,7 +299,7 @@ impl UpdateSource<Data> for ScrollFocusFilter {
     fn update(
         data: &mut Option<Data>,
         settings: &mut SettingsContext,
-        context: &mut ActiveContext,
+        _context: &mut ActiveContext,
     ) {
         if let Some(data) = data {
             if let Some(zoom) = settings.get_float(obs_string!("zoom")) {

@@ -84,7 +84,7 @@ impl ActiveWindow {
     fn snapshot(&self) -> Result<WindowSnapshot> {
         let geom = get_geometry(&self.connection, self.window).get_reply()?;
 
-        let root_geom = get_geometry(&self.connection, geom.root()).get_reply()?;
+        let _root_geom = get_geometry(&self.connection, geom.root()).get_reply()?;
 
         let diff = translate_coordinates(
             &self.connection,
@@ -149,7 +149,7 @@ impl Server {
 
     pub fn wait_for_event(&mut self) -> Option<WindowSnapshot> {
         if let Some(_) = self.connection.wait_for_event() {
-            if (self.active.update().is_err()) {
+            if self.active.update().is_err() {
                 None
             } else {
                 self.active.snapshot().ok()

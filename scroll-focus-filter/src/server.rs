@@ -110,7 +110,7 @@ impl ActiveWindow {
 
 impl Drop for ActiveWindow {
     fn drop(&mut self) {
-        self.stop_listening();
+        self.stop_listening().unwrap_or(());
     }
 }
 

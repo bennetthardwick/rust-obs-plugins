@@ -4,18 +4,17 @@ use server::{Server, WindowSnapshot};
 
 use obs_rs::{
     graphics::*,
-    info, obs_register_module, obs_string,
+    obs_register_module, obs_string,
     source::{
         context::VideoRenderContext,
         properties::{Properties, SettingsContext},
         traits::*,
         SourceContext, SourceType,
     },
-    warning, ActiveContext, LoadContext, Module, ModuleContext, ObsString,
+    ActiveContext, LoadContext, Module, ModuleContext, ObsString,
 };
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
-use std::thread::JoinHandle;
 
 enum FilterMessage {
     CloseConnection,
@@ -30,9 +29,7 @@ struct Data {
     effect: GraphicsEffect,
     mul_val: GraphicsEffectParam,
     add_val: GraphicsEffectParam,
-    image: GraphicsEffectParam,
 
-    thread: Option<JoinHandle<()>>,
     send: Sender<FilterMessage>,
     receive: Receiver<ServerMessage>,
 
@@ -220,7 +217,6 @@ impl CreatableSource<Data> for ScrollFocusFilter {
         ) {
             if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
                 if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
-                    if let Some(image) = effect.get_effect_param_by_name(obs_string!("image")) {
                         let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
 
                         let screen_width = settings
@@ -238,7 +234,7 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                         let (send_filter, receive_filter) = unbounded::<FilterMessage>();
                         let (send_server, receive_server) = unbounded::<ServerMessage>();
 
-                        let handle = std::thread::spawn(move || {
+                        std::thread::spawn(move || {
                             let mut server = Server::new().unwrap();
 
                             loop {
@@ -263,13 +259,11 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             effect,
                             add_val,
                             mul_val,
-                            image,
 
                             current_zoom: zoom,
                             from_zoom: zoom,
                             target_zoom: zoom,
 
-                            thread: Some(handle),
                             send: send_filter,
                             receive: receive_server,
 
@@ -284,7 +278,6 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             screen_x,
                             screen_y,
                         };
-                    }
                 }
             }
 

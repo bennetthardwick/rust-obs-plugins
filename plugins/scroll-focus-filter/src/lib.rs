@@ -2,7 +2,7 @@ mod server;
 
 use server::{Server, WindowSnapshot};
 
-use obs_rs::{
+use obs_wrapper::{
     graphics::*,
     obs_register_module, obs_string,
     source::{

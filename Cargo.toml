@@ -1,5 +1,5 @@
 [package]
-name = "obs-focus-window"
+name = "obs-wrapper"
 version = "0.1.0"
 authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
 edition = "2018"
@@ -9,7 +9,10 @@ edition = "2018"
 [workspace]
 
 members = [
-  "obs-rs",
   "obs-sys",
-  "scroll-focus-filter"
+  "plugins/scroll-focus-filter"
 ]
+
+[dependencies]
+obs-sys = { path = "./obs-sys", version = "0.1.0" }
+serde_json = "1.0.48"

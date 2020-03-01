@@ -82,8 +82,8 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
         properties.add_float_slider(
             obs_string!("zoom"),
             obs_string!("Amount to zoom in window"),
-            0.,
-            2.,
+            1.,
+            5.,
             0.001,
         );
         properties.add_int(
@@ -117,6 +117,11 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
     }
 }
 
+fn smooth_step(x: f32) -> f32 {
+    let t = ((x / 1.).max(0.)).min(1.);
+    t * t * (3. - 2. * t)
+}
+
 impl VideoTickSource<Data> for ScrollFocusFilter {
     fn video_tick(data: &mut Option<Data>, seconds: f32) {
         if let Some(data) = data {
@@ -129,18 +134,23 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                             - (data.screen_y as f32))
                             / (data.screen_height as f32));
 
-                        data.progress = 0.;
+                        let target_x = (x - (0.5 * data.current_zoom as f32))
+                            .min(1. - data.current_zoom as f32)
+                            .max(0.);
 
-                        data.from_zoom = data.current_zoom;
+                        let target_y = (y - (0.5 * data.current_zoom as f32))
+                            .min(1. - data.current_zoom as f32)
+                            .max(0.);
 
-                        data.from.set(data.current.x(), data.current.y());
+                        if (target_y != data.target.y() || target_x != data.target.x()) {
+                            data.progress = 0.;
 
-                        println!("X {} Y {}", x, y);
+                            data.from_zoom = data.current_zoom;
 
-                        data.target.set(
-                            (x - (0.5 * data.current_zoom as f32)).min(1. - data.current_zoom as f32).max(0.),
-                            (y - (0.5 * data.current_zoom as f32)).min(1. - data.current_zoom as f32).max(0.),
-                        );
+                            data.from.set(data.current.x(), data.current.y());
+
+                            data.target.set(target_x, target_y);
+                        }
                     }
                 }
             }
@@ -149,7 +159,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
 
             data.progress = (data.progress + seconds as f64 / animation_time_seconds).min(1.);
 
-            let adjusted_progress = data.progress as f32;
+            let adjusted_progress = smooth_step(data.progress as f32);
 
             data.current.set(
                 data.from.x() + (data.target.x() - data.from.x()) * adjusted_progress,
@@ -211,7 +221,7 @@ impl CreatableSource<Data> for ScrollFocusFilter {
             if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
                 if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
                     if let Some(image) = effect.get_effect_param_by_name(obs_string!("image")) {
-                        let zoom = settings.get_float(obs_string!("zoom")).unwrap_or(0.);
+                        let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
 
                         let screen_width = settings
                             .get_int(obs_string!("screen_width"))
@@ -263,9 +273,9 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             send: send_filter,
                             receive: receive_server,
 
-                            current: Vec2::new(0.5, 0.5),
-                            from: Vec2::new(0.5, 0.5),
-                            target: Vec2::new(0.5, 0.5),
+                            current: Vec2::new(0., 0.),
+                            from: Vec2::new(0., 0.),
+                            target: Vec2::new(0., 0.),
 
                             progress: 1.,
 
@@ -294,7 +304,7 @@ impl UpdateSource<Data> for ScrollFocusFilter {
         if let Some(data) = data {
             if let Some(zoom) = settings.get_float(obs_string!("zoom")) {
                 data.from_zoom = data.current_zoom;
-                data.target_zoom = zoom;
+                data.target_zoom = 1. / zoom;
             }
 
             if let Some(screen_width) = settings.get_int(obs_string!("screen_width")) {

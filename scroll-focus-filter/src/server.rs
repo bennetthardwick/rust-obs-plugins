@@ -104,8 +104,6 @@ impl ActiveWindow {
             root_height: self.root_height,
         };
 
-        println!("Snap {:?}", snap);
-
         Ok(snap)
     }
 }

@@ -37,10 +37,14 @@ struct Data {
     receive: Receiver<ServerMessage>,
 
     current: Vec2,
+    from: Vec2,
     target: Vec2,
 
     current_zoom: f64,
+    from_zoom: f64,
     target_zoom: f64,
+
+    progress: f64,
 
     screen_width: u32,
     screen_height: u32,
@@ -120,35 +124,40 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                 match message {
                     ServerMessage::Snapshot(snapshot) => {
                         let mut x = ((snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
-                            / (data.screen_width as f32))
-                            .max(0.25)
-                            .min(0.75)
-                            - 0.25;
+                            / (data.screen_width as f32));
                         let mut y = ((snapshot.y + (snapshot.height / 2.)
                             - (data.screen_y as f32))
-                            / (data.screen_height as f32))
-                            .max(0.25)
-                            .min(0.75)
-                            - 0.25;
+                            / (data.screen_height as f32));
 
-                        println!("X {}, Y {}", x, y);
+                        data.progress = 0.;
 
-                        if x < 0. || x > 1. || y > 1. || y < 0. {
-                            x = 0.;
-                            y = 0.;
-                            data.target_zoom = 0.;
-                        }
+                        data.from_zoom = data.current_zoom;
 
-                        data.target
-                            .set(x * data.current_zoom as f32, y * data.current_zoom as f32);
+                        data.from.set(data.current.x(), data.current.y());
+
+                        println!("X {} Y {}", x, y);
+
+                        data.target.set(
+                            (x - (0.5 * data.current_zoom as f32)).min(1. - data.current_zoom as f32).max(0.),
+                            (y - (0.5 * data.current_zoom as f32)).min(1. - data.current_zoom as f32).max(0.),
+                        );
                     }
                 }
             }
 
+            let animation_time_seconds = 0.5;
+
+            data.progress = (data.progress + seconds as f64 / animation_time_seconds).min(1.);
+
+            let adjusted_progress = data.progress as f32;
+
             data.current.set(
-                data.current.x() + ((data.target.x() - data.current.x()) / 0.15) * seconds,
-                data.current.y() + ((data.target.y() - data.current.y()) / 0.15) * seconds,
-            )
+                data.from.x() + (data.target.x() - data.from.x()) * adjusted_progress,
+                data.from.y() + (data.target.y() - data.from.y()) * adjusted_progress,
+            );
+
+            data.current_zoom =
+                data.from_zoom + (data.target_zoom - data.from_zoom) * adjusted_progress as f64;
         }
     }
 }
@@ -167,7 +176,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 
             let current = &mut data.current;
 
-            let zoom = data.current_zoom;
+            let zoom = data.current_zoom as f32;
 
             let mut cx: u32 = 0;
             let mut cy: u32 = 0;
@@ -185,10 +194,8 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
                 GraphicsColorFormat::RGBA,
                 GraphicsAllowDirectRendering::NoDirectRendering,
                 |context, effect| {
-                    let amount = zoom;
-
                     param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
-                    param_mul.set_vec2(context, &Vec2::new(amount as f32, amount as f32));
+                    param_mul.set_vec2(context, &Vec2::new(zoom, zoom));
                 },
             );
         }
@@ -196,7 +203,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 }
 
 impl CreatableSource<Data> for ScrollFocusFilter {
-    fn create(settings: &SettingsContext, mut source: SourceContext) -> Data {
+    fn create(settings: &mut SettingsContext, mut source: SourceContext) -> Data {
         if let Some(mut effect) = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),
@@ -232,7 +239,6 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                                 for msg in receive_filter.try_iter() {
                                     match msg {
                                         FilterMessage::CloseConnection => {
-                                            println!("Got close message");
                                             break;
                                         }
                                     }
@@ -250,6 +256,7 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             image,
 
                             current_zoom: zoom,
+                            from_zoom: zoom,
                             target_zoom: zoom,
 
                             thread: Some(handle),
@@ -257,7 +264,10 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             receive: receive_server,
 
                             current: Vec2::new(0.5, 0.5),
+                            from: Vec2::new(0.5, 0.5),
                             target: Vec2::new(0.5, 0.5),
+
+                            progress: 1.,
 
                             screen_height,
                             screen_width,
@@ -276,11 +286,15 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 }
 
 impl UpdateSource<Data> for ScrollFocusFilter {
-    fn update(data: &mut Option<Data>, settings: &SettingsContext, context: &mut ActiveContext) {
+    fn update(
+        data: &mut Option<Data>,
+        settings: &mut SettingsContext,
+        context: &mut ActiveContext,
+    ) {
         if let Some(data) = data {
             if let Some(zoom) = settings.get_float(obs_string!("zoom")) {
+                data.from_zoom = data.current_zoom;
                 data.target_zoom = zoom;
-                data.current_zoom = zoom;
             }
 
             if let Some(screen_width) = settings.get_int(obs_string!("screen_width")) {

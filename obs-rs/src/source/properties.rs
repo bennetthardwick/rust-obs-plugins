@@ -1,9 +1,12 @@
 use super::ObsString;
 use obs_sys::{
-    obs_data_get_double, obs_data_get_int, obs_data_t, obs_properties_add_float_slider,
-    obs_properties_add_int, obs_properties_t,
+    obs_data_get_double, obs_data_get_int, obs_data_get_json, obs_data_t,
+    obs_properties_add_float_slider, obs_properties_add_int, obs_properties_t,
 };
+use std::ffi::CStr;
 use std::os::raw::c_char;
+
+use serde_json::Value;
 
 pub struct ParamBuilder {}
 
@@ -92,6 +95,7 @@ impl<'a> Properties<'a> {
 pub struct SettingsContext<'a> {
     settings: *mut obs_data_t,
     properties: &'a Vec<Property>,
+    init_data: Option<Value>,
 }
 
 impl<'a> SettingsContext<'a> {
@@ -102,6 +106,7 @@ impl<'a> SettingsContext<'a> {
         SettingsContext {
             settings,
             properties,
+            init_data: None,
         }
     }
 
@@ -109,8 +114,30 @@ impl<'a> SettingsContext<'a> {
         self.settings
     }
 
-    pub fn get_float(&self, param: ObsString) -> Option<f64> {
-        self.properties
+    fn get_data(&mut self) -> &Option<Value> {
+        let mut json_data: Option<Value> = None;
+
+        if self.init_data.is_none() {
+            let data = unsafe { CStr::from_ptr(obs_data_get_json(self.settings)) };
+            if let Some(value) = data
+                .to_str()
+                .ok()
+                .and_then(|x| serde_json::from_str(x).ok())
+            {
+                json_data = Some(value);
+            }
+        }
+
+        if json_data.is_some() {
+            self.init_data.replace(json_data.unwrap());
+        }
+
+        &self.init_data
+    }
+
+    pub fn get_float(&mut self, param: ObsString) -> Option<f64> {
+        if (self
+            .properties
             .iter()
             .find(
                 |Property {
@@ -120,11 +147,24 @@ impl<'a> SettingsContext<'a> {
                     property_type == &PropertyType::Float && *name == param.as_str()
                 },
             )
-            .map(|_| unsafe { obs_data_get_double(self.settings, param.as_ptr()) } as f64)
+            .is_some())
+        {
+            Some(unsafe { obs_data_get_double(self.settings, param.as_ptr()) })
+        } else {
+            if let Some(data) = self.get_data() {
+                let param = param.as_str();
+                if let Some(val) = data.get(&param[..param.len() - 1]) {
+                    return val.as_f64();
+                }
+            }
+
+            None
+        }
     }
 
-    pub fn get_int(&self, param: ObsString) -> Option<i32> {
-        self.properties
+    pub fn get_int(&mut self, param: ObsString) -> Option<i32> {
+        if (self
+            .properties
             .iter()
             .find(
                 |Property {
@@ -134,6 +174,20 @@ impl<'a> SettingsContext<'a> {
                     property_type == &PropertyType::Int && *name == param.as_str()
                 },
             )
-            .map(|_| unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
+            .is_some())
+        {
+            Some(unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
+        } else {
+            if let Some(data) = self.get_data() {
+                let param = param.as_str();
+                if let Some(val) = data.get(&param[..param.len() - 1]) {
+                    if let Some(val) = val.as_i64() {
+                        return Some(val as i32);
+                    }
+                }
+            }
+
+            None
+        }
     }
 }

@@ -22,11 +22,11 @@ pub trait GetHeightSource<D> {
 }
 
 pub trait CreatableSource<D> {
-    fn create(settings: &SettingsContext, source: SourceContext) -> D;
+    fn create(settings: &mut SettingsContext, source: SourceContext) -> D;
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &SettingsContext, context: &mut ActiveContext);
+    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut ActiveContext);
 }
 
 pub trait VideoRenderSource<D> {

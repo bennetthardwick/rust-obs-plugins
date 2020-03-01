@@ -63,11 +63,11 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut wrapper = DataWrapper::default();
-    let settings = SettingsContext::from_raw(settings, &mut wrapper.properties);
+    let mut settings = SettingsContext::from_raw(settings, &mut wrapper.properties);
 
     let source = SourceContext { source };
 
-    let data = F::create(&settings, source);
+    let data = F::create(&mut settings, source);
 
     wrapper.data = Some(data);
 
@@ -85,8 +85,8 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
 ) {
     let mut active = ActiveContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let settings = SettingsContext::from_raw(settings, &mut data.properties);
-    F::update(&mut data.data, &settings, &mut active);
+    let mut settings = SettingsContext::from_raw(settings, &mut data.properties);
+    F::update(&mut data.data, &mut settings, &mut active);
 }
 
 pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(

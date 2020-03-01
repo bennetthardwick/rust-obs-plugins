@@ -1,12 +1,9 @@
 use crate::source::{
-    properties::SettingsContext, traits::Sourceable, SourceContext, SourceInfo, SourceInfoBuilder,
-    SourceType,
+    traits::Sourceable, SourceInfo, SourceInfoBuilder,
 };
 use crate::ModuleContext;
 use crate::ObsString;
 use obs_sys::{obs_register_source_s, obs_source_info};
-use std::ffi::c_void;
-use std::ffi::CStr;
 use std::marker::PhantomData;
 
 pub struct LoadContext {

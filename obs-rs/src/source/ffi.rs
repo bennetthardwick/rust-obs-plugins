@@ -3,12 +3,11 @@ use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
 use std::ffi::c_void;
-use std::marker::PhantomData;
 use std::os::raw::c_char;
 
 use obs_sys::{
     gs_effect_t, obs_data_t, obs_properties, obs_properties_create, obs_source_audio_mix,
-    obs_source_enum_proc_t, obs_source_info, obs_source_t, obs_source_type,
+    obs_source_enum_proc_t, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
 };

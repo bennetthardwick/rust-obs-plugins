@@ -114,14 +114,13 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
             3840 * 3,
             1,
         );
-         properties.add_float(
+        properties.add_float(
             obs_string!("animation_time"),
             obs_string!("Animation Time (s)"),
             0.001,
             10.,
             0.001,
         );
-
     }
 }
 
@@ -136,13 +135,16 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
             for message in data.receive.try_iter() {
                 match message {
                     ServerMessage::Snapshot(snapshot) => {
-
-                        let window_zoom = ((snapshot.width / (data.screen_width as f32)).max(snapshot.height / (data.screen_height as f32)) as f64 + 0.01).max(data.internal_zoom);
+                        let window_zoom = ((snapshot.width / (data.screen_width as f32))
+                            .max(snapshot.height / (data.screen_height as f32))
+                            as f64
+                            + 0.01)
+                            .max(data.internal_zoom)
+                            .min(1.);
 
                         let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
                             / (data.screen_width as f32);
-                        let y = (snapshot.y + (snapshot.height / 2.)
-                            - (data.screen_y as f32))
+                        let y = (snapshot.y + (snapshot.height / 2.) - (data.screen_y as f32))
                             / (data.screen_height as f32);
 
                         let target_x = (x - (0.5 * window_zoom as f32))
@@ -153,7 +155,10 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                             .min(1. - window_zoom as f32)
                             .max(0.);
 
-                        if target_y != data.target.y() || target_x != data.target.x() || window_zoom != data.target_zoom {
+                        if target_y != data.target.y()
+                            || target_x != data.target.x()
+                            || window_zoom != data.target_zoom
+                        {
                             data.progress = 0.;
 
                             data.from_zoom = data.current_zoom;
@@ -230,73 +235,72 @@ impl CreatableSource<Data> for ScrollFocusFilter {
         ) {
             if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
                 if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
-                        let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
+                    let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
 
-                        let screen_width = settings
-                            .get_int(obs_string!("screen_width"))
-                            .unwrap_or(1920) as u32;
-                        let screen_height = settings
-                            .get_int(obs_string!("screen_height"))
-                            .unwrap_or(1080) as u32;
+                    let screen_width = settings
+                        .get_int(obs_string!("screen_width"))
+                        .unwrap_or(1920) as u32;
+                    let screen_height = settings
+                        .get_int(obs_string!("screen_height"))
+                        .unwrap_or(1080) as u32;
 
-                        let screen_x =
-                            settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
-                        let screen_y =
-                            settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
+                    let screen_x = settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
+                    let screen_y = settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
 
-                        let animation_time =
-                            settings.get_float(obs_string!("animation_time")).unwrap_or(0.3);
+                    let animation_time = settings
+                        .get_float(obs_string!("animation_time"))
+                        .unwrap_or(0.3);
 
-                        let (send_filter, receive_filter) = unbounded::<FilterMessage>();
-                        let (send_server, receive_server) = unbounded::<ServerMessage>();
+                    let (send_filter, receive_filter) = unbounded::<FilterMessage>();
+                    let (send_server, receive_server) = unbounded::<ServerMessage>();
 
-                        std::thread::spawn(move || {
-                            let mut server = Server::new().unwrap();
+                    std::thread::spawn(move || {
+                        let mut server = Server::new().unwrap();
 
-                            loop {
-                                if let Some(snapshot) = server.wait_for_event() {
-                                    send_server.send(ServerMessage::Snapshot(snapshot)).unwrap();
-                                }
+                        loop {
+                            if let Some(snapshot) = server.wait_for_event() {
+                                send_server.send(ServerMessage::Snapshot(snapshot)).unwrap();
+                            }
 
-                                for msg in receive_filter.try_iter() {
-                                    match msg {
-                                        FilterMessage::CloseConnection => {
-                                            break;
-                                        }
+                            for msg in receive_filter.try_iter() {
+                                match msg {
+                                    FilterMessage::CloseConnection => {
+                                        break;
                                     }
                                 }
                             }
-                        });
+                        }
+                    });
 
-                        source.update_source_settings(settings);
+                    source.update_source_settings(settings);
 
-                        return Data {
-                            source,
-                            effect,
-                            add_val,
-                            mul_val,
+                    return Data {
+                        source,
+                        effect,
+                        add_val,
+                        mul_val,
 
-                            animation_time,
+                        animation_time,
 
-                            current_zoom: zoom,
-                            from_zoom: zoom,
-                            target_zoom: zoom,
-                            internal_zoom: zoom,
+                        current_zoom: zoom,
+                        from_zoom: zoom,
+                        target_zoom: zoom,
+                        internal_zoom: zoom,
 
-                            send: send_filter,
-                            receive: receive_server,
+                        send: send_filter,
+                        receive: receive_server,
 
-                            current: Vec2::new(0., 0.),
-                            from: Vec2::new(0., 0.),
-                            target: Vec2::new(0., 0.),
+                        current: Vec2::new(0., 0.),
+                        from: Vec2::new(0., 0.),
+                        target: Vec2::new(0., 0.),
 
-                            progress: 1.,
+                        progress: 1.,
 
-                            screen_height,
-                            screen_width,
-                            screen_x,
-                            screen_y,
-                        };
+                        screen_height,
+                        screen_width,
+                        screen_x,
+                        screen_y,
+                    };
                 }
             }
 

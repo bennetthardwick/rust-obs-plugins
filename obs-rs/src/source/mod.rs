@@ -6,7 +6,7 @@ pub mod traits;
 use traits::*;
 
 use obs_sys::{
-    obs_data_get_double, obs_data_t, obs_filter_get_target, obs_source_get_base_height,
+    obs_filter_get_target, obs_source_get_base_height,
     obs_source_get_base_width, obs_source_info, obs_source_process_filter_begin,
     obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
@@ -21,9 +21,9 @@ use super::graphics::{
 use crate::ObsString;
 use context::VideoRenderContext;
 use properties::SettingsContext;
-use std::ffi::c_void;
+
 use std::marker::PhantomData;
-use std::os::raw::c_char;
+
 
 #[derive(Clone, Copy)]
 pub enum SourceType {
@@ -86,7 +86,7 @@ impl SourceContext {
         func: F,
     ) {
         unsafe {
-            if (obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw())) {
+            if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
                 let mut context = GraphicsEffectContext::new();
                 func(&mut context, effect);
                 obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);

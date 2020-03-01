@@ -46,7 +46,7 @@ impl Drop for LoadContext {
 pub trait Module {
     fn new(ctx: ModuleContext) -> Self;
     fn get_ctx(&self) -> &ModuleContext;
-    fn load(&mut self, load_context: &mut LoadContext) -> bool {
+    fn load(&mut self, _load_context: &mut LoadContext) -> bool {
         true
     }
     fn unload(&mut self) {}

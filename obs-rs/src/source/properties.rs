@@ -4,7 +4,7 @@ use obs_sys::{
     obs_properties_add_float_slider, obs_properties_add_int, obs_properties_t,
 };
 use std::ffi::CStr;
-use std::os::raw::c_char;
+
 
 use serde_json::Value;
 
@@ -136,7 +136,7 @@ impl<'a> SettingsContext<'a> {
     }
 
     pub fn get_float(&mut self, param: ObsString) -> Option<f64> {
-        if (self
+        if self
             .properties
             .iter()
             .find(
@@ -147,7 +147,7 @@ impl<'a> SettingsContext<'a> {
                     property_type == &PropertyType::Float && *name == param.as_str()
                 },
             )
-            .is_some())
+            .is_some()
         {
             Some(unsafe { obs_data_get_double(self.settings, param.as_ptr()) })
         } else {
@@ -163,7 +163,7 @@ impl<'a> SettingsContext<'a> {
     }
 
     pub fn get_int(&mut self, param: ObsString) -> Option<i32> {
-        if (self
+        if self
             .properties
             .iter()
             .find(
@@ -174,7 +174,7 @@ impl<'a> SettingsContext<'a> {
                     property_type == &PropertyType::Int && *name == param.as_str()
                 },
             )
-            .is_some())
+            .is_some()
         {
             Some(unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
         } else {

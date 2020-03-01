@@ -7,9 +7,7 @@ use std::os::raw::c_char;
 
 use obs_sys::{
     gs_effect_t, obs_data_t, obs_properties, obs_properties_create, obs_source_audio_mix,
-    obs_source_enum_proc_t, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION, size_t,
+    obs_source_enum_proc_t, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -35,7 +33,7 @@ impl<D> From<D> for DataWrapper<D> {
     }
 }
 
-pub unsafe extern "C" fn get_name<F: GetNameSource>(type_data: *mut c_void) -> *const c_char {
+pub unsafe extern "C" fn get_name<F: GetNameSource>(_type_data: *mut c_void) -> *const c_char {
     F::get_name().as_ptr()
 }
 

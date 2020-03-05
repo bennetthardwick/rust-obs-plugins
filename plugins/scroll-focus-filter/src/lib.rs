@@ -157,9 +157,9 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                             .min(1. - window_zoom as f32)
                             .max(0.);
 
-                        if target_y != data.target.y()
-                            || target_x != data.target.x()
-                            || window_zoom != data.target_zoom
+                        if (target_y - data.target.y()).abs() > 0.001
+                            || (target_x - data.target.x()).abs() > 0.001
+                            || (window_zoom - data.target_zoom).abs() > 0.001
                         {
                             data.progress = 0.;
 

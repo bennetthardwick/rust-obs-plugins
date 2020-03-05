@@ -147,7 +147,7 @@ impl Server {
     }
 
     pub fn wait_for_event(&mut self) -> Option<WindowSnapshot> {
-        if let Some(_) = self.connection.wait_for_event() {
+        if self.connection.wait_for_event().is_some() {
             if self.active.update().is_err() {
                 None
             } else {

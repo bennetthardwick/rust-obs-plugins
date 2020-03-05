@@ -9,7 +9,7 @@ pub trait Sourceable {
     fn get_type() -> SourceType;
 }
 
-pub trait GetNameSource {
+pub trait GetNameSource<D> {
     fn get_name() -> ObsString;
 }
 

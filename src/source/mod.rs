@@ -1,3 +1,7 @@
+#![allow(non_upper_case_globals)]
+
+use paste::item;
+
 mod ffi;
 
 pub mod context;
@@ -9,11 +13,12 @@ pub use properties::*;
 pub use traits::*;
 
 use obs_sys::{
-    obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width, obs_source_info,
-    obs_source_process_filter_begin, obs_source_process_filter_end, obs_source_skip_video_filter,
-    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
-    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
-    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, obs_source_update,
+    obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width,
+    obs_source_get_type, obs_source_info, obs_source_process_filter_begin,
+    obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
+    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
+    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
+    obs_source_update,
 };
 
 use super::{
@@ -25,6 +30,9 @@ use super::{
 
 use std::marker::PhantomData;
 
+/// OBS source type
+///
+/// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_get_type)
 #[derive(Clone, Copy)]
 pub enum SourceType {
     INPUT,
@@ -34,6 +42,16 @@ pub enum SourceType {
 }
 
 impl SourceType {
+    pub(crate) fn from_native(source_type: obs_source_type) -> Option<SourceType> {
+        match source_type {
+            obs_source_type_OBS_SOURCE_TYPE_INPUT => Some(SourceType::INPUT),
+            obs_source_type_OBS_SOURCE_TYPE_SCENE => Some(SourceType::SCENE),
+            obs_source_type_OBS_SOURCE_TYPE_FILTER => Some(SourceType::FILTER),
+            obs_source_type_OBS_SOURCE_TYPE_TRANSITION => Some(SourceType::TRANSITION),
+            _ => None,
+        }
+    }
+
     pub(crate) fn to_native(&self) -> obs_source_type {
         match self {
             SourceType::INPUT => obs_source_type_OBS_SOURCE_TYPE_INPUT,
@@ -44,19 +62,30 @@ impl SourceType {
     }
 }
 
+/// Context wrapping an OBS source - video / audio elements which are displayed to the screen.
+///
+/// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
 pub struct SourceContext {
     source: *mut obs_source_t,
 }
 
 impl SourceContext {
+    /// Run a function on the next source in the filter chain.
+    ///
+    /// Note: only works with sources that are filters.
     pub fn do_with_target<F: FnOnce(&mut SourceContext)>(&mut self, func: F) {
         unsafe {
-            let target = obs_filter_get_target(self.source);
-            let mut context = SourceContext { source: target };
-            func(&mut context);
+            if let Some(SourceType::FILTER) =
+                SourceType::from_native(obs_source_get_type(self.source))
+            {
+                let target = obs_filter_get_target(self.source);
+                let mut context = SourceContext { source: target };
+                func(&mut context);
+            }
         }
     }
 
+    /// Return a unique id for the filter
     pub fn id(&self) -> usize {
         self.source as usize
     }
@@ -69,12 +98,19 @@ impl SourceContext {
         unsafe { obs_source_get_base_height(self.source) }
     }
 
+    /// Skips the video filter if it's invalid
     pub fn skip_video_filter(&mut self) {
         unsafe {
             obs_source_skip_video_filter(self.source);
         }
     }
 
+    /// Run a function to do drawing - if the source is a filter.
+    /// This function is wrapped by calls that automatically handle effect-based filter processing.
+    ///
+    /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_process_filter_begin)
+    ///
+    /// Note: only works with sources that are filters.
     pub fn process_filter<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
         &mut self,
         _render: &mut VideoRenderContext,
@@ -86,14 +122,19 @@ impl SourceContext {
         func: F,
     ) {
         unsafe {
-            if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
-                let mut context = GraphicsEffectContext::new();
-                func(&mut context, effect);
-                obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
+            if let Some(SourceType::FILTER) =
+                SourceType::from_native(obs_source_get_type(self.source))
+            {
+                if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
+                    let mut context = GraphicsEffectContext::new();
+                    func(&mut context, effect);
+                    obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
+                }
             }
         }
     }
 
+    /// Update the source settings based on a settings context.
     pub fn update_source_settings(&mut self, settings: &SettingsContext) {
         unsafe {
             obs_source_update(self.source, settings.as_raw());
@@ -115,6 +156,20 @@ impl SourceInfo {
     }
 }
 
+/// The SourceInfoBuilder that handles creating the [SourceInfo](https://obsproject.com/docs/reference-sources.html#c.obs_source_info) object.
+///
+/// For each trait that is implemented for the Source, it needs to be enabled using this builder.
+/// If an struct called `FocusFilter` implements `CreateSource` and `GetNameSource` it would need
+/// to enable those features.
+///
+/// ```rs
+/// let source = load_context
+///  .create_source_builder::<FocusFilter, ()>()
+///  .enable_get_name()
+///  .enable_create()
+///  .build();
+/// ```
+///
 pub struct SourceInfoBuilder<T: Sourceable, D> {
     __source: PhantomData<T>,
     __data: PhantomData<D>,
@@ -180,93 +235,32 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
     }
 }
 
-impl<T: Sourceable + GetNameSource, D> SourceInfoBuilder<T, D> {
-    pub fn enable_get_name(mut self) -> Self {
-        self.info.get_name = Some(ffi::get_name::<T>);
-        self
-    }
+macro_rules! impl_source_builder {
+    ($($f:ident => $t:ident)*) => ($(
+        item! {
+            impl<D, T: Sourceable + [<$t>]<D>> SourceInfoBuilder<T, D> {
+                pub fn [<enable_$f>](mut self) -> Self {
+                    self.info.[<$f>] = Some(ffi::[<$f>]::<D, T>);
+                    self
+                }
+            }
+        }
+    )*)
 }
 
-impl<D, T: Sourceable + GetWidthSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_get_width(mut self) -> Self {
-        self.info.get_width = Some(ffi::get_width::<D, T>);
-        self
-    }
+impl_source_builder! {
+    get_name => GetNameSource
+    get_width => GetWidthSource
+    get_height => GetHeightSource
+    create => CreatableSource
+    update => UpdateSource
+    video_render => VideoRenderSource
+    audio_render => AudioRenderSource
+    get_properties => GetPropertiesSource
+    enum_active_sources => EnumActiveSource
+    enum_all_sources => EnumAllSource
+    transition_start => TransitionStartSource
+    transition_stop => TransitionStopSource
+    video_tick => VideoTickSource
 }
 
-impl<D, T: Sourceable + GetHeightSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_get_height(mut self) -> Self {
-        self.info.get_width = Some(ffi::get_height::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + CreatableSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_create(mut self) -> Self {
-        self.info.create = Some(ffi::create::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + UpdateSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_update(mut self) -> Self {
-        self.info.update = Some(ffi::update::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + VideoRenderSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_video_render(mut self) -> Self {
-        self.info.video_render = Some(ffi::video_render::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + AudioRenderSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_audio_render(mut self) -> Self {
-        self.info.audio_render = Some(ffi::audio_render::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + GetPropertiesSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_get_properties(mut self) -> Self {
-        self.info.get_properties = Some(ffi::get_properties::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + EnumActiveSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_enum_active(mut self) -> Self {
-        self.info.enum_active_sources = Some(ffi::enum_active_sources::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + EnumAllSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_enum_all(mut self) -> Self {
-        self.info.enum_all_sources = Some(ffi::enum_all_sources::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + TransitionStartSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_transition_start(mut self) -> Self {
-        self.info.transition_start = Some(ffi::transition_start::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + TransitionStopSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_transition_stop(mut self) -> Self {
-        self.info.transition_stop = Some(ffi::transition_stop::<D, T>);
-        self
-    }
-}
-
-impl<D, T: Sourceable + VideoTickSource<D>> SourceInfoBuilder<T, D> {
-    pub fn enable_video_tick(mut self) -> Self {
-        self.info.video_tick = Some(ffi::video_tick::<D, T>);
-        self
-    }
-}

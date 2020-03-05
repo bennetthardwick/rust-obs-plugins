@@ -33,7 +33,7 @@ impl<D> From<D> for DataWrapper<D> {
     }
 }
 
-pub unsafe extern "C" fn get_name<F: GetNameSource>(_type_data: *mut c_void) -> *const c_char {
+pub unsafe extern "C" fn get_name<D, F: GetNameSource<D>>(_type_data: *mut c_void) -> *const c_char {
     F::get_name().as_ptr()
 }
 

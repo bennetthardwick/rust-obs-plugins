@@ -62,14 +62,13 @@ macro_rules! obs_register_module {
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_set_pointer(raw: *mut $crate::obs_sys::obs_module_t) {
-            $crate::info!("Setting module pointer!");
-            OBS_MODULE = Some(<$t>::new(ModuleContext { raw }));
+            OBS_MODULE = Some(<$t>::new(ModuleContext::new(raw)));
         }
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_current_module() -> *mut $crate::obs_sys::obs_module_t {
             if let Some(module) = &OBS_MODULE {
-                module.get_ctx().raw
+                module.get_ctx().get_raw()
             } else {
                 panic!("Could not get current module!");
             }

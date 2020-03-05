@@ -73,7 +73,7 @@ impl Sourceable for ScrollFocusFilter {
     }
 }
 
-impl GetNameSource for ScrollFocusFilter {
+impl GetNameSource<Data> for ScrollFocusFilter {
     fn get_name() -> ObsString {
         obs_string!("Scroll Focus Filter")
     }

@@ -371,13 +371,13 @@ impl Module for ScrollFocusFilter {
     }
 
     fn description() -> ObsString {
-        obs_string!("A great thing")
+        obs_string!("A filter that focused the currently focused Xorg window.")
     }
     fn name() -> ObsString {
         obs_string!("Scroll Focus Filter")
     }
     fn author() -> ObsString {
-        obs_string!("Benny")
+        obs_string!("Bennett Hardwick")
     }
 }
 

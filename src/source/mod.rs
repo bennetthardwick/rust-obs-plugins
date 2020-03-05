@@ -6,12 +6,11 @@ pub mod traits;
 use traits::*;
 
 use obs_sys::{
-    obs_filter_get_target, obs_source_get_base_height,
-    obs_source_get_base_width, obs_source_info, obs_source_process_filter_begin,
-    obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update,
+    obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width, obs_source_info,
+    obs_source_process_filter_begin, obs_source_process_filter_end, obs_source_skip_video_filter,
+    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, obs_source_update,
 };
 
 use super::graphics::{
@@ -23,7 +22,6 @@ use context::VideoRenderContext;
 use properties::SettingsContext;
 
 use std::marker::PhantomData;
-
 
 #[derive(Clone, Copy)]
 pub enum SourceType {
@@ -178,16 +176,6 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
                 get_defaults2: None,
                 get_properties2: None,
                 audio_mix: None,
-                icon_type: 0,
-                media_play_pause: None,
-                media_restart: None,
-                media_stop: None,
-                media_next: None,
-                media_previous: None,
-                media_get_duration: None,
-                media_get_time: None,
-                media_set_time: None,
-                media_get_state: None,
             },
         }
     }

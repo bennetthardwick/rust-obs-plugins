@@ -5,7 +5,7 @@ authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
 edition = "2018"
 
 [dependencies]
-obs-wrapper = { path = "../..", version = "0.1.1" }
+obs-wrapper = { path = "../..", version = "0.1.2" }
 crossbeam-channel = "0.4.2"
 xcb = { version = "0.9.0", features = [ "randr" ] }
 

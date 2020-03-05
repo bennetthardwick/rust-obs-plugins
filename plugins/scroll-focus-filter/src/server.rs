@@ -1,6 +1,5 @@
 use std::rc::Rc;
 use xcb_util::ewmh::{get_active_window, Connection};
-
 use xcb::{get_geometry, translate_coordinates};
 
 #[derive(Debug)]

@@ -1,6 +1,6 @@
 [package]
 name = "obs-wrapper"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
 edition = "2018"
 license = "GPL-2.0"
@@ -16,5 +16,6 @@ members = [
 ]
 
 [dependencies]
-obs-sys = { path = "./obs-sys", version = "0.1.1" }
+obs-sys = { path = "./obs-sys", version = "0.1.2" }
 serde_json = "1.0.48"
+xcb-util = { version = "0.3.0", features = [ "ewmh" ] }

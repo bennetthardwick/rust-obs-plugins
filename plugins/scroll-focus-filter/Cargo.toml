@@ -8,6 +8,7 @@ edition = "2018"
 obs-wrapper = { path = "../..", version = "0.1.2" }
 crossbeam-channel = "0.4.2"
 xcb = { version = "0.9.0", features = [ "randr" ] }
+xcb-util = { version = "0.3.0", features = [ "ewmh" ] }
 
 [lib]
 name = "scrollfocus"

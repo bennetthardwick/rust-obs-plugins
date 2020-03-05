@@ -2,7 +2,7 @@ use super::context::{ActiveContext, VideoRenderContext};
 use super::properties::{Properties, SettingsContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
-use crate::ObsString;
+use crate::string::ObsString;
 
 pub trait Sourceable {
     fn get_id() -> ObsString;

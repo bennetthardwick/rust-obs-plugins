@@ -21,7 +21,7 @@ use obs_sys::{
     obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
 };
 
-use super::ObsString;
+use super::string::ObsString;
 
 pub struct GraphicsEffect {
     raw: *mut gs_effect_t,

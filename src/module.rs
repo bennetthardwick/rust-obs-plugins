@@ -1,8 +1,6 @@
-use crate::source::{
-    traits::Sourceable, SourceInfo, SourceInfoBuilder,
-};
-use crate::ModuleContext;
-use crate::ObsString;
+use crate::context::ModuleContext;
+use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
+use crate::string::ObsString;
 use obs_sys::{obs_register_source_s, obs_source_info};
 use std::marker::PhantomData;
 
@@ -60,7 +58,7 @@ pub trait Module {
 macro_rules! obs_register_module {
     ($t:ty) => {
         static mut OBS_MODULE: Option<$t> = None;
-        static mut LOAD_CONTEXT: Option<$crate::LoadContext> = None;
+        static mut LOAD_CONTEXT: Option<$crate::module::LoadContext> = None;
 
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_set_pointer(raw: *mut $crate::obs_sys::obs_module_t) {
@@ -85,7 +83,7 @@ macro_rules! obs_register_module {
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_load() -> bool {
             let mut module = OBS_MODULE.as_mut().expect("Could not get current module!");
-            let mut context = unsafe { $crate::LoadContext::new() };
+            let mut context = unsafe { $crate::module::LoadContext::new() };
             let ret = module.load(&mut context);
             LOAD_CONTEXT = Some(context);
 

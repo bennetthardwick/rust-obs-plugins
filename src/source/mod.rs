@@ -3,7 +3,10 @@ mod ffi;
 pub mod context;
 pub mod properties;
 pub mod traits;
-use traits::*;
+
+pub use context::*;
+pub use properties::*;
+pub use traits::*;
 
 use obs_sys::{
     obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width, obs_source_info,
@@ -13,13 +16,12 @@ use obs_sys::{
     obs_source_type_OBS_SOURCE_TYPE_TRANSITION, obs_source_update,
 };
 
-use super::graphics::{
-    GraphicsAllowDirectRendering, GraphicsColorFormat, GraphicsEffect, GraphicsEffectContext,
+use super::{
+    graphics::{
+        GraphicsAllowDirectRendering, GraphicsColorFormat, GraphicsEffect, GraphicsEffectContext,
+    },
+    string::ObsString,
 };
-
-use crate::ObsString;
-use context::VideoRenderContext;
-use properties::SettingsContext;
 
 use std::marker::PhantomData;
 
@@ -116,21 +118,7 @@ impl SourceInfo {
 pub struct SourceInfoBuilder<T: Sourceable, D> {
     __source: PhantomData<T>,
     __data: PhantomData<D>,
-    info: obs_source_info, // id: &'static str,
-                           // source_type: SourceType,
-                           // output_flags: u32,
-                           // get_name: Option<Box<dyn Fn() -> &'static str>>,
-                           // create: Box<dyn Fn(&SettingsContext, SourceContext) -> S>,
-                           // get_width: Option<Box<dyn Fn(&S) -> u32>>,
-                           // get_height: Option<Box<dyn Fn(&S) -> u32>>,
-                           // update: Option<Box<dyn Fn(&mut S, &SettingsContext)>>,
-                           // video_render: Option<Box<dyn Fn(&mut S, &mut VideoRenderContext)>>,
-                           // audio_render: Option<Box<dyn Fn(&mut S, &mut AudioRenderContext)>>,
-                           // get_properties: Option<Box<dyn Fn(&mut S, &mut PropertiesContext)>>,
-                           // enum_active_sources: Option<Box<dyn Fn(&mut S, &mut EnumActiveContext)>>,
-                           // enum_all_sources: Option<Box<dyn Fn(&mut S, &mut EnumAllContext)>>,
-                           // transition_start: Option<Box<dyn Fn(&mut S)>>,
-                           // transition_stop: Option<Box<dyn Fn(&mut S)>>
+    info: obs_source_info,
 }
 
 impl<T: Sourceable, D> SourceInfoBuilder<T, D> {

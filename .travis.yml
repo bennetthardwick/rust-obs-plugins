@@ -1,0 +1,13 @@
+language: rust
+rust:
+  - stable
+  - beta
+  - nightly
+addons:
+  apt:
+    packages:
+      obs-studio
+
+matrix:
+  allow_failures:
+    - rust: nightly

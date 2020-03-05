@@ -1,11 +1,9 @@
 use super::ObsString;
 use obs_sys::{
-    obs_data_get_double, obs_data_get_int, obs_data_get_json, obs_data_t,
-    obs_properties_add_float,
+    obs_data_get_double, obs_data_get_int, obs_data_get_json, obs_data_t, obs_properties_add_float,
     obs_properties_add_float_slider, obs_properties_add_int, obs_properties_t,
 };
 use std::ffi::CStr;
-
 
 use serde_json::Value;
 
@@ -38,6 +36,8 @@ impl<'a> Properties<'a> {
         }
     }
 
+    /// # Safety
+    /// Modifying this pointer could cause UB
     pub unsafe fn into_raw(self) -> *mut obs_properties_t {
         self.pointer
     }
@@ -120,15 +120,12 @@ impl<'a> Properties<'a> {
 
 pub struct SettingsContext<'a> {
     settings: *mut obs_data_t,
-    properties: &'a Vec<Property>,
+    properties: &'a [Property],
     init_data: Option<Value>,
 }
 
 impl<'a> SettingsContext<'a> {
-    pub(crate) unsafe fn from_raw(
-        settings: *mut obs_data_t,
-        properties: &'a Vec<Property>,
-    ) -> Self {
+    pub(crate) unsafe fn from_raw(settings: *mut obs_data_t, properties: &'a [Property]) -> Self {
         SettingsContext {
             settings,
             properties,
@@ -154,8 +151,8 @@ impl<'a> SettingsContext<'a> {
             }
         }
 
-        if json_data.is_some() {
-            self.init_data.replace(json_data.unwrap());
+        if let Some(data) = json_data {
+            self.init_data.replace(data);
         }
 
         &self.init_data
@@ -165,15 +162,7 @@ impl<'a> SettingsContext<'a> {
         if self
             .properties
             .iter()
-            .find(
-                |Property {
-                     name,
-                     property_type,
-                 }| {
-                    property_type == &PropertyType::Float && *name == param.as_str()
-                },
-            )
-            .is_some()
+            .any(|p| p.property_type == PropertyType::Float && p.name == param.as_str())
         {
             Some(unsafe { obs_data_get_double(self.settings, param.as_ptr()) })
         } else {
@@ -192,15 +181,7 @@ impl<'a> SettingsContext<'a> {
         if self
             .properties
             .iter()
-            .find(
-                |Property {
-                     name,
-                     property_type,
-                 }| {
-                    property_type == &PropertyType::Int && *name == param.as_str()
-                },
-            )
-            .is_some()
+            .any(|p| p.property_type == PropertyType::Int && p.name == param.as_str())
         {
             Some(unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
         } else {

@@ -1,7 +1,10 @@
 pub struct ObsString(&'static str);
 
 impl ObsString {
-    pub unsafe fn from_str(string: &'static str) -> Self {
+    /// # Safety
+    /// Does no checks for nul terminated strings. This could cause memory overruns if used
+    /// incorrectly.
+    pub unsafe fn from_nul_terminted_str(string: &'static str) -> Self {
         Self(string)
     }
 
@@ -17,6 +20,6 @@ impl ObsString {
 #[macro_export]
 macro_rules! obs_string {
     ($e:expr) => {
-        unsafe { $crate::string::ObsString::from_str(concat!($e, "\0")) }
+        unsafe { $crate::string::ObsString::from_nul_terminted_str(concat!($e, "\0")) }
     };
 }

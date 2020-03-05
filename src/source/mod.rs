@@ -52,7 +52,7 @@ impl SourceType {
         }
     }
 
-    pub(crate) fn to_native(&self) -> obs_source_type {
+    pub(crate) fn to_native(self) -> obs_source_type {
         match self {
             SourceType::INPUT => obs_source_type_OBS_SOURCE_TYPE_INPUT,
             SourceType::SCENE => obs_source_type_OBS_SOURCE_TYPE_SCENE,
@@ -115,8 +115,7 @@ impl SourceContext {
         &mut self,
         _render: &mut VideoRenderContext,
         effect: &mut GraphicsEffect,
-        cx: u32,
-        cy: u32,
+        (cx, cy): (u32, u32),
         format: GraphicsColorFormat,
         direct: GraphicsAllowDirectRendering,
         func: F,
@@ -151,6 +150,8 @@ pub struct SourceInfo {
 }
 
 impl SourceInfo {
+    /// # Safety
+    /// Creates a raw pointer from a box and could cause UB is misused.
     pub unsafe fn into_raw(self) -> *mut obs_source_info {
         Box::into_raw(self.info)
     }

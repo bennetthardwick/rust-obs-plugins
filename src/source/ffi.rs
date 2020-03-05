@@ -82,7 +82,7 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
 ) {
     let mut active = ActiveContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = SettingsContext::from_raw(settings, &mut data.properties);
+    let mut settings = SettingsContext::from_raw(settings, &data.properties);
     F::update(&mut data.data, &mut settings, &mut active);
 }
 
@@ -129,8 +129,8 @@ pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
     _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut context = EnumActiveContext {};
-    F::enum_active_sources(&mut wrapper.data, &mut context);
+    let context = EnumActiveContext {};
+    F::enum_active_sources(&mut wrapper.data, &context);
 }
 
 pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
@@ -139,8 +139,8 @@ pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
     _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut context = EnumAllContext {};
-    F::enum_all_sources(&mut wrapper.data, &mut context);
+    let context = EnumAllContext {};
+    F::enum_all_sources(&mut wrapper.data, &context);
 }
 
 pub unsafe extern "C" fn transition_start<D, F: TransitionStartSource<D>>(

@@ -44,7 +44,7 @@ pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -
 
 pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::get_height(&mut wrapper.data)
+    F::get_height(&wrapper.data)
 }
 
 pub unsafe extern "C" fn create_default_data<D>(
@@ -60,7 +60,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut wrapper = DataWrapper::default();
-    let mut settings = SettingsContext::from_raw(settings, &mut wrapper.properties);
+    let mut settings = SettingsContext::from_raw(settings, &wrapper.properties);
 
     let source = SourceContext { source };
 

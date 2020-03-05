@@ -10,6 +10,9 @@ pub struct LoadContext {
 }
 
 impl LoadContext {
+    /// # Safety
+    /// LoadContext can only be used at specific times. Creating it could cause UB if done at the
+    /// wrong time.
     pub unsafe fn new() -> LoadContext {
         LoadContext {
             __marker: PhantomData,

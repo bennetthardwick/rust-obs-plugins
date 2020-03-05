@@ -53,6 +53,8 @@ impl GraphicsEffect {
         }
     }
 
+    /// # Safety
+    /// Returns a mutable pointer to an effect which if modified could cause UB.
     pub unsafe fn as_ptr(&self) -> *mut gs_effect_t {
         self.raw
     }
@@ -73,6 +75,9 @@ pub struct GraphicsEffectParam {
 }
 
 impl GraphicsEffectParam {
+    /// # Safety
+    /// Creates a GraphicsEffectParam from a mutable reference. This data could be modified
+    /// somewhere else so this is UB.
     pub unsafe fn from_raw(raw: *mut gs_eparam_t) -> Self {
         Self { raw }
     }
@@ -198,6 +203,9 @@ impl Drop for GraphicsSamplerState {
 pub struct GraphicsEffectContext {}
 
 impl GraphicsEffectContext {
+    /// # Safety
+    /// GraphicsEffectContext has methods that should only be used in certain situations.
+    /// Constructing it at the wrong time could cause UB.
     pub unsafe fn new() -> Self {
         Self {}
     }

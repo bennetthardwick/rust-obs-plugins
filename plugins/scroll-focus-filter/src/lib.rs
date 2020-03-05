@@ -216,8 +216,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
             source.process_filter(
                 render,
                 effect,
-                cx,
-                cy,
+                (cx, cy),
                 GraphicsColorFormat::RGBA,
                 GraphicsAllowDirectRendering::NoDirectRendering,
                 |context, _effect| {
@@ -264,10 +263,10 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                                 send_server.send(ServerMessage::Snapshot(snapshot)).unwrap();
                             }
 
-                            for msg in receive_filter.try_iter() {
+                            if let Ok(msg) = receive_filter.try_recv() {
                                 match msg {
                                     FilterMessage::CloseConnection => {
-                                        break;
+                                        return;
                                     }
                                 }
                             }

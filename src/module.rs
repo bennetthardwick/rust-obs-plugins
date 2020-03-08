@@ -1,7 +1,6 @@
-use crate::context::ModuleContext;
 use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
 use crate::string::ObsString;
-use obs_sys::{obs_register_source_s, obs_source_info};
+use obs_sys::{obs_module_t, obs_register_source_s, obs_source_info};
 use std::marker::PhantomData;
 
 pub struct LoadContext {
@@ -128,4 +127,24 @@ macro_rules! obs_register_module {
             <$t>::author().as_ptr()
         }
     };
+}
+
+pub struct ModuleContext {
+    raw: *mut obs_module_t,
+}
+
+impl ModuleContext {
+    /// # Safety
+    /// Creates a ModuleContext from a pointer to the raw obs_module data which if modified could
+    /// cause UB.
+    pub unsafe fn new(raw: *mut obs_module_t) -> Self {
+        Self { raw }
+    }
+
+    /// # Safety
+    /// Returns a pointer to the raw obs_module data which if modified could
+    /// cause UB.
+    pub unsafe fn get_raw(&self) -> *mut obs_module_t {
+        self.raw
+    }
 }

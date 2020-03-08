@@ -1,5 +1,5 @@
 //! # Rust OBS Wrapper
-//! 
+//!
 //! A safe wrapper around the OBS API, useful for creating OBS sources, filters and effects.
 //!
 //! ## Usage
@@ -112,17 +112,22 @@
 //! 2. Copy `/target/release/<module-name>.so` to your OBS plugins folder (`/usr/lib/obs-plugins/`)
 //! 3. The plugin should be available for use from inside OBS
 
+/// Raw bindings of OBS C API
 pub use obs_sys;
 
-pub mod context;
+/// Tools required for manipulating graphics in OBS
 pub mod graphics;
+/// Methods for logging to OBS console
 pub mod log;
+/// Tools for creating modules
 pub mod module;
+/// Tools for creating sources
 pub mod source;
+/// String macros
 pub mod string;
 
+/// Re-exports of a bunch of popular tools
 pub mod prelude {
-    pub use crate::context::ModuleContext;
     pub use crate::module::*;
     pub use crate::source::context::*;
     pub use crate::string::*;

@@ -3,7 +3,9 @@
 [![Build Status](https://travis-ci.org/bennetthardwick/rust-obs-plugins.svg?branch=master)](https://travis-ci.org/bennetthardwick/rust-obs-plugins)
 [![Wrapper Docs](https://docs.rs/obs-wrapper/badge.svg)](https://docs.rs/obs-wrapper)
 
-A safe wrapper around the OBS API, useful for creating OBS sources, filters and effects. This repo also includes plugins creating using the wrapper in the `/plugins` folder.
+A safe wrapper around the OBS API, useful for creating OBS sources, filters and effects. The wrapper is quite incomplete and will most likely see dramatic API changes in the future.
+
+This repo also includes plugins creating using the wrapper in the `/plugins` folder.
 
 ## Plugins
 
@@ -114,8 +116,14 @@ impl Module for TestModule {
 }
 ```
 
-### Installing
+### Installation
 
 1. Run `cargo build --release`
 2. Copy `/target/release/<module-name>.so` to your OBS plugins folder (`/usr/lib/obs-plugins/`)
 3. The plugin should be available for use from inside OBS
+
+## License
+
+Like [obs-studio](https://github.com/obsproject/obs-studio), `obs-wrapper` is licensed under GNU General Public License v2.0.
+
+See [LICENSE](./LICENSE) for details.

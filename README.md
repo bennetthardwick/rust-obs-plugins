@@ -8,8 +8,9 @@ A safe wrapper around the OBS API, useful for creating OBS sources, filters and 
 This repo also includes plugins creating using the wrapper in the `/plugins` folder.
 
 ## Plugins
-
-| scroll-focus-filter | an OBS filter that will zoom into the currently focused X window |
+| Folder               | Description                                                      |
+|----------------------|------------------------------------------------------------------|
+| /scroll-focus-filter | an OBS filter that will zoom into the currently focused X window |
 
 ## Usage
 

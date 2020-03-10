@@ -77,14 +77,14 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
             0.001,
         );
         properties.add_int(
-            obs_string!("offset_x"),
+            obs_string!("screen_x"),
             obs_string!("Offset relative to top left screen - x"),
             0,
             3840 * 3,
             1,
         );
         properties.add_int(
-            obs_string!("offset_y"),
+            obs_string!("screen_y"),
             obs_string!("Offset relative to top left screen - y"),
             0,
             3840 * 3,
@@ -132,31 +132,49 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                             .max(data.internal_zoom)
                             .min(1.);
 
-                        let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
-                            / (data.screen_width as f32);
-                        let y = (snapshot.y + (snapshot.height / 2.) - (data.screen_y as f32))
-                            / (data.screen_height as f32);
-
-                        let target_x = (x - (0.5 * window_zoom as f32))
-                            .min(1. - window_zoom as f32)
-                            .max(0.);
-
-                        let target_y = (y - (0.5 * window_zoom as f32))
-                            .min(1. - window_zoom as f32)
-                            .max(0.);
-
-                        if (target_y - data.target.y()).abs() > 0.001
-                            || (target_x - data.target.x()).abs() > 0.001
-                            || (window_zoom - data.target_zoom).abs() > 0.001
+                        if snapshot.x > (data.screen_width + data.screen_x) as f32
+                            || snapshot.x < data.screen_x as f32
+                            || snapshot.y < data.screen_y as f32
+                            || snapshot.y > (data.screen_height + data.screen_y) as f32
                         {
-                            data.progress = 0.;
+                            if data.target_zoom != 1.
+                                && data.target.x() != 0.
+                                && data.target.y() != 0.
+                            {
+                                data.progress = 0.;
+                                data.from_zoom = data.current_zoom;
+                                data.target_zoom = 1.;
 
-                            data.from_zoom = data.current_zoom;
-                            data.target_zoom = window_zoom;
+                                data.from.set(data.current.x(), data.current.y());
+                                data.target.set(0., 0.);
+                            }
+                        } else {
+                            let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
+                                / (data.screen_width as f32);
+                            let y = (snapshot.y + (snapshot.height / 2.) - (data.screen_y as f32))
+                                / (data.screen_height as f32);
 
-                            data.from.set(data.current.x(), data.current.y());
+                            let target_x = (x - (0.5 * window_zoom as f32))
+                                .min(1. - window_zoom as f32)
+                                .max(0.);
 
-                            data.target.set(target_x, target_y);
+                            let target_y = (y - (0.5 * window_zoom as f32))
+                                .min(1. - window_zoom as f32)
+                                .max(0.);
+
+                            if (target_y - data.target.y()).abs() > 0.001
+                                || (target_x - data.target.x()).abs() > 0.001
+                                || (window_zoom - data.target_zoom).abs() > 0.001
+                            {
+                                data.progress = 0.;
+
+                                data.from_zoom = data.current_zoom;
+                                data.target_zoom = window_zoom;
+
+                                data.from.set(data.current.x(), data.current.y());
+
+                                data.target.set(target_x, target_y);
+                            }
                         }
                     }
                 }

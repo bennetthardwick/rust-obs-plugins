@@ -128,7 +128,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                         let window_zoom = ((snapshot.width / (data.screen_width as f32))
                             .max(snapshot.height / (data.screen_height as f32))
                             as f64
-                            + 0.01)
+                            + 0.1)
                             .max(data.internal_zoom)
                             .min(1.);
 

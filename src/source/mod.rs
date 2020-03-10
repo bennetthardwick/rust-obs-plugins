@@ -264,4 +264,3 @@ impl_source_builder! {
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
 }
-

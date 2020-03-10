@@ -1,6 +1,6 @@
 use std::rc::Rc;
-use xcb_util::ewmh::{get_active_window, Connection};
 use xcb::{get_geometry, translate_coordinates};
+use xcb_util::ewmh::{get_active_window, Connection};
 
 #[derive(Debug)]
 pub struct WindowSnapshot {
@@ -17,6 +17,7 @@ pub struct ActiveWindow {
     connection: Rc<Connection>,
     screen: i32,
     pub window: xcb::Window,
+    root: xcb::Window,
     root_width: f32,
     root_height: f32,
 }
@@ -25,15 +26,17 @@ impl ActiveWindow {
     fn new(
         connection: Rc<Connection>,
         screen: i32,
+        root: xcb::Window,
         root_width: f32,
         root_height: f32,
     ) -> Result<ActiveWindow> {
-        let window = Self::get_active_window(&connection, screen)?;
+        let window = Self::get_active_window(&connection, screen).unwrap_or(root);
 
         let active_window = Self {
             window,
             connection,
             screen,
+            root,
             root_width,
             root_height,
         };
@@ -49,10 +52,14 @@ impl ActiveWindow {
     }
 
     fn stop_listening(&self) -> Result<()> {
-        let mask = [(xcb::CW_EVENT_MASK, xcb::EVENT_MASK_NO_EVENT)];
-        xcb::change_window_attributes_checked(&self.connection, self.window, &mask)
-            .request_check()?;
-        Ok(())
+        if self.window == self.root {
+            Ok(())
+        } else {
+            let mask = [(xcb::CW_EVENT_MASK, xcb::EVENT_MASK_NO_EVENT)];
+            xcb::change_window_attributes_checked(&self.connection, self.window, &mask)
+                .request_check()?;
+            Ok(())
+        }
     }
 
     fn start_listening(&self) -> Result<()> {
@@ -61,6 +68,7 @@ impl ActiveWindow {
             xcb::EVENT_MASK_PROPERTY_CHANGE
                 | xcb::EVENT_MASK_FOCUS_CHANGE
                 | xcb::EVENT_MASK_STRUCTURE_NOTIFY
+                | xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY
                 | xcb::EVENT_MASK_LEAVE_WINDOW,
         )];
         xcb::change_window_attributes_checked(&self.connection, self.window, &mask)
@@ -69,7 +77,7 @@ impl ActiveWindow {
     }
 
     fn update(&mut self) -> Result<()> {
-        let window = Self::get_active_window(&self.connection, self.screen)?;
+        let window = Self::get_active_window(&self.connection, self.screen).unwrap_or(self.root);
 
         if self.window != window {
             self.stop_listening().unwrap_or(());
@@ -135,10 +143,14 @@ impl Server {
             .nth(default_screen as usize)
             .unwrap();
 
+        let mask = [(xcb::CW_EVENT_MASK, xcb::EVENT_MASK_SUBSTRUCTURE_NOTIFY)];
+        xcb::change_window_attributes_checked(&connection, screen.root(), &mask).request_check()?;
+
         Ok(Server {
             active: ActiveWindow::new(
                 Rc::clone(&connection),
                 default_screen,
+                screen.root(),
                 screen.width_in_pixels() as f32,
                 screen.height_in_pixels() as f32,
             )?,

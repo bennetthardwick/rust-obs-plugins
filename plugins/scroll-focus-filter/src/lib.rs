@@ -28,7 +28,7 @@ struct Data {
     target: Vec2,
 
     animation_time: f64,
-
+    
     current_zoom: f64,
     from_zoom: f64,
     target_zoom: f64,
@@ -44,7 +44,7 @@ struct Data {
 
 impl Drop for Data {
     fn drop(&mut self) {
-        self.send.send(FilterMessage::CloseConnection).unwrap();
+        self.send.send(FilterMessage::CloseConnection).unwrap_or(());
     }
 }
 
@@ -93,21 +93,21 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
         properties.add_int(
             obs_string!("screen_width"),
             obs_string!("Screen width"),
-            0,
+            1,
             3840 * 3,
             1,
         );
         properties.add_int(
             obs_string!("screen_height"),
             obs_string!("Screen height"),
-            0,
+            1,
             3840 * 3,
             1,
         );
         properties.add_float(
             obs_string!("animation_time"),
             obs_string!("Animation Time (s)"),
-            0.001,
+            0.3,
             10.,
             0.001,
         );
@@ -211,8 +211,8 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 
             let zoom = data.current_zoom as f32;
 
-            let mut cx: u32 = 0;
-            let mut cy: u32 = 0;
+            let mut cx: u32 = 1;
+            let mut cy: u32 = 1;
 
             source.do_with_target(|target| {
                 cx = target.get_base_width();

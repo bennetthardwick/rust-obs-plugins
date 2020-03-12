@@ -28,3 +28,5 @@ After installing the plugin, you need to add it as a filter to the source that's
 1. Note: if the screen goes black, restart OBS
 1. In the properties section input your `Screen width` and `Screen height` in pixels. If the selected monitor isn't the top-left-most, input it's offset in pixels.
 1. Enter the amount to zoom in the desktop
+
+For more information on adding filters to OBS, check out [this forum post](https://obsproject.com/forum/resources/obs-studio-filters-for-sources-scenes-devices.226/)

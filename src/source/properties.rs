@@ -14,10 +14,9 @@ pub(crate) struct Property {
     property_type: PropertyType,
 }
 
-#[derive(Eq, PartialEq)]
 enum PropertyType {
-    Float,
-    Int,
+    Float(f64, f64),
+    Int(i32, i32),
 }
 
 pub struct Properties<'a> {
@@ -53,7 +52,7 @@ impl<'a> Properties<'a> {
         unsafe {
             self.properties.push(Property {
                 name: name.as_str(),
-                property_type: PropertyType::Float,
+                property_type: PropertyType::Float(min, max),
             });
             obs_properties_add_float_slider(
                 self.pointer,
@@ -78,7 +77,7 @@ impl<'a> Properties<'a> {
         unsafe {
             self.properties.push(Property {
                 name: name.as_str(),
-                property_type: PropertyType::Float,
+                property_type: PropertyType::Float(min, max),
             });
             obs_properties_add_float(
                 self.pointer,
@@ -103,7 +102,7 @@ impl<'a> Properties<'a> {
         unsafe {
             self.properties.push(Property {
                 name: name.as_str(),
-                property_type: PropertyType::Int,
+                property_type: PropertyType::Int(min, max),
             });
             obs_properties_add_int(
                 self.pointer,
@@ -159,12 +158,22 @@ impl<'a> SettingsContext<'a> {
     }
 
     pub fn get_float(&mut self, param: ObsString) -> Option<f64> {
-        if self
+        if let Some(Property {
+            property_type: PropertyType::Float(min, max),
+            ..
+        }) = self
             .properties
             .iter()
-            .any(|p| p.property_type == PropertyType::Float && p.name == param.as_str())
+            .filter(|p| {
+                matches!(p.property_type, PropertyType::Float(_, _)) && p.name == param.as_str()
+            })
+            .next()
         {
-            Some(unsafe { obs_data_get_double(self.settings, param.as_ptr()) })
+            Some(
+                (unsafe { obs_data_get_double(self.settings, param.as_ptr()) })
+                    .min(*max)
+                    .max(*min),
+            )
         } else {
             if let Some(data) = self.get_data() {
                 let param = param.as_str();
@@ -178,12 +187,22 @@ impl<'a> SettingsContext<'a> {
     }
 
     pub fn get_int(&mut self, param: ObsString) -> Option<i32> {
-        if self
+        if let Some(Property {
+            property_type: PropertyType::Int(min, max),
+            ..
+        }) = self
             .properties
             .iter()
-            .any(|p| p.property_type == PropertyType::Int && p.name == param.as_str())
+            .filter(|p| {
+                matches!(p.property_type, PropertyType::Int(_, _)) && p.name == param.as_str()
+            })
+            .next()
         {
-            Some(unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
+            Some(
+                (unsafe { obs_data_get_int(self.settings, param.as_ptr()) } as i32)
+                    .min(*max)
+                    .max(*min),
+            )
         } else {
             if let Some(data) = self.get_data() {
                 let param = param.as_str();

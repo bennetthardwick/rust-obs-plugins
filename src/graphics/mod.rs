@@ -1,3 +1,4 @@
+use core::convert::TryFrom;
 use obs_sys::{
     gs_address_mode, gs_address_mode_GS_ADDRESS_BORDER, gs_address_mode_GS_ADDRESS_CLAMP,
     gs_address_mode_GS_ADDRESS_MIRROR, gs_address_mode_GS_ADDRESS_MIRRORONCE,
@@ -8,22 +9,88 @@ use obs_sys::{
     gs_color_format_GS_R8, gs_color_format_GS_R8G8, gs_color_format_GS_RG16F,
     gs_color_format_GS_RG32F, gs_color_format_GS_RGBA, gs_color_format_GS_RGBA16,
     gs_color_format_GS_RGBA16F, gs_color_format_GS_RGBA32F, gs_color_format_GS_UNKNOWN,
-    gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_set_vec2,
-    gs_effect_t, gs_eparam_t, gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC,
-    gs_sample_filter_GS_FILTER_LINEAR, gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_get_param_info,
+    gs_effect_param_info, gs_effect_set_next_sampler, gs_effect_set_vec2, gs_effect_t, gs_eparam_t,
+    gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC, gs_sample_filter_GS_FILTER_LINEAR,
+    gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_MAG_LINEAR_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_MAG_POINT_MIP_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_POINT_MAG_MIP_LINEAR, gs_sample_filter_GS_FILTER_POINT,
     gs_sampler_info, gs_samplerstate_create, gs_samplerstate_destroy, gs_samplerstate_t,
+    gs_shader_param_type, gs_shader_param_type_GS_SHADER_PARAM_BOOL,
+    gs_shader_param_type_GS_SHADER_PARAM_FLOAT, gs_shader_param_type_GS_SHADER_PARAM_INT,
+    gs_shader_param_type_GS_SHADER_PARAM_INT2, gs_shader_param_type_GS_SHADER_PARAM_INT3,
+    gs_shader_param_type_GS_SHADER_PARAM_INT4, gs_shader_param_type_GS_SHADER_PARAM_MATRIX4X4,
+    gs_shader_param_type_GS_SHADER_PARAM_STRING, gs_shader_param_type_GS_SHADER_PARAM_TEXTURE,
+    gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN, gs_shader_param_type_GS_SHADER_PARAM_VEC2,
+    gs_shader_param_type_GS_SHADER_PARAM_VEC3, gs_shader_param_type_GS_SHADER_PARAM_VEC4,
     obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
     obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
     vec3, vec4,
 };
 use paste::item;
+use std::ffi::{CStr, CString};
 
 use super::string::ObsString;
+
+#[derive(Clone, Copy)]
+pub enum ShaderParamType {
+    Unknown,
+    Bool,
+    Float,
+    Int,
+    String,
+    Vec2,
+    Vec3,
+    Vec4,
+    Int2,
+    Int3,
+    Int4,
+    Mat4,
+    Texture,
+}
+
+impl ShaderParamType {
+    pub fn as_raw(&self) -> gs_shader_param_type {
+        match self {
+            ShaderParamType::Unknown => gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN,
+            ShaderParamType::Bool => gs_shader_param_type_GS_SHADER_PARAM_BOOL,
+            ShaderParamType::Float => gs_shader_param_type_GS_SHADER_PARAM_FLOAT,
+            ShaderParamType::Int => gs_shader_param_type_GS_SHADER_PARAM_INT,
+            ShaderParamType::String => gs_shader_param_type_GS_SHADER_PARAM_STRING,
+            ShaderParamType::Vec2 => gs_shader_param_type_GS_SHADER_PARAM_VEC2,
+            ShaderParamType::Vec3 => gs_shader_param_type_GS_SHADER_PARAM_VEC3,
+            ShaderParamType::Vec4 => gs_shader_param_type_GS_SHADER_PARAM_VEC4,
+            ShaderParamType::Int2 => gs_shader_param_type_GS_SHADER_PARAM_INT2,
+            ShaderParamType::Int3 => gs_shader_param_type_GS_SHADER_PARAM_INT3,
+            ShaderParamType::Int4 => gs_shader_param_type_GS_SHADER_PARAM_INT4,
+            ShaderParamType::Mat4 => gs_shader_param_type_GS_SHADER_PARAM_MATRIX4X4,
+            ShaderParamType::Texture => gs_shader_param_type_GS_SHADER_PARAM_TEXTURE,
+        }
+    }
+
+    #[allow(non_upper_case_globals)]
+    pub fn from_raw(param_type: gs_shader_param_type) -> Self {
+        match param_type {
+            gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN => ShaderParamType::Unknown,
+            gs_shader_param_type_GS_SHADER_PARAM_BOOL => ShaderParamType::Bool,
+            gs_shader_param_type_GS_SHADER_PARAM_FLOAT => ShaderParamType::Float,
+            gs_shader_param_type_GS_SHADER_PARAM_INT => ShaderParamType::Int,
+            gs_shader_param_type_GS_SHADER_PARAM_STRING => ShaderParamType::String,
+            gs_shader_param_type_GS_SHADER_PARAM_VEC2 => ShaderParamType::Vec2,
+            gs_shader_param_type_GS_SHADER_PARAM_VEC3 => ShaderParamType::Vec3,
+            gs_shader_param_type_GS_SHADER_PARAM_VEC4 => ShaderParamType::Vec4,
+            gs_shader_param_type_GS_SHADER_PARAM_INT2 => ShaderParamType::Int2,
+            gs_shader_param_type_GS_SHADER_PARAM_INT3 => ShaderParamType::Int3,
+            gs_shader_param_type_GS_SHADER_PARAM_INT4 => ShaderParamType::Int4,
+            gs_shader_param_type_GS_SHADER_PARAM_MATRIX4X4 => ShaderParamType::Mat4,
+            gs_shader_param_type_GS_SHADER_PARAM_TEXTURE => ShaderParamType::Texture,
+            _ => panic!("Invalid param_type!"),
+        }
+    }
+}
 
 pub struct GraphicsEffect {
     raw: *mut gs_effect_t,
@@ -44,11 +111,14 @@ impl GraphicsEffect {
         }
     }
 
-    pub fn get_effect_param_by_name(&mut self, name: ObsString) -> Option<GraphicsEffectParam> {
+    pub fn get_effect_param_by_name<T: TryFrom<GraphicsEffectParam>>(
+        &mut self,
+        name: ObsString,
+    ) -> Option<T> {
         unsafe {
             let pointer = gs_effect_get_param_by_name(self.raw, name.as_ptr());
             if !pointer.is_null() {
-                Some(GraphicsEffectParam::from_raw(pointer))
+                T::try_from(GraphicsEffectParam::from_raw(pointer)).ok()
             } else {
                 None
             }
@@ -72,8 +142,14 @@ impl Drop for GraphicsEffect {
     }
 }
 
+pub enum GraphicsEffectParamConversionError {
+    InvalidType,
+}
+
 pub struct GraphicsEffectParam {
     raw: *mut gs_eparam_t,
+    name: String,
+    shader_type: ShaderParamType,
 }
 
 impl GraphicsEffectParam {
@@ -81,12 +157,70 @@ impl GraphicsEffectParam {
     /// Creates a GraphicsEffectParam from a mutable reference. This data could be modified
     /// somewhere else so this is UB.
     pub unsafe fn from_raw(raw: *mut gs_eparam_t) -> Self {
-        Self { raw }
+        let mut info = gs_effect_param_info::default();
+        gs_effect_get_param_info(raw, &mut info);
+
+        let shader_type = ShaderParamType::from_raw(info.type_);
+        let name = CString::from(CStr::from_ptr(info.name))
+            .into_string()
+            .unwrap_or(String::from("{unknown-param-name}"));
+
+        Self {
+            raw,
+            shader_type,
+            name,
+        }
     }
 
+    pub fn get_name(&self) -> &str {
+        &self.name
+    }
+}
+
+macro_rules! impl_graphics_effects {
+    ($($t:ident)*) => {
+        $(
+            item! {
+                pub struct [<GraphicsEffect $t Param>] {
+                    effect: GraphicsEffectParam,
+                }
+
+                impl TryFrom<GraphicsEffectParam> for [<GraphicsEffect $t Param>] {
+                    type Error = GraphicsEffectParamConversionError;
+
+                    fn try_from(effect: GraphicsEffectParam) -> Result<Self, Self::Error> {
+                        match effect.shader_type {
+                            ShaderParamType::[<$t>] => Ok([<GraphicsEffect $t Param>] { effect }),
+                            _ => Err(GraphicsEffectParamConversionError::InvalidType),
+                        }
+                    }
+                }
+            }
+        )*
+    };
+}
+
+impl_graphics_effects! {
+    Vec2
+    Texture
+}
+
+impl GraphicsEffectVec2Param {
     pub fn set_vec2(&mut self, _context: &GraphicsEffectContext, value: &Vec2) {
         unsafe {
-            gs_effect_set_vec2(self.raw, &value.raw);
+            gs_effect_set_vec2(self.effect.raw, &value.raw);
+        }
+    }
+}
+
+impl GraphicsEffectTextureParam {
+    pub fn set_next_sampler(
+        &mut self,
+        _context: &GraphicsEffectContext,
+        value: &mut GraphicsSamplerState,
+    ) {
+        unsafe {
+            gs_effect_set_next_sampler(self.effect.raw, value.raw);
         }
     }
 }
@@ -167,6 +301,26 @@ impl GraphicsSamplerInfo {
                 filter: GraphicsSampleFilter::Point.as_raw(),
             },
         }
+    }
+
+    pub fn with_address_u(mut self, mode: GraphicsAddressMode) -> Self {
+        self.info.address_u = mode.as_raw();
+        self
+    }
+
+    pub fn with_address_v(mut self, mode: GraphicsAddressMode) -> Self {
+        self.info.address_v = mode.as_raw();
+        self
+    }
+
+    pub fn with_address_w(mut self, mode: GraphicsAddressMode) -> Self {
+        self.info.address_w = mode.as_raw();
+        self
+    }
+
+    pub fn with_filter(mut self, mode: GraphicsSampleFilter) -> Self {
+        self.info.filter = mode.as_raw();
+        self
     }
 }
 

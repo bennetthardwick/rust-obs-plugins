@@ -17,8 +17,12 @@ enum ServerMessage {
 struct Data {
     source: SourceContext,
     effect: GraphicsEffect,
-    mul_val: GraphicsEffectParam,
-    add_val: GraphicsEffectParam,
+
+    mul_val: GraphicsEffectVec2Param,
+    add_val: GraphicsEffectVec2Param,
+    image: GraphicsEffectTextureParam,
+
+    sampler: GraphicsSamplerState,
 
     send: Sender<FilterMessage>,
     receive: Receiver<ServerMessage>,
@@ -28,7 +32,7 @@ struct Data {
     target: Vec2,
 
     animation_time: f64,
-    
+
     current_zoom: f64,
     from_zoom: f64,
     target_zoom: f64,
@@ -206,6 +210,8 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
             let source = &mut data.source;
             let param_add = &mut data.add_val;
             let param_mul = &mut data.mul_val;
+            let image = &mut data.image;
+            let sampler = &mut data.sampler;
 
             let current = &mut data.current;
 
@@ -228,6 +234,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
                 |context, _effect| {
                     param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
                     param_mul.set_vec2(context, &Vec2::new(zoom, zoom));
+                    image.set_next_sampler(context, sampler);
                 },
             );
         }
@@ -240,74 +247,85 @@ impl CreatableSource<Data> for ScrollFocusFilter {
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),
         ) {
-            if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
-                if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
-                    let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
+            if let Some(image) = effect.get_effect_param_by_name(obs_string!("image")) {
+                if let Some(add_val) = effect.get_effect_param_by_name(obs_string!("add_val")) {
+                    if let Some(mul_val) = effect.get_effect_param_by_name(obs_string!("mul_val")) {
+                        let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
 
-                    let screen_width = settings
-                        .get_int(obs_string!("screen_width"))
-                        .unwrap_or(1920) as u32;
-                    let screen_height = settings
-                        .get_int(obs_string!("screen_height"))
-                        .unwrap_or(1080) as u32;
+                        let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
 
-                    let screen_x = settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
-                    let screen_y = settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
+                        let screen_width = settings
+                            .get_int(obs_string!("screen_width"))
+                            .unwrap_or(1920) as u32;
+                        let screen_height = settings
+                            .get_int(obs_string!("screen_height"))
+                            .unwrap_or(1080) as u32;
 
-                    let animation_time = settings
-                        .get_float(obs_string!("animation_time"))
-                        .unwrap_or(0.3);
+                        let screen_x =
+                            settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
+                        let screen_y =
+                            settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
 
-                    let (send_filter, receive_filter) = unbounded::<FilterMessage>();
-                    let (send_server, receive_server) = unbounded::<ServerMessage>();
+                        let animation_time = settings
+                            .get_float(obs_string!("animation_time"))
+                            .unwrap_or(0.3);
 
-                    std::thread::spawn(move || {
-                        let mut server = Server::new().unwrap();
+                        let (send_filter, receive_filter) = unbounded::<FilterMessage>();
+                        let (send_server, receive_server) = unbounded::<ServerMessage>();
 
-                        loop {
-                            if let Some(snapshot) = server.wait_for_event() {
-                                send_server.send(ServerMessage::Snapshot(snapshot)).unwrap();
-                            }
+                        std::thread::spawn(move || {
+                            let mut server = Server::new().unwrap();
 
-                            if let Ok(msg) = receive_filter.try_recv() {
-                                match msg {
-                                    FilterMessage::CloseConnection => {
-                                        return;
+                            loop {
+                                if let Some(snapshot) = server.wait_for_event() {
+                                    send_server
+                                        .send(ServerMessage::Snapshot(snapshot))
+                                        .unwrap_or(());
+                                }
+
+                                if let Ok(msg) = receive_filter.try_recv() {
+                                    match msg {
+                                        FilterMessage::CloseConnection => {
+                                            return;
+                                        }
                                     }
                                 }
                             }
-                        }
-                    });
+                        });
 
-                    source.update_source_settings(settings);
+                        source.update_source_settings(settings);
 
-                    return Data {
-                        source,
-                        effect,
-                        add_val,
-                        mul_val,
+                        return Data {
+                            source,
+                            effect,
+                            add_val,
+                            mul_val,
+                            image,
 
-                        animation_time,
+                            sampler,
 
-                        current_zoom: zoom,
-                        from_zoom: zoom,
-                        target_zoom: zoom,
-                        internal_zoom: zoom,
+                            animation_time,
 
-                        send: send_filter,
-                        receive: receive_server,
+                            current_zoom: zoom,
+                            from_zoom: zoom,
+                            target_zoom: zoom,
+                            internal_zoom: zoom,
 
-                        current: Vec2::new(0., 0.),
-                        from: Vec2::new(0., 0.),
-                        target: Vec2::new(0., 0.),
+                            send: send_filter,
+                            receive: receive_server,
 
-                        progress: 1.,
+                            current: Vec2::new(0., 0.),
+                            from: Vec2::new(0., 0.),
+                            target: Vec2::new(0., 0.),
 
-                        screen_height,
-                        screen_width,
-                        screen_x,
-                        screen_y,
-                    };
+                            progress: 1.,
+
+                            screen_height,
+                            screen_width,
+                            screen_x,
+                            screen_y,
+                        };
+                    }
                 }
             }
 

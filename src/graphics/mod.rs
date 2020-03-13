@@ -19,7 +19,9 @@ use obs_sys::{
     gs_sampler_info, gs_samplerstate_create, gs_samplerstate_destroy, gs_samplerstate_t,
     obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
     obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
+    vec3, vec4,
 };
+use paste::item;
 
 use super::string::ObsString;
 
@@ -279,44 +281,171 @@ impl GraphicsAllowDirectRendering {
     }
 }
 
-pub struct Vec2 {
-    raw: vec2,
+macro_rules! vector_impls {
+    ($($rust_name: ident, $name:ident => $($component:ident)*,)*) => (
+        $(
+        #[derive(Clone)]
+        pub struct $rust_name {
+            raw: $name,
+        }
+
+        impl $rust_name {
+            pub fn new($( $component: f32, )*) -> Self {
+                let mut v = Self {
+                    raw: $name::default(),
+                };
+                v.set($($component,)*);
+                v
+            }
+
+            #[inline]
+            pub fn zero(&mut self) {
+                $(
+                    self.raw.__bindgen_anon_1.__bindgen_anon_1.$component = 0.;
+                )*
+            }
+
+            #[inline]
+            pub fn copy(&mut self, input: &$rust_name) {
+                self.set($(input.$component(),)*);
+            }
+
+            #[inline]
+            pub fn add(&mut self, input: &$rust_name) {
+                self.set($(self.$component() + input.$component(),)*);
+            }
+
+            #[inline]
+            pub fn sub(&mut self, input: &$rust_name) {
+                self.set($(self.$component() - input.$component(),)*);
+            }
+
+            #[inline]
+            pub fn mul(&mut self, input: &$rust_name) {
+                self.set($(self.$component() * input.$component(),)*);
+            }
+
+            #[inline]
+            pub fn div(&mut self, input: &$rust_name) {
+                self.set($(self.$component() / input.$component(),)*);
+            }
+
+            #[inline]
+            pub fn addf(&mut self, input: f32) {
+                self.set($(self.$component() + input,)*);
+            }
+
+            #[inline]
+            pub fn subf(&mut self, input: f32) {
+                self.set($(self.$component() - input,)*);
+            }
+
+            #[inline]
+            pub fn mulf(&mut self, input: f32) {
+                self.set($(self.$component() * input,)*);
+            }
+
+            #[inline]
+            pub fn divf(&mut self, input: f32) {
+                self.set($(self.$component() / input,)*);
+            }
+
+            #[inline]
+            pub fn neg(&mut self) {
+                self.set($(-self.$component(),)*);
+            }
+
+            #[inline]
+            pub fn dot(&mut self, input: &$rust_name) -> f32 {
+                $(
+                    self.$component() * input.$component() +
+                )* 0.
+            }
+
+            #[inline]
+            pub fn len(&mut self) -> f32 {
+                ($( self.$component() * self.$component() + )* 0.).sqrt()
+            }
+
+            #[inline]
+            pub fn set(&mut self, $( $component: f32, )*) {
+                $(
+                    self.raw.__bindgen_anon_1.__bindgen_anon_1.$component = $component;
+                )*
+            }
+
+            #[inline]
+            pub fn min(&mut self, input: &$rust_name) {
+                self.set($(self.$component().min(input.$component()),)*);
+            }
+
+            #[inline]
+            pub fn max(&mut self, input: &$rust_name) {
+                self.set($(self.$component().max(input.$component()),)*);
+            }
+
+            #[inline]
+            pub fn minf(&mut self, input: f32) {
+                self.set($(self.$component().min(input),)*);
+            }
+
+            #[inline]
+            pub fn maxf(&mut self, input: f32) {
+                self.set($(self.$component().max(input),)*);
+            }
+
+            #[inline]
+            pub fn abs(&mut self) {
+                self.set($(self.$component().abs(),)*);
+            }
+
+            #[inline]
+            pub fn ceil(&mut self) {
+                self.set($(self.$component().ceil(),)*);
+            }
+
+            #[inline]
+            pub fn floor(&mut self) {
+                self.set($(self.$component().floor(),)*);
+            }
+
+            #[inline]
+            pub fn close(&mut self, input: &$rust_name, epsilon: f32) -> bool {
+                $(
+                    (self.$component() - input.$component()).abs() > epsilon &&
+                )* true
+            }
+
+            $(
+                item! {
+                    #[inline]
+                    pub fn [<$component>](&self) -> f32 {
+                        unsafe {
+                            self.raw.__bindgen_anon_1.__bindgen_anon_1.$component
+                        }
+                    }
+                }
+            )*
+
+            pub unsafe fn as_ptr(&mut self) -> *mut $name {
+                &mut self.raw
+            }
+        }
+
+        impl Default for $rust_name {
+            fn default() -> Self {
+                $(
+                    let $component = 0.;
+                )*
+                Self::new($( $component, )*)
+            }
+        }
+        )*
+    );
 }
 
-impl Vec2 {
-    pub fn new(x: f32, y: f32) -> Vec2 {
-        let mut v = Vec2 {
-            raw: vec2::default(),
-        };
-        v.set(x, y);
-        v
-    }
-
-    pub fn x(&self) -> f32 {
-        unsafe { self.raw.__bindgen_anon_1.__bindgen_anon_1.x }
-    }
-
-    pub fn y(&self) -> f32 {
-        unsafe { self.raw.__bindgen_anon_1.__bindgen_anon_1.y }
-    }
-
-    #[inline]
-    pub fn set(&mut self, x: f32, y: f32) {
-        self.raw.__bindgen_anon_1.__bindgen_anon_1.x = x;
-        self.raw.__bindgen_anon_1.__bindgen_anon_1.y = y;
-    }
-
-    pub fn as_ptr(&mut self) -> *mut vec2 {
-        &mut self.raw
-    }
-}
-
-impl Default for Vec2 {
-    fn default() -> Self {
-        let mut v = Vec2 {
-            raw: vec2::default(),
-        };
-        v.set(0., 0.);
-        v
-    }
+vector_impls! {
+    Vec2, vec2 => x y,
+    Vec3, vec3 => x y z,
+    Vec4, vec4 => x y z w,
 }

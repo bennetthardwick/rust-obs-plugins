@@ -369,7 +369,6 @@ impl Module for ScrollFocusFilter {
             .enable_update()
             .enable_video_render()
             .enable_video_tick()
-            .with_output_flags(1)
             .build();
 
         load_context.register_source(source);

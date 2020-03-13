@@ -18,7 +18,7 @@ use obs_sys::{
     obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update,
+    obs_source_update, OBS_SOURCE_VIDEO
 };
 
 use super::{
@@ -224,12 +224,11 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
         }
     }
 
-    pub fn with_output_flags(mut self, flags: u32) -> Self {
-        self.info.output_flags = flags;
-        self
-    }
+    pub fn build(mut self) -> SourceInfo {
+        if self.info.video_render.is_some() {
+            self.info.output_flags |= OBS_SOURCE_VIDEO;
+        }
 
-    pub fn build(self) -> SourceInfo {
         SourceInfo {
             info: Box::new(self.info),
         }

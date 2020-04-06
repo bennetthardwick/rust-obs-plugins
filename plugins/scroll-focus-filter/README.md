@@ -13,7 +13,7 @@ cd rust-obs-plugins
 cargo build -p scroll-focus-filter --release
 # Create a symlink to the plugin so that you don't need to copy when rebuilding, you
 # could alternatively run `sudo cp ./target/release/scrollfocus.so /usr/lib/obs-plugins/`
-sudo ln -s ./target/release/libscrollfocus.so /usr/lib/obs-plugins/libscrollfocus.so
+sudo ln -s $(pwd)/target/release/libscrollfocus.so /usr/lib/obs-plugins/libscrollfocus.so
 ```
 ### Enabling
 

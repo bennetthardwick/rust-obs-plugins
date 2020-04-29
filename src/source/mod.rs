@@ -18,7 +18,7 @@ use obs_sys::{
     obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_VIDEO
+    obs_source_update, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -185,41 +185,10 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
             info: obs_source_info {
                 id: T::get_id().as_ptr(),
                 type_: T::get_type().to_native(),
-                output_flags: 0,
-                get_name: None,
                 create: Some(ffi::create_default_data::<D>),
                 destroy: Some(ffi::destroy::<D>),
-                get_width: None,
-                get_height: None,
-                get_defaults: None,
-                get_properties: None,
-                update: None,
-                activate: None,
-                deactivate: None,
-                show: None,
-                hide: None,
-                video_tick: None,
-                video_render: None,
-                filter_video: None,
-                filter_audio: None,
-                enum_active_sources: None,
-                save: None,
-                load: None,
-                mouse_click: None,
-                mouse_move: None,
-                mouse_wheel: None,
-                focus: None,
-                key_click: None,
-                filter_remove: None,
                 type_data: std::ptr::null_mut(),
-                free_type_data: None,
-                audio_render: None,
-                enum_all_sources: None,
-                transition_start: None,
-                transition_stop: None,
-                get_defaults2: None,
-                get_properties2: None,
-                audio_mix: None,
+                ..Default::default()
             },
         }
     }

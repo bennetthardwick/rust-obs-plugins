@@ -135,7 +135,6 @@ pub const __SIZEOF_PTHREAD_BARRIERATTR_T: u32 = 4;
 pub const _THREAD_MUTEX_INTERNAL_H: u32 = 1;
 pub const __PTHREAD_MUTEX_HAVE_PREV: u32 = 1;
 pub const __have_pthread_attr_t: u32 = 1;
-pub const SIZE_T_FORMAT: &'static [u8; 4usize] = b"%zu\0";
 pub const __GNUC_VA_LIST: u32 = 1;
 pub const _WCHAR_H: u32 = 1;
 pub const __HAVE_FLOAT128: u32 = 0;
@@ -394,9 +393,9 @@ pub const VIDEO_OUTPUT_INVALIDPARAM: i32 = -1;
 pub const VIDEO_OUTPUT_FAIL: i32 = -2;
 pub const CALL_PARAM_IN: u32 = 1;
 pub const CALL_PARAM_OUT: u32 = 2;
-pub const LIBOBS_API_MAJOR_VER: u32 = 24;
+pub const LIBOBS_API_MAJOR_VER: u32 = 25;
 pub const LIBOBS_API_MINOR_VER: u32 = 0;
-pub const LIBOBS_API_PATCH_VER: u32 = 6;
+pub const LIBOBS_API_PATCH_VER: u32 = 4;
 pub const OBS_VERSION: &'static [u8; 8usize] = b"unknown\0";
 pub const OBS_DATA_PATH: &'static [u8; 11usize] = b"../../data\0";
 pub const OBS_INSTALL_PREFIX: &'static [u8; 1usize] = b"\0";
@@ -453,11 +452,14 @@ pub const OBS_SOURCE_DO_NOT_DUPLICATE: u32 = 128;
 pub const OBS_SOURCE_DEPRECATED: u32 = 256;
 pub const OBS_SOURCE_DO_NOT_SELF_MONITOR: u32 = 512;
 pub const OBS_SOURCE_CAP_DISABLED: u32 = 1024;
+pub const OBS_SOURCE_CAP_OBSOLETE: u32 = 1024;
 pub const OBS_SOURCE_MONITOR_BY_DEFAULT: u32 = 2048;
 pub const OBS_SOURCE_SUBMIX: u32 = 4096;
+pub const OBS_SOURCE_CONTROLLABLE_MEDIA: u32 = 8192;
 pub const OBS_ENCODER_CAP_DEPRECATED: u32 = 1;
 pub const OBS_ENCODER_CAP_PASS_TEXTURE: u32 = 2;
 pub const OBS_ENCODER_CAP_DYN_BITRATE: u32 = 4;
+pub const OBS_ENCODER_CAP_INTERNAL: u32 = 8;
 pub const OBS_OUTPUT_VIDEO: u32 = 1;
 pub const OBS_OUTPUT_AUDIO: u32 = 2;
 pub const OBS_OUTPUT_AV: u32 = 3;
@@ -2531,7 +2533,7 @@ extern "C" {
         __dest: *mut ::std::os::raw::c_void,
         __src: *const ::std::os::raw::c_void,
         __c: ::std::os::raw::c_int,
-        __n: size_t,
+        __n: ::std::os::raw::c_ulong,
     ) -> *mut ::std::os::raw::c_void;
 }
 extern "C" {
@@ -4217,6 +4219,71 @@ pub const gs_texture_type_GS_TEXTURE_3D: gs_texture_type = 1;
 pub const gs_texture_type_GS_TEXTURE_CUBE: gs_texture_type = 2;
 pub type gs_texture_type = u32;
 #[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct gs_device_loss {
+    pub device_loss_release:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>,
+    pub device_loss_rebuild: ::std::option::Option<
+        unsafe extern "C" fn(
+            device: *mut ::std::os::raw::c_void,
+            data: *mut ::std::os::raw::c_void,
+        ),
+    >,
+    pub data: *mut ::std::os::raw::c_void,
+}
+#[test]
+fn bindgen_test_layout_gs_device_loss() {
+    assert_eq!(
+        ::std::mem::size_of::<gs_device_loss>(),
+        24usize,
+        concat!("Size of: ", stringify!(gs_device_loss))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<gs_device_loss>(),
+        8usize,
+        concat!("Alignment of ", stringify!(gs_device_loss))
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<gs_device_loss>())).device_loss_release as *const _ as usize
+        },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(gs_device_loss),
+            "::",
+            stringify!(device_loss_release)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<gs_device_loss>())).device_loss_rebuild as *const _ as usize
+        },
+        8usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(gs_device_loss),
+            "::",
+            stringify!(device_loss_rebuild)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<gs_device_loss>())).data as *const _ as usize },
+        16usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(gs_device_loss),
+            "::",
+            stringify!(data)
+        )
+    );
+}
+impl Default for gs_device_loss {
+    fn default() -> Self {
+        unsafe { ::std::mem::zeroed() }
+    }
+}
+#[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 pub struct gs_monitor_info {
     pub rotation_degrees: ::std::os::raw::c_int,
@@ -5615,6 +5682,9 @@ extern "C" {
 }
 extern "C" {
     pub fn gs_stage_texture(dst: *mut gs_stagesurf_t, src: *mut gs_texture_t);
+}
+extern "C" {
+    pub fn gs_begin_frame();
 }
 extern "C" {
     pub fn gs_begin_scene();
@@ -8129,6 +8199,7 @@ pub type video_format = u32;
 pub const video_colorspace_VIDEO_CS_DEFAULT: video_colorspace = 0;
 pub const video_colorspace_VIDEO_CS_601: video_colorspace = 1;
 pub const video_colorspace_VIDEO_CS_709: video_colorspace = 2;
+pub const video_colorspace_VIDEO_CS_SRGB: video_colorspace = 3;
 pub type video_colorspace = u32;
 pub const video_range_type_VIDEO_RANGE_DEFAULT: video_range_type = 0;
 pub const video_range_type_VIDEO_RANGE_PARTIAL: video_range_type = 1;
@@ -10082,6 +10153,9 @@ extern "C" {
     pub fn obs_property_text_type(p: *mut obs_property_t) -> obs_text_type;
 }
 extern "C" {
+    pub fn obs_property_text_monospace(p: *mut obs_property_t) -> obs_text_type;
+}
+extern "C" {
     pub fn obs_property_path_type(p: *mut obs_property_t) -> obs_path_type;
 }
 extern "C" {
@@ -10118,6 +10192,9 @@ extern "C" {
         p: *mut obs_property_t,
         suffix: *const ::std::os::raw::c_char,
     );
+}
+extern "C" {
+    pub fn obs_property_text_set_monospace(p: *mut obs_property_t, monospace: bool);
 }
 extern "C" {
     pub fn obs_property_list_clear(p: *mut obs_property_t);
@@ -10535,6 +10612,30 @@ pub const obs_balance_type_OBS_BALANCE_TYPE_SINE_LAW: obs_balance_type = 0;
 pub const obs_balance_type_OBS_BALANCE_TYPE_SQUARE_LAW: obs_balance_type = 1;
 pub const obs_balance_type_OBS_BALANCE_TYPE_LINEAR: obs_balance_type = 2;
 pub type obs_balance_type = u32;
+pub const obs_icon_type_OBS_ICON_TYPE_UNKNOWN: obs_icon_type = 0;
+pub const obs_icon_type_OBS_ICON_TYPE_IMAGE: obs_icon_type = 1;
+pub const obs_icon_type_OBS_ICON_TYPE_COLOR: obs_icon_type = 2;
+pub const obs_icon_type_OBS_ICON_TYPE_SLIDESHOW: obs_icon_type = 3;
+pub const obs_icon_type_OBS_ICON_TYPE_AUDIO_INPUT: obs_icon_type = 4;
+pub const obs_icon_type_OBS_ICON_TYPE_AUDIO_OUTPUT: obs_icon_type = 5;
+pub const obs_icon_type_OBS_ICON_TYPE_DESKTOP_CAPTURE: obs_icon_type = 6;
+pub const obs_icon_type_OBS_ICON_TYPE_WINDOW_CAPTURE: obs_icon_type = 7;
+pub const obs_icon_type_OBS_ICON_TYPE_GAME_CAPTURE: obs_icon_type = 8;
+pub const obs_icon_type_OBS_ICON_TYPE_CAMERA: obs_icon_type = 9;
+pub const obs_icon_type_OBS_ICON_TYPE_TEXT: obs_icon_type = 10;
+pub const obs_icon_type_OBS_ICON_TYPE_MEDIA: obs_icon_type = 11;
+pub const obs_icon_type_OBS_ICON_TYPE_BROWSER: obs_icon_type = 12;
+pub const obs_icon_type_OBS_ICON_TYPE_CUSTOM: obs_icon_type = 13;
+pub type obs_icon_type = u32;
+pub const obs_media_state_OBS_MEDIA_STATE_NONE: obs_media_state = 0;
+pub const obs_media_state_OBS_MEDIA_STATE_PLAYING: obs_media_state = 1;
+pub const obs_media_state_OBS_MEDIA_STATE_OPENING: obs_media_state = 2;
+pub const obs_media_state_OBS_MEDIA_STATE_BUFFERING: obs_media_state = 3;
+pub const obs_media_state_OBS_MEDIA_STATE_PAUSED: obs_media_state = 4;
+pub const obs_media_state_OBS_MEDIA_STATE_STOPPED: obs_media_state = 5;
+pub const obs_media_state_OBS_MEDIA_STATE_ENDED: obs_media_state = 6;
+pub const obs_media_state_OBS_MEDIA_STATE_ERROR: obs_media_state = 7;
+pub type obs_media_state = u32;
 pub type obs_source_enum_proc_t = ::std::option::Option<
     unsafe extern "C" fn(
         parent: *mut obs_source_t,
@@ -10717,12 +10818,33 @@ pub struct obs_source_info {
             sample_rate: size_t,
         ) -> bool,
     >,
+    pub icon_type: obs_icon_type,
+    pub media_play_pause:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void, pause: bool)>,
+    pub media_restart:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>,
+    pub media_stop: ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>,
+    pub media_next: ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>,
+    pub media_previous:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void)>,
+    pub media_get_duration:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> i64>,
+    pub media_get_time:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> i64>,
+    pub media_set_time: ::std::option::Option<
+        unsafe extern "C" fn(data: *mut ::std::os::raw::c_void, miliseconds: i64),
+    >,
+    pub media_get_state: ::std::option::Option<
+        unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> obs_media_state,
+    >,
+    pub version: u32,
+    pub unversioned_id: *const ::std::os::raw::c_char,
 }
 #[test]
 fn bindgen_test_layout_obs_source_info() {
     assert_eq!(
         ::std::mem::size_of::<obs_source_info>(),
-        288usize,
+        384usize,
         concat!("Size of: ", stringify!(obs_source_info))
     );
     assert_eq!(
@@ -11104,6 +11226,130 @@ fn bindgen_test_layout_obs_source_info() {
             stringify!(obs_source_info),
             "::",
             stringify!(audio_mix)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).icon_type as *const _ as usize },
+        288usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(icon_type)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<obs_source_info>())).media_play_pause as *const _ as usize
+        },
+        296usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_play_pause)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_restart as *const _ as usize },
+        304usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_restart)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_stop as *const _ as usize },
+        312usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_stop)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_next as *const _ as usize },
+        320usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_next)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_previous as *const _ as usize },
+        328usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_previous)
+        )
+    );
+    assert_eq!(
+        unsafe {
+            &(*(::std::ptr::null::<obs_source_info>())).media_get_duration as *const _ as usize
+        },
+        336usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_get_duration)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_get_time as *const _ as usize },
+        344usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_get_time)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_set_time as *const _ as usize },
+        352usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_set_time)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).media_get_state as *const _ as usize },
+        360usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(media_get_state)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).version as *const _ as usize },
+        368usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(version)
+        )
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<obs_source_info>())).unversioned_id as *const _ as usize },
+        376usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_source_info),
+            "::",
+            stringify!(unversioned_id)
         )
     );
 }
@@ -12849,7 +13095,180 @@ pub const obs_key_OBS_KEY_MOUSE27: obs_key = 459;
 pub const obs_key_OBS_KEY_MOUSE28: obs_key = 460;
 pub const obs_key_OBS_KEY_MOUSE29: obs_key = 461;
 pub const obs_key_OBS_KEY_BACKSLASH_RT102: obs_key = 462;
-pub const obs_key_OBS_KEY_LAST_VALUE: obs_key = 463;
+pub const obs_key_OBS_KEY_OPEN: obs_key = 463;
+pub const obs_key_OBS_KEY_FIND: obs_key = 464;
+pub const obs_key_OBS_KEY_REDO: obs_key = 465;
+pub const obs_key_OBS_KEY_UNDO: obs_key = 466;
+pub const obs_key_OBS_KEY_FRONT: obs_key = 467;
+pub const obs_key_OBS_KEY_PROPS: obs_key = 468;
+pub const obs_key_OBS_KEY_VK_CANCEL: obs_key = 469;
+pub const obs_key_OBS_KEY_0x07: obs_key = 470;
+pub const obs_key_OBS_KEY_0x0A: obs_key = 471;
+pub const obs_key_OBS_KEY_0x0B: obs_key = 472;
+pub const obs_key_OBS_KEY_0x0E: obs_key = 473;
+pub const obs_key_OBS_KEY_0x0F: obs_key = 474;
+pub const obs_key_OBS_KEY_0x16: obs_key = 475;
+pub const obs_key_OBS_KEY_VK_JUNJA: obs_key = 476;
+pub const obs_key_OBS_KEY_VK_FINAL: obs_key = 477;
+pub const obs_key_OBS_KEY_0x1A: obs_key = 478;
+pub const obs_key_OBS_KEY_VK_ACCEPT: obs_key = 479;
+pub const obs_key_OBS_KEY_VK_MODECHANGE: obs_key = 480;
+pub const obs_key_OBS_KEY_VK_SELECT: obs_key = 481;
+pub const obs_key_OBS_KEY_VK_PRINT: obs_key = 482;
+pub const obs_key_OBS_KEY_VK_EXECUTE: obs_key = 483;
+pub const obs_key_OBS_KEY_VK_HELP: obs_key = 484;
+pub const obs_key_OBS_KEY_0x30: obs_key = 485;
+pub const obs_key_OBS_KEY_0x31: obs_key = 486;
+pub const obs_key_OBS_KEY_0x32: obs_key = 487;
+pub const obs_key_OBS_KEY_0x33: obs_key = 488;
+pub const obs_key_OBS_KEY_0x34: obs_key = 489;
+pub const obs_key_OBS_KEY_0x35: obs_key = 490;
+pub const obs_key_OBS_KEY_0x36: obs_key = 491;
+pub const obs_key_OBS_KEY_0x37: obs_key = 492;
+pub const obs_key_OBS_KEY_0x38: obs_key = 493;
+pub const obs_key_OBS_KEY_0x39: obs_key = 494;
+pub const obs_key_OBS_KEY_0x3A: obs_key = 495;
+pub const obs_key_OBS_KEY_0x3B: obs_key = 496;
+pub const obs_key_OBS_KEY_0x3C: obs_key = 497;
+pub const obs_key_OBS_KEY_0x3D: obs_key = 498;
+pub const obs_key_OBS_KEY_0x3E: obs_key = 499;
+pub const obs_key_OBS_KEY_0x3F: obs_key = 500;
+pub const obs_key_OBS_KEY_0x40: obs_key = 501;
+pub const obs_key_OBS_KEY_0x41: obs_key = 502;
+pub const obs_key_OBS_KEY_0x42: obs_key = 503;
+pub const obs_key_OBS_KEY_0x43: obs_key = 504;
+pub const obs_key_OBS_KEY_0x44: obs_key = 505;
+pub const obs_key_OBS_KEY_0x45: obs_key = 506;
+pub const obs_key_OBS_KEY_0x46: obs_key = 507;
+pub const obs_key_OBS_KEY_0x47: obs_key = 508;
+pub const obs_key_OBS_KEY_0x48: obs_key = 509;
+pub const obs_key_OBS_KEY_0x49: obs_key = 510;
+pub const obs_key_OBS_KEY_0x4A: obs_key = 511;
+pub const obs_key_OBS_KEY_0x4B: obs_key = 512;
+pub const obs_key_OBS_KEY_0x4C: obs_key = 513;
+pub const obs_key_OBS_KEY_0x4D: obs_key = 514;
+pub const obs_key_OBS_KEY_0x4E: obs_key = 515;
+pub const obs_key_OBS_KEY_0x4F: obs_key = 516;
+pub const obs_key_OBS_KEY_0x50: obs_key = 517;
+pub const obs_key_OBS_KEY_0x51: obs_key = 518;
+pub const obs_key_OBS_KEY_0x52: obs_key = 519;
+pub const obs_key_OBS_KEY_0x53: obs_key = 520;
+pub const obs_key_OBS_KEY_0x54: obs_key = 521;
+pub const obs_key_OBS_KEY_0x55: obs_key = 522;
+pub const obs_key_OBS_KEY_0x56: obs_key = 523;
+pub const obs_key_OBS_KEY_0x57: obs_key = 524;
+pub const obs_key_OBS_KEY_0x58: obs_key = 525;
+pub const obs_key_OBS_KEY_0x59: obs_key = 526;
+pub const obs_key_OBS_KEY_0x5A: obs_key = 527;
+pub const obs_key_OBS_KEY_VK_LWIN: obs_key = 528;
+pub const obs_key_OBS_KEY_VK_RWIN: obs_key = 529;
+pub const obs_key_OBS_KEY_VK_APPS: obs_key = 530;
+pub const obs_key_OBS_KEY_0x5E: obs_key = 531;
+pub const obs_key_OBS_KEY_VK_SLEEP: obs_key = 532;
+pub const obs_key_OBS_KEY_VK_SEPARATOR: obs_key = 533;
+pub const obs_key_OBS_KEY_0x88: obs_key = 534;
+pub const obs_key_OBS_KEY_0x89: obs_key = 535;
+pub const obs_key_OBS_KEY_0x8A: obs_key = 536;
+pub const obs_key_OBS_KEY_0x8B: obs_key = 537;
+pub const obs_key_OBS_KEY_0x8C: obs_key = 538;
+pub const obs_key_OBS_KEY_0x8D: obs_key = 539;
+pub const obs_key_OBS_KEY_0x8E: obs_key = 540;
+pub const obs_key_OBS_KEY_0x8F: obs_key = 541;
+pub const obs_key_OBS_KEY_VK_OEM_FJ_JISHO: obs_key = 542;
+pub const obs_key_OBS_KEY_VK_OEM_FJ_LOYA: obs_key = 543;
+pub const obs_key_OBS_KEY_VK_OEM_FJ_ROYA: obs_key = 544;
+pub const obs_key_OBS_KEY_0x97: obs_key = 545;
+pub const obs_key_OBS_KEY_0x98: obs_key = 546;
+pub const obs_key_OBS_KEY_0x99: obs_key = 547;
+pub const obs_key_OBS_KEY_0x9A: obs_key = 548;
+pub const obs_key_OBS_KEY_0x9B: obs_key = 549;
+pub const obs_key_OBS_KEY_0x9C: obs_key = 550;
+pub const obs_key_OBS_KEY_0x9D: obs_key = 551;
+pub const obs_key_OBS_KEY_0x9E: obs_key = 552;
+pub const obs_key_OBS_KEY_0x9F: obs_key = 553;
+pub const obs_key_OBS_KEY_VK_LSHIFT: obs_key = 554;
+pub const obs_key_OBS_KEY_VK_RSHIFT: obs_key = 555;
+pub const obs_key_OBS_KEY_VK_LCONTROL: obs_key = 556;
+pub const obs_key_OBS_KEY_VK_RCONTROL: obs_key = 557;
+pub const obs_key_OBS_KEY_VK_LMENU: obs_key = 558;
+pub const obs_key_OBS_KEY_VK_RMENU: obs_key = 559;
+pub const obs_key_OBS_KEY_VK_BROWSER_BACK: obs_key = 560;
+pub const obs_key_OBS_KEY_VK_BROWSER_FORWARD: obs_key = 561;
+pub const obs_key_OBS_KEY_VK_BROWSER_REFRESH: obs_key = 562;
+pub const obs_key_OBS_KEY_VK_BROWSER_STOP: obs_key = 563;
+pub const obs_key_OBS_KEY_VK_BROWSER_SEARCH: obs_key = 564;
+pub const obs_key_OBS_KEY_VK_BROWSER_FAVORITES: obs_key = 565;
+pub const obs_key_OBS_KEY_VK_BROWSER_HOME: obs_key = 566;
+pub const obs_key_OBS_KEY_VK_VOLUME_MUTE: obs_key = 567;
+pub const obs_key_OBS_KEY_VK_VOLUME_DOWN: obs_key = 568;
+pub const obs_key_OBS_KEY_VK_VOLUME_UP: obs_key = 569;
+pub const obs_key_OBS_KEY_VK_MEDIA_NEXT_TRACK: obs_key = 570;
+pub const obs_key_OBS_KEY_VK_MEDIA_PREV_TRACK: obs_key = 571;
+pub const obs_key_OBS_KEY_VK_MEDIA_STOP: obs_key = 572;
+pub const obs_key_OBS_KEY_VK_MEDIA_PLAY_PAUSE: obs_key = 573;
+pub const obs_key_OBS_KEY_VK_LAUNCH_MAIL: obs_key = 574;
+pub const obs_key_OBS_KEY_VK_LAUNCH_MEDIA_SELECT: obs_key = 575;
+pub const obs_key_OBS_KEY_VK_LAUNCH_APP1: obs_key = 576;
+pub const obs_key_OBS_KEY_VK_LAUNCH_APP2: obs_key = 577;
+pub const obs_key_OBS_KEY_0xB8: obs_key = 578;
+pub const obs_key_OBS_KEY_0xB9: obs_key = 579;
+pub const obs_key_OBS_KEY_0xC1: obs_key = 580;
+pub const obs_key_OBS_KEY_0xC2: obs_key = 581;
+pub const obs_key_OBS_KEY_0xC3: obs_key = 582;
+pub const obs_key_OBS_KEY_0xC4: obs_key = 583;
+pub const obs_key_OBS_KEY_0xC5: obs_key = 584;
+pub const obs_key_OBS_KEY_0xC6: obs_key = 585;
+pub const obs_key_OBS_KEY_0xC7: obs_key = 586;
+pub const obs_key_OBS_KEY_0xC8: obs_key = 587;
+pub const obs_key_OBS_KEY_0xC9: obs_key = 588;
+pub const obs_key_OBS_KEY_0xCA: obs_key = 589;
+pub const obs_key_OBS_KEY_0xCB: obs_key = 590;
+pub const obs_key_OBS_KEY_0xCC: obs_key = 591;
+pub const obs_key_OBS_KEY_0xCD: obs_key = 592;
+pub const obs_key_OBS_KEY_0xCE: obs_key = 593;
+pub const obs_key_OBS_KEY_0xCF: obs_key = 594;
+pub const obs_key_OBS_KEY_0xD0: obs_key = 595;
+pub const obs_key_OBS_KEY_0xD1: obs_key = 596;
+pub const obs_key_OBS_KEY_0xD2: obs_key = 597;
+pub const obs_key_OBS_KEY_0xD3: obs_key = 598;
+pub const obs_key_OBS_KEY_0xD4: obs_key = 599;
+pub const obs_key_OBS_KEY_0xD5: obs_key = 600;
+pub const obs_key_OBS_KEY_0xD6: obs_key = 601;
+pub const obs_key_OBS_KEY_0xD7: obs_key = 602;
+pub const obs_key_OBS_KEY_0xD8: obs_key = 603;
+pub const obs_key_OBS_KEY_0xD9: obs_key = 604;
+pub const obs_key_OBS_KEY_0xDA: obs_key = 605;
+pub const obs_key_OBS_KEY_VK_OEM_8: obs_key = 606;
+pub const obs_key_OBS_KEY_0xE0: obs_key = 607;
+pub const obs_key_OBS_KEY_VK_OEM_AX: obs_key = 608;
+pub const obs_key_OBS_KEY_VK_ICO_HELP: obs_key = 609;
+pub const obs_key_OBS_KEY_VK_ICO_00: obs_key = 610;
+pub const obs_key_OBS_KEY_VK_PROCESSKEY: obs_key = 611;
+pub const obs_key_OBS_KEY_VK_ICO_CLEAR: obs_key = 612;
+pub const obs_key_OBS_KEY_VK_PACKET: obs_key = 613;
+pub const obs_key_OBS_KEY_0xE8: obs_key = 614;
+pub const obs_key_OBS_KEY_VK_OEM_RESET: obs_key = 615;
+pub const obs_key_OBS_KEY_VK_OEM_JUMP: obs_key = 616;
+pub const obs_key_OBS_KEY_VK_OEM_PA1: obs_key = 617;
+pub const obs_key_OBS_KEY_VK_OEM_PA2: obs_key = 618;
+pub const obs_key_OBS_KEY_VK_OEM_PA3: obs_key = 619;
+pub const obs_key_OBS_KEY_VK_OEM_WSCTRL: obs_key = 620;
+pub const obs_key_OBS_KEY_VK_OEM_CUSEL: obs_key = 621;
+pub const obs_key_OBS_KEY_VK_OEM_ATTN: obs_key = 622;
+pub const obs_key_OBS_KEY_VK_OEM_FINISH: obs_key = 623;
+pub const obs_key_OBS_KEY_VK_OEM_COPY: obs_key = 624;
+pub const obs_key_OBS_KEY_VK_OEM_AUTO: obs_key = 625;
+pub const obs_key_OBS_KEY_VK_OEM_ENLW: obs_key = 626;
+pub const obs_key_OBS_KEY_VK_ATTN: obs_key = 627;
+pub const obs_key_OBS_KEY_VK_CRSEL: obs_key = 628;
+pub const obs_key_OBS_KEY_VK_EXSEL: obs_key = 629;
+pub const obs_key_OBS_KEY_VK_EREOF: obs_key = 630;
+pub const obs_key_OBS_KEY_VK_PLAY: obs_key = 631;
+pub const obs_key_OBS_KEY_VK_ZOOM: obs_key = 632;
+pub const obs_key_OBS_KEY_VK_NONAME: obs_key = 633;
+pub const obs_key_OBS_KEY_VK_PA1: obs_key = 634;
+pub const obs_key_OBS_KEY_VK_OEM_CLEAR: obs_key = 635;
+pub const obs_key_OBS_KEY_LAST_VALUE: obs_key = 636;
 pub type obs_key = u32;
 pub use self::obs_key as obs_key_t;
 #[repr(C)]
@@ -14761,6 +15180,18 @@ extern "C" {
     pub fn obs_enum_input_types(idx: size_t, id: *mut *const ::std::os::raw::c_char) -> bool;
 }
 extern "C" {
+    pub fn obs_enum_input_types2(
+        idx: size_t,
+        id: *mut *const ::std::os::raw::c_char,
+        unversioned_id: *mut *const ::std::os::raw::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn obs_get_latest_input_type_id(
+        unversioned_id: *const ::std::os::raw::c_char,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
     pub fn obs_enum_filter_types(idx: size_t, id: *mut *const ::std::os::raw::c_char) -> bool;
 }
 extern "C" {
@@ -15060,6 +15491,25 @@ extern "C" {
 extern "C" {
     pub fn obs_get_private_data() -> *mut obs_data_t;
 }
+pub type obs_task_t =
+    ::std::option::Option<unsafe extern "C" fn(param: *mut ::std::os::raw::c_void)>;
+pub const obs_task_type_OBS_TASK_UI: obs_task_type = 0;
+pub const obs_task_type_OBS_TASK_GRAPHICS: obs_task_type = 1;
+pub type obs_task_type = u32;
+extern "C" {
+    pub fn obs_queue_task(
+        type_: obs_task_type,
+        task: obs_task_t,
+        param: *mut ::std::os::raw::c_void,
+        wait: bool,
+    );
+}
+pub type obs_task_handler_t = ::std::option::Option<
+    unsafe extern "C" fn(task: obs_task_t, param: *mut ::std::os::raw::c_void, wait: bool),
+>;
+extern "C" {
+    pub fn obs_set_ui_task_handler(handler: obs_task_handler_t);
+}
 extern "C" {
     pub fn obs_view_create() -> *mut obs_view_t;
 }
@@ -15246,6 +15696,11 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_source_get_id(source: *const obs_source_t) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_source_get_unversioned_id(
+        source: *const obs_source_t,
+    ) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn obs_source_get_signal_handler(source: *const obs_source_t) -> *mut signal_handler_t;
@@ -15464,6 +15919,12 @@ extern "C" {
     pub fn obs_source_output_video2(source: *mut obs_source_t, frame: *const obs_source_frame2);
 }
 extern "C" {
+    pub fn obs_source_set_async_rotation(
+        source: *mut obs_source_t,
+        rotation: ::std::os::raw::c_long,
+    );
+}
+extern "C" {
     pub fn obs_source_preload_video(source: *mut obs_source_t, frame: *const obs_source_frame);
 }
 extern "C" {
@@ -15591,6 +16052,39 @@ extern "C" {
 extern "C" {
     pub fn obs_source_get_last_obs_version(source: *const obs_source_t) -> u32;
 }
+extern "C" {
+    pub fn obs_source_media_play_pause(source: *mut obs_source_t, pause: bool);
+}
+extern "C" {
+    pub fn obs_source_media_restart(source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_source_media_stop(source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_source_media_next(source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_source_media_previous(source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_source_media_get_duration(source: *mut obs_source_t) -> i64;
+}
+extern "C" {
+    pub fn obs_source_media_get_time(source: *mut obs_source_t) -> i64;
+}
+extern "C" {
+    pub fn obs_source_media_set_time(source: *mut obs_source_t, ms: i64);
+}
+extern "C" {
+    pub fn obs_source_media_get_state(source: *mut obs_source_t) -> obs_media_state;
+}
+extern "C" {
+    pub fn obs_source_media_started(source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_source_media_ended(source: *mut obs_source_t);
+}
 pub const obs_transition_target_OBS_TRANSITION_SOURCE_A: obs_transition_target = 0;
 pub const obs_transition_target_OBS_TRANSITION_SOURCE_B: obs_transition_target = 1;
 pub type obs_transition_target = u32;
@@ -15607,6 +16101,7 @@ extern "C" {
     pub fn obs_transition_get_active_source(transition: *mut obs_source_t) -> *mut obs_source_t;
 }
 pub const obs_transition_mode_OBS_TRANSITION_MODE_AUTO: obs_transition_mode = 0;
+pub const obs_transition_mode_OBS_TRANSITION_MODE_MANUAL: obs_transition_mode = 1;
 pub type obs_transition_mode = u32;
 extern "C" {
     pub fn obs_transition_start(
@@ -15618,6 +16113,12 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_transition_set(transition: *mut obs_source_t, source: *mut obs_source_t);
+}
+extern "C" {
+    pub fn obs_transition_set_manual_time(transition: *mut obs_source_t, t: f32);
+}
+extern "C" {
+    pub fn obs_transition_set_manual_torque(transition: *mut obs_source_t, torque: f32, clamp: f32);
 }
 pub const obs_transition_scale_type_OBS_TRANSITION_SCALE_MAX_ONLY: obs_transition_scale_type = 0;
 pub const obs_transition_scale_type_OBS_TRANSITION_SCALE_ASPECT: obs_transition_scale_type = 1;
@@ -15736,6 +16237,12 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_scene_find_source(
+        scene: *mut obs_scene_t,
+        name: *const ::std::os::raw::c_char,
+    ) -> *mut obs_sceneitem_t;
+}
+extern "C" {
+    pub fn obs_scene_find_source_recursive(
         scene: *mut obs_scene_t,
         name: *const ::std::os::raw::c_char,
     ) -> *mut obs_sceneitem_t;
@@ -16033,6 +16540,22 @@ extern "C" {
     ) -> *mut obs_sceneitem_t;
 }
 extern "C" {
+    pub fn obs_scene_add_group2(
+        scene: *mut obs_scene_t,
+        name: *const ::std::os::raw::c_char,
+        signal: bool,
+    ) -> *mut obs_sceneitem_t;
+}
+extern "C" {
+    pub fn obs_scene_insert_group2(
+        scene: *mut obs_scene_t,
+        name: *const ::std::os::raw::c_char,
+        items: *mut *mut obs_sceneitem_t,
+        count: size_t,
+        signal: bool,
+    ) -> *mut obs_sceneitem_t;
+}
+extern "C" {
     pub fn obs_scene_get_group(
         scene: *mut obs_scene_t,
         name: *const ::std::os::raw::c_char,
@@ -16046,6 +16569,9 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_sceneitem_group_ungroup(group: *mut obs_sceneitem_t);
+}
+extern "C" {
+    pub fn obs_sceneitem_group_ungroup2(group: *mut obs_sceneitem_t, signal: bool);
 }
 extern "C" {
     pub fn obs_sceneitem_group_add_item(group: *mut obs_sceneitem_t, item: *mut obs_sceneitem_t);
@@ -16077,6 +16603,9 @@ extern "C" {
         >,
         param: *mut ::std::os::raw::c_void,
     );
+}
+extern "C" {
+    pub fn obs_group_from_source(source: *const obs_source_t) -> *mut obs_scene_t;
 }
 extern "C" {
     pub fn obs_sceneitem_defer_group_resize_begin(item: *mut obs_sceneitem_t);
@@ -16396,6 +16925,9 @@ extern "C" {
     pub fn obs_encoder_set_scaled_size(encoder: *mut obs_encoder_t, width: u32, height: u32);
 }
 extern "C" {
+    pub fn obs_encoder_scaling_enabled(encoder: *const obs_encoder_t) -> bool;
+}
+extern "C" {
     pub fn obs_encoder_get_width(encoder: *const obs_encoder_t) -> u32;
 }
 extern "C" {
@@ -16596,6 +17128,9 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_source_frame_copy(dst: *mut obs_source_frame, src: *const obs_source_frame);
+}
+extern "C" {
+    pub fn obs_source_get_icon_type(id: *const ::std::os::raw::c_char) -> obs_icon_type;
 }
 pub type __builtin_va_list = [__va_list_tag; 1usize];
 #[repr(C)]

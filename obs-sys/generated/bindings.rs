@@ -395,7 +395,7 @@ pub const CALL_PARAM_IN: u32 = 1;
 pub const CALL_PARAM_OUT: u32 = 2;
 pub const LIBOBS_API_MAJOR_VER: u32 = 25;
 pub const LIBOBS_API_MINOR_VER: u32 = 0;
-pub const LIBOBS_API_PATCH_VER: u32 = 4;
+pub const LIBOBS_API_PATCH_VER: u32 = 8;
 pub const OBS_VERSION: &'static [u8; 8usize] = b"unknown\0";
 pub const OBS_DATA_PATH: &'static [u8; 11usize] = b"../../data\0";
 pub const OBS_INSTALL_PREFIX: &'static [u8; 1usize] = b"\0";
@@ -17017,6 +17017,16 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_encoder_paused(output: *const obs_encoder_t) -> bool;
+}
+extern "C" {
+    pub fn obs_encoder_get_last_error(encoder: *mut obs_encoder_t)
+        -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_encoder_set_last_error(
+        encoder: *mut obs_encoder_t,
+        message: *const ::std::os::raw::c_char,
+    );
 }
 extern "C" {
     pub fn obs_service_get_display_name(

@@ -37,6 +37,7 @@ struct Data {
     from_zoom: f64,
     target_zoom: f64,
     internal_zoom: f64,
+    padding: f64,
 
     progress: f64,
 
@@ -94,6 +95,13 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
             3840 * 3,
             1,
         );
+        properties.add_float_slider(
+            obs_string!("padding"),
+            obs_string!("Padding around each window"),
+            0.,
+            0.5,
+            0.001,
+        );
         properties.add_int(
             obs_string!("screen_width"),
             obs_string!("Screen width"),
@@ -132,7 +140,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
                         let window_zoom = ((snapshot.width / (data.screen_width as f32))
                             .max(snapshot.height / (data.screen_height as f32))
                             as f64
-                            + 0.1)
+                            + data.padding)
                             .max(data.internal_zoom)
                             .min(1.);
 
@@ -317,6 +325,7 @@ impl CreatableSource<Data> for ScrollFocusFilter {
                             current: Vec2::new(0., 0.),
                             from: Vec2::new(0., 0.),
                             target: Vec2::new(0., 0.),
+                            padding: 0.1,
 
                             progress: 1.,
 
@@ -351,6 +360,10 @@ impl UpdateSource<Data> for ScrollFocusFilter {
 
             if let Some(screen_width) = settings.get_int(obs_string!("screen_width")) {
                 data.screen_width = screen_width as u32;
+            }
+
+            if let Some(padding) = settings.get_float(obs_string!("padding")) {
+                data.padding = padding;
             }
 
             if let Some(animation_time) = settings.get_float(obs_string!("animation_time")) {

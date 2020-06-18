@@ -2,8 +2,6 @@
 
 use paste::item;
 
-mod ffi;
-
 pub mod context;
 pub mod properties;
 pub mod traits;

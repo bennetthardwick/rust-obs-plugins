@@ -4,7 +4,7 @@ impl ObsString {
     /// # Safety
     /// Does no checks for nul terminated strings. This could cause memory overruns if used
     /// incorrectly.
-    pub unsafe fn from_nul_terminted_str(string: &'static str) -> Self {
+    pub const unsafe fn from_nul_terminted_str(string: &'static str) -> Self {
         Self(string)
     }
 

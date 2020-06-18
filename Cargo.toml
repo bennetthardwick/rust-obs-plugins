@@ -12,7 +12,8 @@ description = "Safe wrapper of obs-sys"
 
 members = [
   "obs-sys",
-  "plugins/scroll-focus-filter"
+  "plugins/scroll-focus-filter",
+  "plugins/motion-effect-clone"
 ]
 
 [dependencies]

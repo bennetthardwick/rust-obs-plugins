@@ -6,7 +6,8 @@ edition = "2018"
 
 [dependencies]
 obs-wrapper = { path = "../..", version = "0.1.5" }
+rnnoise-c = "0.2.0"
 
 [lib]
-name = "rnnoise-denoiser"
+name = "rnnoisedenoiser"
 crate-type = ["cdylib"]

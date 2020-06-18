@@ -1,4 +1,5 @@
-use super::context::{ActiveContext, VideoRenderContext};
+use super::audio::AudioDataContext;
+use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
@@ -6,8 +7,8 @@ use std::ffi::c_void;
 use std::os::raw::c_char;
 
 use obs_sys::{
-    gs_effect_t, obs_data_t, obs_properties, obs_properties_create, obs_source_audio_mix,
-    obs_source_enum_proc_t, obs_source_t, size_t,
+    gs_effect_t, obs_audio_data, obs_data_t, obs_properties, obs_properties_create,
+    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -65,8 +66,9 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let mut settings = SettingsContext::from_raw(settings, &wrapper.properties);
 
     let source = SourceContext { source };
+    let mut global = GlobalContext::default();
 
-    let data = F::create(&mut settings, source);
+    let data = F::create(&mut settings, source, &mut global);
 
     wrapper.data = Some(data);
 
@@ -82,10 +84,10 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
     data: *mut c_void,
     settings: *mut obs_data_t,
 ) {
-    let mut active = ActiveContext::default();
+    let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut settings = SettingsContext::from_raw(settings, &data.properties);
-    F::update(&mut data.data, &mut settings, &mut active);
+    F::update(&mut data.data, &mut settings, &mut global);
 }
 
 pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
@@ -93,9 +95,9 @@ pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
     _effect: *mut gs_effect_t,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut active = ActiveContext::default();
+    let mut global = GlobalContext::default();
     let mut render = VideoRenderContext::default();
-    F::video_render(&mut wrapper.data, &mut active, &mut render);
+    F::video_render(&mut wrapper.data, &mut global, &mut render);
 }
 
 pub unsafe extern "C" fn audio_render<D, F: AudioRenderSource<D>>(
@@ -107,8 +109,8 @@ pub unsafe extern "C" fn audio_render<D, F: AudioRenderSource<D>>(
     _sample_rate: size_t,
 ) -> bool {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut active = ActiveContext::default();
-    F::audio_render(&mut wrapper.data, &mut active);
+    let mut global = GlobalContext::default();
+    F::audio_render(&mut wrapper.data, &mut global);
     // TODO: understand what this bool is
     true
 }
@@ -165,4 +167,14 @@ pub unsafe extern "C" fn video_tick<D, F: VideoTickSource<D>>(
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::video_tick(&mut wrapper.data, seconds);
+}
+
+pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+    audio: *mut obs_audio_data,
+) -> *mut obs_audio_data {
+    let mut context = AudioDataContext::from_raw(audio);
+    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
+    F::filter_audio(&mut wrapper.data, &mut context);
+    audio
 }

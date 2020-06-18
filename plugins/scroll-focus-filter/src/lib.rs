@@ -210,7 +210,7 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
 impl VideoRenderSource<Data> for ScrollFocusFilter {
     fn video_render(
         data: &mut Option<Data>,
-        _context: &mut ActiveContext,
+        _context: &mut GlobalContext,
         render: &mut VideoRenderContext,
     ) {
         if let Some(data) = data {
@@ -250,7 +250,11 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 }
 
 impl CreatableSource<Data> for ScrollFocusFilter {
-    fn create(settings: &mut SettingsContext, mut source: SourceContext) -> Data {
+    fn create(
+        settings: &mut SettingsContext,
+        mut source: SourceContext,
+        _context: &mut GlobalContext,
+    ) -> Data {
         if let Some(mut effect) = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),
@@ -349,7 +353,7 @@ impl UpdateSource<Data> for ScrollFocusFilter {
     fn update(
         data: &mut Option<Data>,
         settings: &mut SettingsContext,
-        _context: &mut ActiveContext,
+        _context: &mut GlobalContext,
     ) {
         if let Some(data) = data {
             if let Some(zoom) = settings.get_float(obs_string!("zoom")) {

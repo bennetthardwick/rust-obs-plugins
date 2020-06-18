@@ -5,6 +5,8 @@ use paste::item;
 pub mod context;
 pub mod properties;
 pub mod traits;
+pub mod audio;
+mod ffi;
 
 pub use context::*;
 pub use properties::*;
@@ -229,4 +231,5 @@ impl_source_builder! {
     transition_start => TransitionStartSource
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
+    filter_audio => FilterAudioSource
 }

@@ -1,6 +1,6 @@
-pub struct ActiveContext {}
+pub struct GlobalContext {}
 
-impl Default for ActiveContext {
+impl Default for GlobalContext {
     fn default() -> Self {
         Self {}
     }

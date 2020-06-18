@@ -13,7 +13,7 @@ description = "Safe wrapper of obs-sys"
 members = [
   "obs-sys",
   "plugins/scroll-focus-filter",
-  "plugins/motion-effect-clone"
+  "plugins/rnnoise-denoiser-filter"
 ]
 
 [dependencies]

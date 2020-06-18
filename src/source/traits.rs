@@ -1,4 +1,5 @@
-use super::context::{ActiveContext, VideoRenderContext};
+use super::audio::AudioDataContext;
+use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::{Properties, SettingsContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
@@ -22,23 +23,23 @@ pub trait GetHeightSource<D> {
 }
 
 pub trait CreatableSource<D> {
-    fn create(settings: &mut SettingsContext, source: SourceContext) -> D;
+    fn create(settings: &mut SettingsContext, source: SourceContext, context: &mut GlobalContext) -> D;
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut ActiveContext);
+    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut GlobalContext);
 }
 
 pub trait VideoRenderSource<D> {
     fn video_render(
         data: &mut Option<D>,
-        context: &mut ActiveContext,
+        context: &mut GlobalContext,
         render: &mut VideoRenderContext,
     );
 }
 
 pub trait AudioRenderSource<D> {
-    fn audio_render(data: &mut Option<D>, context: &mut ActiveContext);
+    fn audio_render(data: &mut Option<D>, context: &mut GlobalContext);
 }
 
 pub trait GetPropertiesSource<D> {
@@ -63,4 +64,8 @@ pub trait TransitionStartSource<D> {
 
 pub trait TransitionStopSource<D> {
     fn transition_stop(data: &mut Option<D>);
+}
+
+pub trait FilterAudioSource<D> {
+    fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
 }

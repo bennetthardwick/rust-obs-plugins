@@ -1,15 +1,24 @@
-pub struct GlobalContext {}
+use super::audio::AudioRef;
+use obs_sys::obs_get_audio;
 
-impl Default for GlobalContext {
-    fn default() -> Self {
-        Self {}
+pub struct GlobalContext;
+pub struct VideoRenderContext;
+
+impl GlobalContext {
+    pub fn with_audio<T, F: FnOnce(&AudioRef) -> T>(&self, func: F) -> T {
+        let audio = unsafe { AudioRef::from_raw(obs_get_audio()) };
+        func(&audio)
     }
 }
 
-pub struct VideoRenderContext {}
-
 impl Default for VideoRenderContext {
     fn default() -> Self {
-        Self {}
+        Self
+    }
+}
+
+impl Default for GlobalContext {
+    fn default() -> Self {
+        Self
     }
 }

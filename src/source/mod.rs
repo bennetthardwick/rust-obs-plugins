@@ -2,11 +2,11 @@
 
 use paste::item;
 
+pub mod audio;
 pub mod context;
+mod ffi;
 pub mod properties;
 pub mod traits;
-pub mod audio;
-mod ffi;
 
 pub use context::*;
 pub use properties::*;
@@ -18,7 +18,7 @@ use obs_sys::{
     obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_VIDEO,
+    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -196,6 +196,10 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
     pub fn build(mut self) -> SourceInfo {
         if self.info.video_render.is_some() {
             self.info.output_flags |= OBS_SOURCE_VIDEO;
+        }
+
+        if self.info.audio_render.is_some() || self.info.filter_audio.is_some() {
+            self.info.output_flags |= OBS_SOURCE_AUDIO;
         }
 
         SourceInfo {

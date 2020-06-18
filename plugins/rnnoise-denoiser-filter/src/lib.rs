@@ -2,8 +2,10 @@ use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, sour
 use rnnoise_c::{DenoiseState, FRAME_SIZE};
 
 struct Data {
-    left_over: Vec<f32>,
-    state: DenoiseState,
+    left_over: Vec<Vec<f32>>,
+    state: Vec<DenoiseState>,
+    sample_rate: usize,
+    channels: usize,
 }
 
 struct RnnoiseDenoiserFilter {
@@ -29,11 +31,17 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
     fn create(
         settings: &mut SettingsContext,
         mut source: SourceContext,
-        _context: &mut GlobalContext,
+        context: &mut GlobalContext,
     ) -> Data {
-        let state = DenoiseState::new();
+        let (sample_rate, channels) =
+            context.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
 
-        todo!()
+        Data {
+            left_over: vec![vec![0.; FRAME_SIZE]; channels],
+            state: (0..channels).map(|_| DenoiseState::new()).collect(),
+            sample_rate,
+            channels,
+        }
     }
 }
 
@@ -41,8 +49,31 @@ impl UpdateSource<Data> for RnnoiseDenoiserFilter {
     fn update(
         data: &mut Option<Data>,
         settings: &mut SettingsContext,
-        _context: &mut GlobalContext,
+        context: &mut GlobalContext,
     ) {
+        if let Some(data) = data {
+            let (sample_rate, channels) =
+                context.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
+
+            data.sample_rate = sample_rate;
+
+            if data.channels != channels {
+                data.left_over = vec![vec![0.; FRAME_SIZE]; channels];
+                data.state = (0..channels).map(|_| DenoiseState::new()).collect();
+            }
+        }
+    }
+}
+
+impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
+    fn filter_audio(_data: &mut Option<Data>, audio: &mut audio::AudioDataContext) {
+        let data = audio
+            .get_channel_as_mut_slice(1)
+            .expect("There was not a second channel!");
+
+        for sample in data {
+            *sample = 0.;
+        }
     }
 }
 
@@ -60,6 +91,7 @@ impl Module for RnnoiseDenoiserFilter {
             .enable_get_name()
             .enable_create()
             .enable_update()
+            .enable_filter_audio()
             .build();
 
         load_context.register_source(source);
@@ -71,9 +103,11 @@ impl Module for RnnoiseDenoiserFilter {
         obs_string!("A filter that focused the currently focused Xorg window.")
     }
     fn name() -> ObsString {
-        obs_string!("Scroll Focus Filter")
+        obs_string!("Rnnoise Denoiser Filter")
     }
     fn author() -> ObsString {
         obs_string!("Bennett Hardwick")
     }
 }
+
+obs_register_module!(RnnoiseDenoiserFilter);

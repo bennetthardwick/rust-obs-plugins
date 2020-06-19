@@ -17,7 +17,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
-      - run: sudo apt-get install obs-studio libx11-xcb-dev llvm
+      - run: sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev llvm
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable

@@ -14,12 +14,12 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
-      - run: sudo apt-get install obs-studio
+      - run: sudo apt-get install obs-studio libxcb-dev
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo test --all
-      - run: cargo build --release --all
+      - run: cargo test --workspace
+      - run: cargo build --release --workspace
 
   build_windows:
     runs-on: windows-latest
@@ -30,8 +30,8 @@ jobs:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
       - run: choco install obs-studio
-      - run: cargo test --all
-      - run: cargo build --release --all
+      - run: cargo test --workspace --exclude scroll-focus-filter
+      - run: cargo build --release --workspace --exclude scroll-focus-filter
 
   build_macos:
     runs-on: macos-latest
@@ -42,5 +42,5 @@ jobs:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
       - run: brew cask install obs
-      - run: cargo test --all
-      - run: cargo build --release --all
+      - run: cargo test --workspace --exclude scroll-focus-filter
+      - run: cargo build --release --workspace --exclude scroll-focus-filter

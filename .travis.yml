@@ -15,6 +15,8 @@ addons:
 matrix:
   allow_failures:
     - rust: nightly
+
+jobs:
   include:
     - os: linux
       dist: bionic

@@ -1,7 +1,4 @@
-os:
-  - linux
-  - osx
-  - windows
+dist: bionic
 language: rust
 rust:
   - stable

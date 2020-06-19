@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+# env:
+#   FAIL_BUILD_IN_CI: true
+
 jobs:
   build_linux:
     runs-on: ubuntu-latest
@@ -29,7 +32,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
-      - run: choco install obs-studio
+      - run: choco install obs-studio llvm
       - run: cargo test --workspace --exclude scroll-focus-filter
       - run: cargo build --release --workspace --exclude scroll-focus-filter
 
@@ -41,6 +44,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
+      - run: brew install llvm
       - run: brew cask install obs
       - run: cargo test --workspace --exclude scroll-focus-filter
       - run: cargo build --release --workspace --exclude scroll-focus-filter

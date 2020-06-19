@@ -41,6 +41,6 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
-      - run: brew install obs
+      - run: brew cask install obs
       - run: cargo test --all
       - run: cargo build --release --all

@@ -1,4 +1,7 @@
-dist: bionic
+os:
+  - linux
+  - osx
+  - windows
 language: rust
 rust:
   - stable
@@ -12,3 +15,6 @@ addons:
 matrix:
   allow_failures:
     - rust: nightly
+  include:
+    - os: linux
+      dist: bionic

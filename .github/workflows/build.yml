@@ -17,7 +17,7 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
-      - run: sudo apt-get install obs-studio libxcb
+      - run: sudo apt-get install obs-studio libx11-xcb-dev
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -45,6 +45,7 @@ jobs:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
       - run: brew install llvm
+      - run: brew link --force llvm
       - run: brew cask install obs
       - run: cargo test --workspace --exclude scroll-focus-filter
       - run: cargo build --release --workspace --exclude scroll-focus-filter

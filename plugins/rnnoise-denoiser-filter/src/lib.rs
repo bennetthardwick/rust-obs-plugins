@@ -1,10 +1,28 @@
 use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*};
 use rnnoise_c::{DenoiseState, FRAME_SIZE};
 
+use std::collections::VecDeque;
+
+use dasp::{
+    interpolate::linear::Linear,
+    signal::{self, interpolate::Converter, Signal},
+};
+
+const RNNOISE_SAMPLE_RATE: f64 = 48000.;
+const WAV_COEFFICIENT: f32 = 32767.0;
+
+struct Output {
+    buffer: VecDeque<f32>,
+    last_input: (f32, f32),
+    last_output: (f32, f32),
+}
+
 struct Data {
-    left_over: Vec<Vec<f32>>,
-    state: Vec<DenoiseState>,
-    sample_rate: usize,
+    output: Output,
+    input: VecDeque<f32>,
+    state: DenoiseState,
+    temp: [f32; FRAME_SIZE],
+    sample_rate: f64,
     channels: usize,
 }
 
@@ -37,9 +55,15 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
             context.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
 
         Data {
-            left_over: vec![vec![0.; FRAME_SIZE]; channels],
-            state: (0..channels).map(|_| DenoiseState::new()).collect(),
-            sample_rate,
+            input: VecDeque::with_capacity(FRAME_SIZE * 3),
+            output: Output {
+                buffer: VecDeque::with_capacity(FRAME_SIZE * 3),
+                last_output: (0., 0.),
+                last_input: (0., 0.),
+            },
+            temp: [0.; FRAME_SIZE],
+            state: DenoiseState::new(),
+            sample_rate: sample_rate as f64,
             channels,
         }
     }
@@ -52,27 +76,107 @@ impl UpdateSource<Data> for RnnoiseDenoiserFilter {
         context: &mut GlobalContext,
     ) {
         if let Some(data) = data {
-            let (sample_rate, channels) =
-                context.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
-
-            data.sample_rate = sample_rate;
-
-            if data.channels != channels {
-                data.left_over = vec![vec![0.; FRAME_SIZE]; channels];
-                data.state = (0..channels).map(|_| DenoiseState::new()).collect();
-            }
+            let sample_rate = context.with_audio(|audio| audio.output_sample_rate());
+            data.sample_rate = sample_rate as f64;
         }
     }
 }
 
 impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
-    fn filter_audio(_data: &mut Option<Data>, audio: &mut audio::AudioDataContext) {
-        let data = audio
-            .get_channel_as_mut_slice(1)
-            .expect("There was not a second channel!");
+    fn filter_audio(data: &mut Option<Data>, audio: &mut audio::AudioDataContext) {
+        if let Some(data) = data {
+            let state = &mut data.state;
+            let input_ring_buffer = &mut data.input;
+            let output_state = &mut data.output;
 
-        for sample in data {
-            *sample = 0.;
+            let temp = &mut data.temp;
+
+            if let Some(base) = audio.get_channel_as_mut_slice(0) {
+                for channel in 1..data.channels {
+                    let buffer = audio
+                        .get_channel_as_mut_slice(channel)
+                        .expect("Channel count said there was a buffer here.");
+
+                    for (output, input) in base.iter_mut().zip(buffer.iter()) {
+                        *output = (*output + *input) / 2.;
+                    }
+                }
+
+                let mut audio_chunks = base.chunks_mut(FRAME_SIZE);
+
+                while let Some(buffer) = audio_chunks.next() {
+                    for sample in buffer.iter() {
+                        input_ring_buffer.push_back(*sample);
+                    }
+
+                    let output_buffer = &mut output_state.buffer;
+                    let last_input = &mut output_state.last_input;
+                    let last_output = &mut output_state.last_output;
+
+                    let start_last_input = (last_input.0, last_input.1);
+                    let start_last_output = (last_output.0, last_output.1);
+
+                    if input_ring_buffer.len() >= FRAME_SIZE {
+                        let mut converter = Converter::from_hz_to_hz(
+                            signal::from_iter((0..FRAME_SIZE).map(|_| {
+                                let s = input_ring_buffer
+                                    .pop_front()
+                                    .expect("There should be a sample there!");
+
+                                last_input.0 = last_input.1;
+                                last_input.1 = s;
+
+                                s
+                            })),
+                            Linear::new(start_last_input.1, start_last_input.0),
+                            data.sample_rate,
+                            RNNOISE_SAMPLE_RATE,
+                        );
+
+                        for sample in temp.iter_mut() {
+                            *sample = converter.next() * WAV_COEFFICIENT;
+                        }
+
+                        state.process_frame_in_place(temp);
+
+                        for sample in temp.iter_mut() {
+                            *sample /= WAV_COEFFICIENT;
+                            last_output.0 = last_output.1;
+                            last_output.1 = *sample;
+                        }
+
+                        let converter = Converter::from_hz_to_hz(
+                            signal::from_iter(temp.iter().map(|sample| *sample)),
+                            Linear::new(start_last_output.0, start_last_output.1),
+                            RNNOISE_SAMPLE_RATE,
+                            data.sample_rate,
+                        );
+
+                        for sample in converter.until_exhausted() {
+                            output_buffer.push_back(sample);
+                        }
+                    }
+
+                    if output_state.buffer.len() >= buffer.len() {
+                        for sample in buffer.iter_mut() {
+                            *sample = output_state
+                                .buffer
+                                .pop_front()
+                                .expect("There should be a sample there!");
+                        }
+                    }
+                }
+
+                for channel in 1..data.channels {
+                    let buffer = audio
+                        .get_channel_as_mut_slice(channel)
+                        .expect("Channel count said there was a buffer here.");
+
+                    for (output, input) in buffer.iter_mut().zip(base.iter()) {
+                        *output = *input;
+                    }
+                }
+            }
         }
     }
 }

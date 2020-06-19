@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 obs-wrapper = { path = "../..", version = "0.1.5" }
 rnnoise-c = "0.2.0"
+dasp = { version = "0.11.0", features = [ "interpolate", "signal", "ring_buffer", "interpolate-linear" ] }
 
 [lib]
 name = "rnnoisedenoiser"

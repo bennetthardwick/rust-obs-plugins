@@ -1,0 +1,46 @@
+name: Build OBS Plugins
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: ubuntu-rust-target-directory
+      - run: sudo apt-get install obs-studio
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - run: cargo test --all
+      - run: cargo build --release --all
+
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: windows-rust-target-directory
+      - run: choco install obs-studio
+      - run: cargo test --all
+      - run: cargo build --release --all
+
+  build_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: macos-rust-target-directory
+      - run: brew install obs
+      - run: cargo test --all
+      - run: cargo build --release --all

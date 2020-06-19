@@ -1,4 +1,4 @@
-use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*};
+use obs_wrapper::{obs_register_module, obs_string, prelude::*, source::*};
 use rnnoise_c::{DenoiseState, FRAME_SIZE};
 
 use std::collections::VecDeque;
@@ -32,7 +32,7 @@ struct RnnoiseDenoiserFilter {
 
 impl Sourceable for RnnoiseDenoiserFilter {
     fn get_id() -> ObsString {
-        obs_string!("rnnoise_denoiser_filter")
+        obs_string!("rnnoise_noise_suppression_filter")
     }
     fn get_type() -> SourceType {
         SourceType::FILTER
@@ -41,14 +41,14 @@ impl Sourceable for RnnoiseDenoiserFilter {
 
 impl GetNameSource<Data> for RnnoiseDenoiserFilter {
     fn get_name() -> ObsString {
-        obs_string!("Rnnoise Denoiser Filter")
+        obs_string!("Rnnoise Noise Suppression Filter")
     }
 }
 
 impl CreatableSource<Data> for RnnoiseDenoiserFilter {
     fn create(
-        settings: &mut SettingsContext,
-        mut source: SourceContext,
+        _settings: &mut SettingsContext,
+        mut _source: SourceContext,
         context: &mut GlobalContext,
     ) -> Data {
         let (sample_rate, channels) =
@@ -72,7 +72,7 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
 impl UpdateSource<Data> for RnnoiseDenoiserFilter {
     fn update(
         data: &mut Option<Data>,
-        settings: &mut SettingsContext,
+        _settings: &mut SettingsContext,
         context: &mut GlobalContext,
     ) {
         if let Some(data) = data {
@@ -204,10 +204,10 @@ impl Module for RnnoiseDenoiserFilter {
     }
 
     fn description() -> ObsString {
-        obs_string!("A filter that focused the currently focused Xorg window.")
+        obs_string!("A filter that removes background noise from your microphone using the rnnoise neural network noise suppression model.")
     }
     fn name() -> ObsString {
-        obs_string!("Rnnoise Denoiser Filter")
+        obs_string!("Rnnoise Noise Suppression Filter")
     }
     fn author() -> ObsString {
         obs_string!("Bennett Hardwick")

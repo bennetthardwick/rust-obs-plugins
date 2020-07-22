@@ -21,8 +21,9 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: cargo test --workspace
-      - run: cargo build --release --workspace
+      - run: |
+          cargo test --workspace
+          cargo build --release --workspace
 
   build_windows:
     runs-on: windows-latest
@@ -32,9 +33,10 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
-      - run: choco install obs-studio llvm
-      - run: cargo test --workspace --exclude scroll-focus-filter
-      - run: cargo build --release --workspace --exclude scroll-focus-filter
+      - run: |
+          choco install obs-studio llvm
+          cargo test --workspace --exclude scroll-focus-filter
+          cargo build --release --workspace --exclude scroll-focus-filter
 
   build_macos:
     runs-on: macos-latest
@@ -44,8 +46,9 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
-      - run: brew install llvm
-      - run: brew link --force llvm
-      - run: brew cask install obs
-      - run: cargo test --workspace --exclude scroll-focus-filter
-      - run: cargo build --release --workspace --exclude scroll-focus-filter
+      - run: |
+          brew install llvm
+          brew link --force llvm
+          brew cask install obs
+          cargo test --workspace --exclude scroll-focus-filter
+          cargo build --release --workspace --exclude scroll-focus-filter

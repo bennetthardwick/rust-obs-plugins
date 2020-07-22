@@ -1,5 +1,5 @@
+use nnnoiseless::DenoiseState;
 use obs_wrapper::{obs_register_module, obs_string, prelude::*, source::*};
-use rnnoise_c::{DenoiseState, FRAME_SIZE};
 
 use std::collections::VecDeque;
 
@@ -10,6 +10,7 @@ use dasp::{
 
 const RNNOISE_SAMPLE_RATE: f64 = 48000.;
 const WAV_COEFFICIENT: f32 = 32767.0;
+const FRAME_SIZE: usize = DenoiseState::FRAME_SIZE;
 
 struct Output {
     buffer: VecDeque<f32>,
@@ -20,8 +21,9 @@ struct Output {
 struct Data {
     output: Output,
     input: VecDeque<f32>,
-    state: DenoiseState,
+    state: Box<DenoiseState>,
     temp: [f32; FRAME_SIZE],
+    temp_out: [f32; FRAME_SIZE],
     sample_rate: f64,
     channels: usize,
 }
@@ -62,6 +64,7 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
                 last_input: (0., 0.),
             },
             temp: [0.; FRAME_SIZE],
+            temp_out: [0.; FRAME_SIZE],
             state: DenoiseState::new(),
             sample_rate: sample_rate as f64,
             channels,
@@ -90,6 +93,7 @@ impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
             let output_state = &mut data.output;
 
             let temp = &mut data.temp;
+            let temp_out = &mut data.temp_out;
 
             if let Some(base) = audio.get_channel_as_mut_slice(0) {
                 for channel in 1..data.channels {
@@ -137,16 +141,16 @@ impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
                             *sample = converter.next() * WAV_COEFFICIENT;
                         }
 
-                        state.process_frame_in_place(temp);
+                        state.process_frame(temp_out, temp);
 
-                        for sample in temp.iter_mut() {
+                        for sample in temp_out.iter_mut() {
                             *sample /= WAV_COEFFICIENT;
                             last_output.0 = last_output.1;
                             last_output.1 = *sample;
                         }
 
                         let converter = Converter::from_hz_to_hz(
-                            signal::from_iter(temp.iter().map(|sample| *sample)),
+                            signal::from_iter(temp_out.iter().map(|sample| *sample)),
                             Linear::new(start_last_output.0, start_last_output.1),
                             RNNOISE_SAMPLE_RATE,
                             data.sample_rate,

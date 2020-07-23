@@ -233,8 +233,6 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
             let cx = source.get_base_width();
             let cy = source.get_base_height();
 
-            println!("SOURCE CX {}", cx);
-
             source.do_with_target(|target| {
                 target_cx = target.get_base_width();
                 target_cy = target.get_base_height();

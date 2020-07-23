@@ -227,20 +227,26 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 
             let zoom = data.current_zoom as f32;
 
-            let mut cx: u32 = 1;
-            let mut cy: u32 = 1;
+            let mut target_cx: u32 = 1;
+            let mut target_cy: u32 = 1;
+
+            let cx = source.get_base_width();
+            let cy = source.get_base_height();
+
+            println!("SOURCE CX {}", cx);
 
             source.do_with_target(|target| {
-                cx = target.get_base_width();
-                cy = target.get_base_height();
+                target_cx = target.get_base_width();
+                target_cy = target.get_base_height();
             });
 
-            source.process_filter(
+            source.process_filter_tech(
                 render,
                 effect,
-                (cx, cy),
+                (target_cx, target_cy),
                 GraphicsColorFormat::RGBA,
                 GraphicsAllowDirectRendering::NoDirectRendering,
+                obs_string!("DrawUndistort"),
                 |context, _effect| {
                     param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
                     param_mul.set_vec2(context, &Vec2::new(zoom, zoom));

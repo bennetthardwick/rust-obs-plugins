@@ -15,7 +15,8 @@ pub use traits::*;
 use obs_sys::{
     obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width,
     obs_source_get_type, obs_source_info, obs_source_process_filter_begin,
-    obs_source_process_filter_end, obs_source_skip_video_filter, obs_source_t, obs_source_type,
+    obs_source_process_filter_end, obs_source_process_filter_tech_end,
+    obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
     obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_VIDEO,
@@ -128,6 +129,35 @@ impl SourceContext {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
                     obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
+                }
+            }
+        }
+    }
+
+    pub fn process_filter_tech<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
+        &mut self,
+        _render: &mut VideoRenderContext,
+        effect: &mut GraphicsEffect,
+        (cx, cy): (u32, u32),
+        format: GraphicsColorFormat,
+        direct: GraphicsAllowDirectRendering,
+        technique: ObsString,
+        func: F,
+    ) {
+        unsafe {
+            if let Some(SourceType::FILTER) =
+                SourceType::from_native(obs_source_get_type(self.source))
+            {
+                if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
+                    let mut context = GraphicsEffectContext::new();
+                    func(&mut context, effect);
+                    obs_source_process_filter_tech_end(
+                        self.source,
+                        effect.as_ptr(),
+                        cx,
+                        cy,
+                        technique.as_ptr(),
+                    );
                 }
             }
         }

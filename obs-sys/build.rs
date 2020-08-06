@@ -4,9 +4,19 @@ use std::env;
 use std::fs;
 use std::path::PathBuf;
 
+#[cfg(windows)]
+mod build_win;
+
+#[cfg(windows)]
+use build_win::find_windows_obs_lib;
+
 fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rustc-link-lib=dylib=obs");
+
+    #[cfg(windows)]
+    find_windows_obs_lib();
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 

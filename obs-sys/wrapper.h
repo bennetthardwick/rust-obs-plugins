@@ -1,1 +1,1 @@
-#include <obs/obs.h>
+#include "obs/libobs/obs.h"

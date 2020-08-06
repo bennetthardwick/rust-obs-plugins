@@ -17,7 +17,9 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
-      - run: sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev llvm
+      - run: |
+          sudo apt-get update
+          sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -34,7 +36,7 @@ jobs:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
       - run: |
-          choco install obs-studio llvm
+          choco install obs-studio
           cargo test --workspace --exclude scroll-focus-filter
           cargo build --release --workspace --exclude scroll-focus-filter
 
@@ -47,8 +49,6 @@ jobs:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
       - run: |
-          brew install llvm
-          brew link --force llvm
           brew cask install obs
           cargo test --workspace --exclude scroll-focus-filter
           cargo build --release --workspace --exclude scroll-focus-filter

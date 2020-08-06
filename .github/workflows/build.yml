@@ -5,8 +5,8 @@ on:
     branches:
       - master
 
-# env:
-#   FAIL_BUILD_IN_CI: true
+env:
+  DONT_USE_GENERATED_BINDINGS: "true"
 
 jobs:
   build_linux:
@@ -18,14 +18,15 @@ jobs:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
       - run: |
+          sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt-get update
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
       - run: |
+          cargo build --verbose --workspace
           cargo test --workspace
-          cargo build --release --workspace
 
   build_windows:
     runs-on: windows-latest
@@ -36,9 +37,9 @@ jobs:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
       - run: |
-          choco install obs-studio
+          choco install obs-studio llvm
+          cargo build --verbose --workspace --exclude scroll-focus-filter
           cargo test --workspace --exclude scroll-focus-filter
-          cargo build --release --workspace --exclude scroll-focus-filter
 
   build_macos:
     runs-on: macos-latest
@@ -50,5 +51,5 @@ jobs:
           key: macos-rust-target-directory
       - run: |
           brew cask install obs
+          cargo build --verbose --workspace --exclude scroll-focus-filter
           cargo test --workspace --exclude scroll-focus-filter
-          cargo build --release --workspace --exclude scroll-focus-filter

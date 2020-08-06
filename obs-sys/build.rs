@@ -32,10 +32,8 @@ fn main() {
             .expect("Couldn't write bindings!");
         fs::copy(&out_path, "generated/bindings.rs").expect("Could not copy bindings!");
     } else {
-        if let Ok(should_fail) = env::var("FAIL_BUILD_IN_CI") {
-            if should_fail == "true" {
-                panic!("Could not find obs headers - aborting!");
-            }
+        if env::var("DONT_USE_GENERATED_BINDINGS").is_ok() {
+            panic!("Could not find obs headers - aborting!");
         }
 
         println!("cargo:warning=Could not find obs headers - using pre-compiled.");

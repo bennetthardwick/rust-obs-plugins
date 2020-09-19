@@ -7,16 +7,25 @@ use std::path::PathBuf;
 #[cfg(windows)]
 mod build_win;
 
-#[cfg(windows)]
-use build_win::find_windows_obs_lib;
+#[cfg(target_os = "macos")]
+mod build_mac;
 
 fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
+
+    #[cfg(not(target_os = "macos"))]
     println!("cargo:rustc-link-lib=dylib=obs");
 
+    // mac OBS only ships with libobs.0.dylib for some reason
+    #[cfg(target_os = "macos")]
+    println!("cargo:rustc-link-lib=dylib=obs.0");
+
     #[cfg(windows)]
-    find_windows_obs_lib();
+    build_win::find_windows_obs_lib();
+
+    #[cfg(target_os = "macos")]
+    build_mac::find_mac_obs_lib();
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 

@@ -1,4 +1,5 @@
 use core::convert::TryFrom;
+use core::ptr::null_mut;
 use obs_sys::{
     gs_address_mode, gs_address_mode_GS_ADDRESS_BORDER, gs_address_mode_GS_ADDRESS_CLAMP,
     gs_address_mode_GS_ADDRESS_MIRROR, gs_address_mode_GS_ADDRESS_MIRRORONCE,
@@ -26,12 +27,15 @@ use obs_sys::{
     gs_shader_param_type_GS_SHADER_PARAM_STRING, gs_shader_param_type_GS_SHADER_PARAM_TEXTURE,
     gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN, gs_shader_param_type_GS_SHADER_PARAM_VEC2,
     gs_shader_param_type_GS_SHADER_PARAM_VEC3, gs_shader_param_type_GS_SHADER_PARAM_VEC4,
-    obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
-    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
-    vec3, vec4,
+    gs_texture_create, gs_texture_destroy, gs_texture_get_height, gs_texture_get_width,
+    gs_texture_set_image, gs_texture_t, obs_allow_direct_render,
+    obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
+    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
+    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC,
 };
 use paste::item;
 use std::ffi::{CStr, CString};
+use std::os::raw::c_int;
 
 use super::string::ObsString;
 
@@ -602,4 +606,57 @@ vector_impls! {
     Vec2, vec2 => x y,
     Vec3, vec3 => x y z,
     Vec4, vec4 => x y z w,
+}
+
+pub struct GraphicsTexture {
+    raw: *mut gs_texture_t,
+}
+
+impl GraphicsTexture {
+    pub fn new(width: u32, height: u32, format: GraphicsColorFormat) -> Self {
+        unsafe {
+            obs_enter_graphics();
+            let raw = gs_texture_create(width, height, format.as_raw(), 1, null_mut(), GS_DYNAMIC);
+            obs_leave_graphics();
+            Self { raw }
+        }
+    }
+    pub fn height(&self) -> u32 {
+        unsafe {
+            obs_enter_graphics();
+            let ret = gs_texture_get_height(self.raw);
+            obs_leave_graphics();
+            ret
+        }
+    }
+    pub fn width(&self) -> u32 {
+        unsafe {
+            obs_enter_graphics();
+            let ret = gs_texture_get_width(self.raw);
+            obs_leave_graphics();
+            ret
+        }
+    }
+    pub fn set_image(&mut self, data: &[u8], linesize: u32, invert: bool) {
+        unsafe {
+            obs_enter_graphics();
+            gs_texture_set_image(self.raw, data.as_ptr(), linesize, invert);
+            obs_leave_graphics();
+        }
+    }
+    pub fn draw(&self, x: c_int, y: c_int, cx: u32, cy: u32, flip: bool) {
+        unsafe {
+            obs_source_draw(self.raw, x, y, cx, cy, flip);
+        }
+    }
+}
+
+impl Drop for GraphicsTexture {
+    fn drop(&mut self) {
+        unsafe {
+            obs_enter_graphics();
+            gs_texture_destroy(self.raw);
+            obs_leave_graphics();
+        }
+    }
 }

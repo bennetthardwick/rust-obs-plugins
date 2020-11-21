@@ -10,18 +10,19 @@ pub mod properties;
 pub mod traits;
 
 pub use context::*;
+pub use media::*;
 pub use properties::*;
 pub use traits::*;
-pub use media::*;
 
 use obs_sys::{
-    obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width,
-    obs_source_get_type, obs_source_info, obs_source_process_filter_begin,
-    obs_source_process_filter_end, obs_source_process_filter_tech_end,
-    obs_source_skip_video_filter, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_VIDEO,
+    obs_filter_get_target, obs_source_active, obs_source_get_base_height,
+    obs_source_get_base_width, obs_source_get_id, obs_source_get_name, obs_source_get_type,
+    obs_source_info, obs_source_process_filter_begin, obs_source_process_filter_end,
+    obs_source_process_filter_tech_end, obs_source_showing, obs_source_skip_video_filter,
+    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, obs_source_update, OBS_SOURCE_AUDIO,
+    OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -31,7 +32,7 @@ use super::{
     string::ObsString,
 };
 
-use std::marker::PhantomData;
+use std::{ffi::CStr, marker::PhantomData};
 
 /// OBS source type
 ///
@@ -99,6 +100,28 @@ impl SourceContext {
 
     pub fn get_base_height(&self) -> u32 {
         unsafe { obs_source_get_base_height(self.source) }
+    }
+
+    pub fn showing(&self) -> bool {
+        unsafe { obs_source_showing(self.source) }
+    }
+
+    pub fn active(&self) -> bool {
+        unsafe { obs_source_active(self.source) }
+    }
+
+    pub fn source_id(&self) -> &str {
+        unsafe {
+            let ptr = obs_source_get_id(self.source);
+            CStr::from_ptr(ptr).to_str().unwrap()
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        unsafe {
+            let ptr = obs_source_get_name(self.source);
+            CStr::from_ptr(ptr).to_str().unwrap()
+        }
     }
 
     /// Skips the video filter if it's invalid
@@ -232,6 +255,10 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
 
         if self.info.audio_render.is_some() || self.info.filter_audio.is_some() {
             self.info.output_flags |= OBS_SOURCE_AUDIO;
+        }
+
+        if self.info.media_get_state.is_some() || self.info.media_play_pause.is_some() {
+            self.info.output_flags |= OBS_SOURCE_CONTROLLABLE_MEDIA;
         }
 
         SourceInfo {

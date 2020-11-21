@@ -35,21 +35,32 @@ impl<D> From<D> for DataWrapper<D> {
     }
 }
 
+macro_rules! impl_simple_fn {
+    ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
+        item! {
+            pub unsafe extern "C" fn $name<D, F: $trait<D>>(
+                data: *mut ::std::os::raw::c_void,
+            ) $(-> $ret)? {
+                let wrapper = &mut *(data as *mut DataWrapper<D>);
+                F::$name(&mut wrapper.data)
+            }
+        }
+    )*)
+}
+
 pub unsafe extern "C" fn get_name<D, F: GetNameSource<D>>(
     _type_data: *mut c_void,
 ) -> *const c_char {
     F::get_name().as_ptr()
 }
 
-pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::get_width(&mut wrapper.data)
-}
+impl_simple_fn!(
+    get_width => GetWidthSource -> u32
+    get_height => GetHeightSource -> u32
 
-pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::get_height(&wrapper.data)
-}
+    activate => ActivateSource
+    deactivate => DeactivateSource
+);
 
 pub unsafe extern "C" fn create_default_data<D>(
     _settings: *mut obs_data_t,
@@ -148,19 +159,10 @@ pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
     F::enum_all_sources(&mut wrapper.data, &context);
 }
 
-pub unsafe extern "C" fn transition_start<D, F: TransitionStartSource<D>>(
-    data: *mut ::std::os::raw::c_void,
-) {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::transition_start(&mut wrapper.data);
-}
-
-pub unsafe extern "C" fn transition_stop<D, F: TransitionStopSource<D>>(
-    data: *mut ::std::os::raw::c_void,
-) {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::transition_stop(&mut wrapper.data);
-}
+impl_simple_fn!(
+    transition_start => TransitionStartSource
+    transition_stop => TransitionStopSource
+);
 
 pub unsafe extern "C" fn video_tick<D, F: VideoTickSource<D>>(
     data: *mut ::std::os::raw::c_void,

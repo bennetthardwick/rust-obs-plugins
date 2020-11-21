@@ -257,6 +257,8 @@ impl_source_builder! {
     get_name => GetNameSource
     get_width => GetWidthSource
     get_height => GetHeightSource
+    activate => ActivateSource
+    deactivate => DeactivateSource
     create => CreatableSource
     update => UpdateSource
     video_render => VideoRenderSource

@@ -9,17 +9,24 @@ pub trait Sourceable {
     fn get_type() -> SourceType;
 }
 
+macro_rules! simple_trait {
+    ($($f:ident => $t:ident $(-> $ret:ty)?)*) => ($(
+        pub trait $t<D> {
+            fn $f(data: &mut Option<D>) $(-> $ret)?;
+        }
+    )*)
+}
+
 pub trait GetNameSource<D> {
     fn get_name() -> ObsString;
 }
 
-pub trait GetWidthSource<D> {
-    fn get_width(data: &mut Option<D>) -> u32;
-}
-
-pub trait GetHeightSource<D> {
-    fn get_height(data: &Option<D>) -> u32;
-}
+simple_trait!(
+    get_width => GetWidthSource -> u32
+    get_height => GetHeightSource -> u32
+    activate => ActivateSource
+    deactivate => DeactivateSource
+);
 
 pub trait CreatableSource<D> {
     fn create(
@@ -61,13 +68,10 @@ pub trait EnumAllSource<D> {
     fn enum_all_sources(data: &mut Option<D>, context: &EnumAllContext);
 }
 
-pub trait TransitionStartSource<D> {
-    fn transition_start(data: &mut Option<D>);
-}
-
-pub trait TransitionStopSource<D> {
-    fn transition_stop(data: &mut Option<D>);
-}
+simple_trait!(
+    transition_start => TransitionStartSource
+    transition_stop => TransitionStopSource
+);
 
 pub trait FilterAudioSource<D> {
     fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
@@ -81,15 +85,7 @@ pub trait MediaGetStateSource<D> {
     fn get_state(data: &mut Option<D>) -> MediaState;
 }
 
-macro_rules! media_trait {
-    ($($f:ident => $t:ident $(-> $ret:ty)?)*) => ($(
-        pub trait $t<D> {
-            fn $f(data: &mut Option<D>) $(-> $ret)?;
-        }
-    )*)
-}
-
-media_trait!(
+simple_trait!(
     restart => MediaRestartSource
     stop => MediaStopSource
     next => MediaNextSource

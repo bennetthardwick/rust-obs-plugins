@@ -5,12 +5,14 @@ use paste::item;
 pub mod audio;
 pub mod context;
 mod ffi;
+pub mod media;
 pub mod properties;
 pub mod traits;
 
 pub use context::*;
 pub use properties::*;
 pub use traits::*;
+pub use media::*;
 
 use obs_sys::{
     obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width,
@@ -266,4 +268,12 @@ impl_source_builder! {
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
     filter_audio => FilterAudioSource
+    media_play_pause => MediaPlayPauseSource
+    media_restart => MediaRestartSource
+    media_stop => MediaStopSource
+    media_next => MediaNextSource
+    media_previous => MediaPreviousSource
+    media_get_duration => MediaGetDurationSource
+    media_get_time => MediaGetTimeSource
+    media_get_state => MediaGetStateSource
 }

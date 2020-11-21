@@ -1,8 +1,7 @@
-use super::audio::AudioDataContext;
+use super::{audio::AudioDataContext, media::MediaState};
 use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::{Properties, SettingsContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
-
 use crate::string::ObsString;
 
 pub trait Sourceable {
@@ -23,7 +22,11 @@ pub trait GetHeightSource<D> {
 }
 
 pub trait CreatableSource<D> {
-    fn create(settings: &mut SettingsContext, source: SourceContext, context: &mut GlobalContext) -> D;
+    fn create(
+        settings: &mut SettingsContext,
+        source: SourceContext,
+        context: &mut GlobalContext,
+    ) -> D;
 }
 
 pub trait UpdateSource<D> {
@@ -69,3 +72,28 @@ pub trait TransitionStopSource<D> {
 pub trait FilterAudioSource<D> {
     fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
 }
+
+pub trait MediaPlayPauseSource<D> {
+    fn play_pause(data: &mut Option<D>, pause: bool);
+}
+
+pub trait MediaGetStateSource<D> {
+    fn get_state(data: &mut Option<D>) -> MediaState;
+}
+
+macro_rules! media_trait {
+    ($($f:ident => $t:ident $(-> $ret:ty)?)*) => ($(
+        pub trait $t<D> {
+            fn $f(data: &mut Option<D>) $(-> $ret)?;
+        }
+    )*)
+}
+
+media_trait!(
+    restart => MediaRestartSource
+    stop => MediaStopSource
+    next => MediaNextSource
+    previous => MediaPreviousSource
+    get_duration => MediaGetDurationSource -> i64
+    get_time => MediaGetTimeSource -> i64
+);

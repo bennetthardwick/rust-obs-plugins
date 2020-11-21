@@ -3,12 +3,13 @@ use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
+use paste::item;
 use std::ffi::c_void;
 use std::os::raw::c_char;
 
 use obs_sys::{
-    gs_effect_t, obs_audio_data, obs_data_t, obs_properties, obs_properties_create,
-    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_t, size_t,
+    gs_effect_t, obs_audio_data, obs_data_t, obs_media_state, obs_properties,
+    obs_properties_create, obs_source_audio_mix, obs_source_enum_proc_t, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -178,3 +179,40 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
 }
+
+pub unsafe extern "C" fn media_play_pause<D, F: MediaPlayPauseSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+    pause: bool,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    F::play_pause(&mut wrapper.data, pause);
+}
+
+pub unsafe extern "C" fn media_get_state<D, F: MediaGetStateSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+) -> obs_media_state {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    F::get_state(&mut wrapper.data).to_native()
+}
+
+macro_rules! impl_media {
+    ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
+        item! {
+            pub unsafe extern "C" fn [<media_$name>]<D, F: $trait<D>>(
+                data: *mut ::std::os::raw::c_void,
+            ) $(-> $ret)? {
+                let wrapper = &mut *(data as *mut DataWrapper<D>);
+                F::$name(&mut wrapper.data)
+            }
+        }
+    )*)
+}
+
+impl_media!(
+    stop => MediaStopSource
+    restart => MediaRestartSource
+    next => MediaNextSource
+    previous => MediaPreviousSource
+    get_duration => MediaGetDurationSource -> i64
+    get_time => MediaGetTimeSource -> i64
+);

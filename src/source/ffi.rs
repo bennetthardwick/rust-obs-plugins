@@ -1,19 +1,49 @@
 use super::audio::AudioDataContext;
-use super::context::{GlobalContext, VideoRenderContext};
+use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
+use super::hotkey::Hotkey;
 use super::properties::{Properties, Property, SettingsContext};
 use super::traits::*;
+use super::ObsString;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
+use std::collections::HashMap;
 use std::ffi::c_void;
 use std::os::raw::c_char;
 
 use obs_sys::{
-    gs_effect_t, obs_audio_data, obs_data_t, obs_properties, obs_properties_create,
-    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_t, size_t,
+    gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
+    obs_hotkey_t, obs_properties, obs_properties_create, obs_source_audio_mix,
+    obs_source_enum_proc_t, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
     data: Option<D>,
     properties: Vec<Property>,
+    hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>>,
+}
+
+impl<D> DataWrapper<D> {
+    pub(crate) unsafe fn register_callbacks(
+        &mut self,
+        callbacks: Vec<(
+            ObsString,
+            ObsString,
+            Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
+        )>,
+        source: *mut obs_source_t,
+        data: *mut c_void,
+    ) {
+        for (name, description, func) in callbacks.into_iter() {
+            let id = obs_hotkey_register_source(
+                source,
+                name.as_ptr(),
+                description.as_ptr(),
+                Some(hotkey_callback::<D>),
+                data,
+            );
+
+            self.hotkey_callbacks.insert(id, func);
+        }
+    }
 }
 
 impl<D> Default for DataWrapper<D> {
@@ -21,6 +51,7 @@ impl<D> Default for DataWrapper<D> {
         Self {
             data: None,
             properties: vec![],
+            hotkey_callbacks: HashMap::new(),
         }
     }
 }
@@ -30,6 +61,7 @@ impl<D> From<D> for DataWrapper<D> {
         Self {
             data: Some(data),
             properties: vec![],
+            hotkey_callbacks: HashMap::new(),
         }
     }
 }
@@ -63,16 +95,25 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut wrapper = DataWrapper::default();
-    let mut settings = SettingsContext::from_raw(settings, &wrapper.properties);
-
-    let source = SourceContext { source };
     let mut global = GlobalContext::default();
+    let mut settings = SettingsContext::from_raw(settings, &wrapper.properties);
+    let mut create = CreatableSourceContext::from_raw(source, &mut settings, &mut global);
 
-    let data = F::create(&mut settings, source, &mut global);
+    let source_context = SourceContext { source };
+
+    let data = F::create(&mut create, source_context);
 
     wrapper.data = Some(data);
+    let callbacks = create.hotkey_callbacks;
 
-    Box::into_raw(Box::new(wrapper)) as *mut c_void
+    let pointer = Box::into_raw(Box::new(wrapper));
+
+    pointer
+        .as_mut()
+        .unwrap()
+        .register_callbacks(callbacks, source, pointer as *mut c_void);
+
+    return pointer as *mut c_void;
 }
 
 pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
@@ -177,4 +218,21 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
+}
+
+pub unsafe extern "C" fn hotkey_callback<D>(
+    data: *mut c_void,
+    id: obs_hotkey_id,
+    hotkey: *mut obs_hotkey_t,
+    pressed: bool,
+) {
+    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
+
+    let data = &mut wrapper.data;
+    let hotkey_callbacks = &mut wrapper.hotkey_callbacks;
+    let mut key = Hotkey::from_raw(hotkey, pressed);
+
+    if let Some(callback) = hotkey_callbacks.get_mut(&id) {
+        callback(&mut key, data);
+    }
 }

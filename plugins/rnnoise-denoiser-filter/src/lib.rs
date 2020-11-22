@@ -48,13 +48,9 @@ impl GetNameSource<Data> for RnnoiseDenoiserFilter {
 }
 
 impl CreatableSource<Data> for RnnoiseDenoiserFilter {
-    fn create(
-        _settings: &mut SettingsContext,
-        mut _source: SourceContext,
-        context: &mut GlobalContext,
-    ) -> Data {
+    fn create(create: &mut CreatableSourceContext<Data>, mut _source: SourceContext) -> Data {
         let (sample_rate, channels) =
-            context.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
+            create.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
 
         Data {
             input: VecDeque::with_capacity(FRAME_SIZE * 3),

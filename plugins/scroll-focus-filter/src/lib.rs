@@ -260,16 +260,20 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 }
 
 impl CreatableSource<Data> for ScrollFocusFilter {
-    fn create(
-        settings: &mut SettingsContext,
-        mut source: SourceContext,
-        _context: &mut GlobalContext,
-    ) -> Data {
+    fn create(create: &mut CreatableSourceContext<Data>, mut source: SourceContext) -> Data {
         let mut effect = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),
         )
         .expect("Could not load crop filter effect!");
+
+        create.register_hotkey(
+            obs_string!("scroll_focus_filter.Create"),
+            obs_string!("Get stuff"),
+            Box::new(|a, b| println!("WOOOOW!")),
+        );
+
+        let settings = &mut create.settings;
 
         if let (
             Some(image),

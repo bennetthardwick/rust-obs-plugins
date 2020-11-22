@@ -1,5 +1,5 @@
 use super::audio::AudioDataContext;
-use super::context::{GlobalContext, VideoRenderContext};
+use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::properties::{Properties, SettingsContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
@@ -23,7 +23,7 @@ pub trait GetHeightSource<D> {
 }
 
 pub trait CreatableSource<D> {
-    fn create(settings: &mut SettingsContext, source: SourceContext, context: &mut GlobalContext) -> D;
+    fn create(create: &mut CreatableSourceContext<D>, source: SourceContext) -> D;
 }
 
 pub trait UpdateSource<D> {

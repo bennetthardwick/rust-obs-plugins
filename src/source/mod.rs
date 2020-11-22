@@ -5,6 +5,7 @@ use paste::item;
 pub mod audio;
 pub mod context;
 mod ffi;
+mod hotkey;
 pub mod properties;
 pub mod traits;
 

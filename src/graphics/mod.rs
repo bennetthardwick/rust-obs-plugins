@@ -55,7 +55,7 @@ impl GraphicsGuard {
         Self
     }
 
-    fn with_enter<T, F: Fn() -> T>(f: F) -> T {
+    pub fn with_enter<T, F: FnOnce() -> T>(f: F) -> T {
         let _g = Self::enter();
         f()
     }
@@ -690,11 +690,11 @@ impl<'tex> MappedTexture<'tex> {
     fn new(tex: &'tex mut GraphicsTexture) -> Result<Self> {
         let mut ptr: *mut u8 = ptr::null_mut();
         let mut linesize = 0u32;
-        let _g = GraphicsGuard::enter();
-        unsafe {
-            if !gs_texture_map(tex.as_ptr(), &mut ptr, &mut linesize) {
-                return Err(Error);
-            }
+        let map_result = GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_map(tex.as_ptr(), &mut ptr, &mut linesize)
+        });
+        if !map_result {
+            return Err(Error);
         }
         let len = (linesize * tex.height()) as usize;
         Ok(Self { tex, ptr, len })

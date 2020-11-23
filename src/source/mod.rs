@@ -7,6 +7,7 @@ pub mod context;
 mod ffi;
 pub mod properties;
 pub mod traits;
+pub mod data;
 
 pub use context::*;
 pub use properties::*;

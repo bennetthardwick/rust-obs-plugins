@@ -126,6 +126,8 @@ pub mod source;
 /// String macros
 pub mod string;
 
+mod native_enum;
+
 /// Re-exports of a bunch of popular tools
 pub mod prelude {
     pub use crate::module::*;

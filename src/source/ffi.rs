@@ -6,6 +6,7 @@ use super::traits::*;
 use super::ObsString;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
 use crate::data::DataObj;
+use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::forget;
@@ -13,7 +14,7 @@ use std::os::raw::c_char;
 
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
-    obs_hotkey_t, obs_properties, obs_properties_create, obs_source_audio_mix,
+    obs_hotkey_t, obs_media_state, obs_properties, obs_properties_create, obs_source_audio_mix,
     obs_source_enum_proc_t, obs_source_t, size_t,
 };
 
@@ -65,21 +66,32 @@ impl<D> From<D> for DataWrapper<D> {
     }
 }
 
+macro_rules! impl_simple_fn {
+    ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
+        item! {
+            pub unsafe extern "C" fn $name<D, F: $trait<D>>(
+                data: *mut ::std::os::raw::c_void,
+            ) $(-> $ret)? {
+                let wrapper = &mut *(data as *mut DataWrapper<D>);
+                F::$name(&mut wrapper.data)
+            }
+        }
+    )*)
+}
+
 pub unsafe extern "C" fn get_name<D, F: GetNameSource<D>>(
     _type_data: *mut c_void,
 ) -> *const c_char {
     F::get_name().as_ptr()
 }
 
-pub unsafe extern "C" fn get_width<D, F: GetWidthSource<D>>(data: *mut c_void) -> u32 {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::get_width(&mut wrapper.data)
-}
+impl_simple_fn!(
+    get_width => GetWidthSource -> u32
+    get_height => GetHeightSource -> u32
 
-pub unsafe extern "C" fn get_height<D, F: GetHeightSource<D>>(data: *mut c_void) -> u32 {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::get_height(&wrapper.data)
-}
+    activate => ActivateSource
+    deactivate => DeactivateSource
+);
 
 pub unsafe extern "C" fn create_default_data<D>(
     _settings: *mut obs_data_t,
@@ -191,19 +203,10 @@ pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
     F::enum_all_sources(&mut wrapper.data, &context);
 }
 
-pub unsafe extern "C" fn transition_start<D, F: TransitionStartSource<D>>(
-    data: *mut ::std::os::raw::c_void,
-) {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::transition_start(&mut wrapper.data);
-}
-
-pub unsafe extern "C" fn transition_stop<D, F: TransitionStopSource<D>>(
-    data: *mut ::std::os::raw::c_void,
-) {
-    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::transition_stop(&mut wrapper.data);
-}
+impl_simple_fn!(
+    transition_start => TransitionStartSource
+    transition_stop => TransitionStopSource
+);
 
 pub unsafe extern "C" fn video_tick<D, F: VideoTickSource<D>>(
     data: *mut ::std::os::raw::c_void,
@@ -222,6 +225,43 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
 }
+
+pub unsafe extern "C" fn media_play_pause<D, F: MediaPlayPauseSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+    pause: bool,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    F::play_pause(&mut wrapper.data, pause);
+}
+
+pub unsafe extern "C" fn media_get_state<D, F: MediaGetStateSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+) -> obs_media_state {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    F::get_state(&mut wrapper.data).to_native()
+}
+
+macro_rules! impl_media {
+    ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
+        item! {
+            pub unsafe extern "C" fn [<media_$name>]<D, F: $trait<D>>(
+                data: *mut ::std::os::raw::c_void,
+            ) $(-> $ret)? {
+                let wrapper = &mut *(data as *mut DataWrapper<D>);
+                F::$name(&mut wrapper.data)
+            }
+        }
+    )*)
+}
+
+impl_media!(
+    stop => MediaStopSource
+    restart => MediaRestartSource
+    next => MediaNextSource
+    previous => MediaPreviousSource
+    get_duration => MediaGetDurationSource -> i64
+    get_time => MediaGetTimeSource -> i64
+);
 
 pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
     let mut settings = DataObj::new_unchecked(settings);

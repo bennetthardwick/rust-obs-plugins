@@ -6,21 +6,28 @@ pub mod audio;
 pub mod context;
 mod ffi;
 mod hotkey;
+pub mod media;
 pub mod properties;
 pub mod traits;
 
 pub use context::*;
+pub use media::*;
 pub use properties::*;
 pub use traits::*;
 
 use obs_sys::{
-    obs_filter_get_target, obs_source_get_base_height, obs_source_get_base_width,
-    obs_source_get_type, obs_source_info, obs_source_process_filter_begin,
-    obs_source_process_filter_end, obs_source_process_filter_tech_end,
-    obs_source_skip_video_filter, obs_source_t, obs_source_type,
+    obs_filter_get_target, obs_source_active, obs_source_enabled, obs_source_get_base_height,
+    obs_source_get_base_width, obs_source_get_height, obs_source_get_id, obs_source_get_name,
+    obs_source_get_type, obs_source_get_width, obs_source_info, obs_source_media_ended,
+    obs_source_media_get_duration, obs_source_media_get_state, obs_source_media_get_time,
+    obs_source_media_next, obs_source_media_play_pause, obs_source_media_previous,
+    obs_source_media_restart, obs_source_media_set_time, obs_source_media_started,
+    obs_source_media_stop, obs_source_process_filter_begin, obs_source_process_filter_end,
+    obs_source_process_filter_tech_end, obs_source_set_enabled, obs_source_set_name,
+    obs_source_showing, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_VIDEO,
+    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -31,7 +38,10 @@ use super::{
 };
 use crate::data::DataObj;
 
-use std::marker::PhantomData;
+use std::{
+    ffi::{CStr, CString},
+    marker::PhantomData,
+};
 
 /// OBS source type
 ///
@@ -99,6 +109,118 @@ impl SourceContext {
 
     pub fn get_base_height(&self) -> u32 {
         unsafe { obs_source_get_base_height(self.source) }
+    }
+
+    pub fn showing(&self) -> bool {
+        unsafe { obs_source_showing(self.source) }
+    }
+
+    pub fn active(&self) -> bool {
+        unsafe { obs_source_active(self.source) }
+    }
+
+    pub fn enabled(&self) -> bool {
+        unsafe { obs_source_enabled(self.source) }
+    }
+
+    pub fn set_enabled(&mut self, enabled: bool) {
+        unsafe { obs_source_set_enabled(self.source, enabled) }
+    }
+
+    pub fn source_id(&self) -> Option<&str> {
+        unsafe {
+            let ptr = obs_source_get_id(self.source);
+            if ptr.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(ptr).to_str().unwrap())
+            }
+        }
+    }
+
+    pub fn name(&self) -> Option<&str> {
+        unsafe {
+            let ptr = obs_source_get_name(self.source);
+            if ptr.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(ptr).to_str().unwrap())
+            }
+        }
+    }
+
+    pub fn set_name(&mut self, name: &str) {
+        let cstr = CString::new(name).unwrap();
+        unsafe {
+            obs_source_set_name(self.source, cstr.as_ptr());
+        }
+    }
+
+    pub fn width(&self) -> u32 {
+        unsafe { obs_source_get_width(self.source) }
+    }
+
+    pub fn height(&self) -> u32 {
+        unsafe { obs_source_get_height(self.source) }
+    }
+
+    pub fn media_play_pause(&mut self, pause: bool) {
+        unsafe {
+            obs_source_media_play_pause(self.source, pause);
+        }
+    }
+
+    pub fn media_restart(&mut self) {
+        unsafe {
+            obs_source_media_restart(self.source);
+        }
+    }
+
+    pub fn media_stop(&mut self) {
+        unsafe {
+            obs_source_media_stop(self.source);
+        }
+    }
+
+    pub fn media_next(&mut self) {
+        unsafe {
+            obs_source_media_next(self.source);
+        }
+    }
+
+    pub fn media_previous(&mut self) {
+        unsafe {
+            obs_source_media_previous(self.source);
+        }
+    }
+
+    pub fn media_duration(&self) -> i64 {
+        unsafe { obs_source_media_get_duration(self.source) }
+    }
+
+    pub fn media_time(&self) -> i64 {
+        unsafe { obs_source_media_get_time(self.source) }
+    }
+
+    pub fn media_set_time(&mut self, ms: i64) {
+        unsafe { obs_source_media_set_time(self.source, ms) }
+    }
+
+    pub fn media_state(&self) -> MediaState {
+        let ret = unsafe { obs_source_media_get_state(self.source) };
+        MediaState::from_native(ret).expect("Invalid media state value")
+    }
+
+    pub fn media_started(&mut self) {
+        unsafe {
+            obs_source_media_started(self.source);
+        }
+    }
+
+    pub fn media_ended(&mut self) {
+        unsafe {
+            obs_source_media_ended(self.source);
+        }
     }
 
     /// Skips the video filter if it's invalid
@@ -234,6 +356,10 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
             self.info.output_flags |= OBS_SOURCE_AUDIO;
         }
 
+        if self.info.media_get_state.is_some() || self.info.media_play_pause.is_some() {
+            self.info.output_flags |= OBS_SOURCE_CONTROLLABLE_MEDIA;
+        }
+
         SourceInfo {
             info: Box::new(self.info),
         }
@@ -257,6 +383,8 @@ impl_source_builder! {
     get_name => GetNameSource
     get_width => GetWidthSource
     get_height => GetHeightSource
+    activate => ActivateSource
+    deactivate => DeactivateSource
     create => CreatableSource
     update => UpdateSource
     video_render => VideoRenderSource
@@ -269,4 +397,12 @@ impl_source_builder! {
     video_tick => VideoTickSource
     filter_audio => FilterAudioSource
     get_defaults => GetDefaultsSource
+    media_play_pause => MediaPlayPauseSource
+    media_restart => MediaRestartSource
+    media_stop => MediaStopSource
+    media_next => MediaNextSource
+    media_previous => MediaPreviousSource
+    media_get_duration => MediaGetDurationSource
+    media_get_time => MediaGetTimeSource
+    media_get_state => MediaGetStateSource
 }

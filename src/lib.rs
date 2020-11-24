@@ -126,9 +126,26 @@ pub mod source;
 /// String macros
 pub mod string;
 
+pub mod data;
+
+mod native_enum;
+
 /// Re-exports of a bunch of popular tools
 pub mod prelude {
     pub use crate::module::*;
     pub use crate::source::context::*;
     pub use crate::string::*;
+    pub use crate::data::{DataObj, DataArray, FromDataItem};
 }
+#[derive(Debug)]
+pub struct Error;
+
+impl std::error::Error for Error {}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "OBS Error")
+    }
+}
+
+pub type Result<T> = std::result::Result<T, Error>;

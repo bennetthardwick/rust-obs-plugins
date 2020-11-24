@@ -78,55 +78,63 @@ impl GetNameSource<Data> for ScrollFocusFilter {
 
 impl GetPropertiesSource<Data> for ScrollFocusFilter {
     fn get_properties(_data: &mut Option<Data>, properties: &mut Properties) {
-        properties.add_float_slider(
-            obs_string!("zoom"),
-            obs_string!("Amount to zoom in window"),
-            1.,
-            5.,
-            0.001,
-        );
-        properties.add_int(
-            obs_string!("screen_x"),
-            obs_string!("Offset relative to top left screen - x"),
-            0,
-            3840 * 3,
-            1,
-        );
-        properties.add_int(
-            obs_string!("screen_y"),
-            obs_string!("Offset relative to top left screen - y"),
-            0,
-            3840 * 3,
-            1,
-        );
-        properties.add_float_slider(
-            obs_string!("padding"),
-            obs_string!("Padding around each window"),
-            0.,
-            0.5,
-            0.001,
-        );
-        properties.add_int(
-            obs_string!("screen_width"),
-            obs_string!("Screen width"),
-            1,
-            3840 * 3,
-            1,
-        );
-        properties.add_int(
-            obs_string!("screen_height"),
-            obs_string!("Screen height"),
-            1,
-            3840 * 3,
-            1,
-        );
-        properties.add_float(
-            obs_string!("animation_time"),
-            obs_string!("Animation Time (s)"),
-            0.3,
-            10.,
-            0.001,
-        );
+        properties
+            .add_float(
+                obs_string!("zoom"),
+                obs_string!("Amount to zoom in window"),
+                1.,
+                5.,
+                0.001,
+                true,
+            )
+            .add_int(
+                obs_string!("screen_x"),
+                obs_string!("Offset relative to top left screen - x"),
+                0,
+                3840 * 3,
+                1,
+                false,
+            )
+            .add_int(
+                obs_string!("screen_y"),
+                obs_string!("Offset relative to top left screen - y"),
+                0,
+                3840 * 3,
+                1,
+                false,
+            )
+            .add_float(
+                obs_string!("padding"),
+                obs_string!("Padding around each window"),
+                0.,
+                0.5,
+                0.001,
+                true,
+            )
+            .add_int(
+                obs_string!("screen_width"),
+                obs_string!("Screen width"),
+                1,
+                3840 * 3,
+                1,
+                false,
+            )
+            .add_int(
+                obs_string!("screen_height"),
+                obs_string!("Screen height"),
+                1,
+                3840 * 3,
+                1,
+                false,
+            )
+            .add_float(
+                obs_string!("animation_time"),
+                obs_string!("Animation Time (s)"),
+                0.3,
+                10.,
+                0.001,
+                false,
+            );
     }
 }
 
@@ -261,7 +269,7 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
 
 impl CreatableSource<Data> for ScrollFocusFilter {
     fn create(
-        settings: &mut SettingsContext,
+        settings: &mut DataObj,
         mut source: SourceContext,
         _context: &mut GlobalContext,
     ) -> Data {
@@ -284,23 +292,17 @@ impl CreatableSource<Data> for ScrollFocusFilter {
             effect.get_effect_param_by_name(obs_string!("base_dimension_i")),
             effect.get_effect_param_by_name(obs_string!("mul_val")),
         ) {
-            let zoom = 1. / settings.get_float(obs_string!("zoom")).unwrap_or(1.);
+            let zoom = 1. / settings.get(obs_string!("zoom")).unwrap_or(1.);
 
             let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
 
-            let screen_width = settings
-                .get_int(obs_string!("screen_width"))
-                .unwrap_or(1920) as u32;
-            let screen_height = settings
-                .get_int(obs_string!("screen_height"))
-                .unwrap_or(1080) as u32;
+            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920) as u32;
+            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080) as u32;
 
-            let screen_x = settings.get_int(obs_string!("screen_x")).unwrap_or(0) as u32;
-            let screen_y = settings.get_int(obs_string!("screen_y")).unwrap_or(0) as u32;
+            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0) as u32;
+            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0) as u32;
 
-            let animation_time = settings
-                .get_float(obs_string!("animation_time"))
-                .unwrap_or(0.3);
+            let animation_time = settings.get(obs_string!("animation_time")).unwrap_or(0.3);
 
             let (send_filter, receive_filter) = unbounded::<FilterMessage>();
             let (send_server, receive_server) = unbounded::<ServerMessage>();
@@ -369,37 +371,33 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 }
 
 impl UpdateSource<Data> for ScrollFocusFilter {
-    fn update(
-        data: &mut Option<Data>,
-        settings: &mut SettingsContext,
-        _context: &mut GlobalContext,
-    ) {
+    fn update(data: &mut Option<Data>, settings: &mut DataObj, _context: &mut GlobalContext) {
         if let Some(data) = data {
-            if let Some(zoom) = settings.get_float(obs_string!("zoom")) {
+            if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
                 data.from_zoom = data.current_zoom;
                 data.internal_zoom = 1. / zoom;
                 data.target_zoom = 1. / zoom;
             }
 
-            if let Some(screen_width) = settings.get_int(obs_string!("screen_width")) {
+            if let Some(screen_width) = settings.get::<i64, _>(obs_string!("screen_width")) {
                 data.screen_width = screen_width as u32;
             }
 
-            if let Some(padding) = settings.get_float(obs_string!("padding")) {
+            if let Some(padding) = settings.get(obs_string!("padding")) {
                 data.padding = padding;
             }
 
-            if let Some(animation_time) = settings.get_float(obs_string!("animation_time")) {
+            if let Some(animation_time) = settings.get(obs_string!("animation_time")) {
                 data.animation_time = animation_time;
             }
 
-            if let Some(screen_height) = settings.get_int(obs_string!("screen_height")) {
+            if let Some(screen_height) = settings.get::<i64, _>(obs_string!("screen_height")) {
                 data.screen_height = screen_height as u32;
             }
-            if let Some(screen_x) = settings.get_int(obs_string!("screen_x")) {
+            if let Some(screen_x) = settings.get::<i64, _>(obs_string!("screen_x")) {
                 data.screen_x = screen_x as u32;
             }
-            if let Some(screen_y) = settings.get_int(obs_string!("screen_y")) {
+            if let Some(screen_y) = settings.get::<i64, _>(obs_string!("screen_y")) {
                 data.screen_y = screen_y as u32;
             }
         }

@@ -1,6 +1,7 @@
 use super::{audio::AudioDataContext, media::MediaState};
 use super::context::{GlobalContext, VideoRenderContext};
-use super::properties::{Properties, SettingsContext};
+use super::properties::Properties;
+use crate::data::DataObj;
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 use crate::string::ObsString;
 
@@ -37,7 +38,7 @@ pub trait CreatableSource<D> {
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut GlobalContext);
+    fn update(data: &mut Option<D>, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
 pub trait VideoRenderSource<D> {
@@ -83,6 +84,10 @@ pub trait MediaPlayPauseSource<D> {
 
 pub trait MediaGetStateSource<D> {
     fn get_state(data: &mut Option<D>) -> MediaState;
+}
+
+pub trait GetDefaultsSource<D> {
+    fn get_defaults(settings: &mut DataObj);
 }
 
 simple_trait!(

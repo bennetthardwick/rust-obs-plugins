@@ -12,6 +12,14 @@ use obs_sys::{blog, LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING};
 /// You can also use any other logger implementation, but we recommend this since
 /// OBS also writes everything in its logging system to a file, which can be viewed
 /// if there is a problem and OBS is not started from a console.
+///
+/// # Examples
+///
+/// A new logger with default settings.
+///
+/// ```no_run
+/// let _ = Logger::new().init();
+/// ```
 pub struct Logger {
     max_level: LevelFilter,
     promote_debug: bool,
@@ -34,6 +42,8 @@ impl Logger {
         Self::default()
     }
 
+    /// Initializes this logger, setting this as the global logger. This MUST be called to be effective.
+    /// This may fail if there is already a logger.
     pub fn init(self) -> Result<(), SetLoggerError> {
         log::set_max_level(self.max_level);
         log::set_boxed_logger(Box::new(self))?;

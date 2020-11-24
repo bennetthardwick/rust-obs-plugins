@@ -1,10 +1,8 @@
 use super::audio::AudioRef;
-use super::ffi::hotkey_callback;
 use super::hotkey::Hotkey;
-use super::properties::SettingsContext;
+use crate::prelude::DataObj;
 use crate::string::ObsString;
-use obs_sys::{obs_get_audio, obs_hotkey_id, obs_hotkey_register_source, obs_source_t};
-use std::collections::HashMap;
+use obs_sys::{obs_get_audio, obs_source_t};
 
 pub struct GlobalContext;
 pub struct VideoRenderContext;
@@ -35,14 +33,14 @@ pub struct CreatableSourceContext<'a, D> {
         ObsString,
         Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
     )>,
-    pub settings: &'a mut SettingsContext<'a>,
+    pub settings: DataObj<'a>,
     pub global: &'a mut GlobalContext,
 }
 
 impl<'a, D> CreatableSourceContext<'a, D> {
     pub(crate) unsafe fn from_raw(
         source: *mut obs_source_t,
-        settings: &'a mut SettingsContext<'a>,
+        settings: DataObj<'a>,
         global: &'a mut GlobalContext,
     ) -> Self {
         Self {

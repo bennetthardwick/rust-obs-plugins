@@ -1,7 +1,18 @@
 #![allow(non_upper_case_globals)]
 use std::{borrow::Cow, ffi::CStr, marker::PhantomData};
 
-use obs_sys::{obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t, obs_data_clear, obs_data_create, obs_data_create_from_json, obs_data_create_from_json_file, obs_data_create_from_json_file_safe, obs_data_erase, obs_data_get_json, obs_data_item_byname, obs_data_item_get_array, obs_data_item_get_bool, obs_data_item_get_double, obs_data_item_get_int, obs_data_item_get_obj, obs_data_item_get_string, obs_data_item_gettype, obs_data_item_numtype, obs_data_item_release, obs_data_item_t, obs_data_number_type, obs_data_number_type_OBS_DATA_NUM_DOUBLE, obs_data_number_type_OBS_DATA_NUM_INT, obs_data_release, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING, size_t};
+use obs_sys::{
+    obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t,
+    obs_data_clear, obs_data_create, obs_data_create_from_json, obs_data_create_from_json_file,
+    obs_data_create_from_json_file_safe, obs_data_erase, obs_data_get_json, obs_data_item_byname,
+    obs_data_item_get_array, obs_data_item_get_bool, obs_data_item_get_double,
+    obs_data_item_get_int, obs_data_item_get_obj, obs_data_item_get_string, obs_data_item_gettype,
+    obs_data_item_numtype, obs_data_item_release, obs_data_item_t, obs_data_number_type,
+    obs_data_number_type_OBS_DATA_NUM_DOUBLE, obs_data_number_type_OBS_DATA_NUM_INT,
+    obs_data_release, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY,
+    obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT,
+    obs_data_type_OBS_DATA_STRING, size_t,
+};
 
 use crate::string::ObsString;
 

@@ -1,10 +1,8 @@
 use super::audio::AudioDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::properties::{Properties, SettingsContext};
-use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::Properties;
-use crate::data::DataObj;
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
+use crate::data::DataObj;
 
 use crate::string::ObsString;
 

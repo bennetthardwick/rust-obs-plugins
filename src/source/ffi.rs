@@ -1,14 +1,12 @@
 use super::audio::AudioDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::hotkey::Hotkey;
-use super::properties::{Properties, Property, SettingsContext};
-use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::Properties;
 use super::traits::*;
 use super::ObsString;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
-use std::collections::HashMap;
 use crate::data::DataObj;
+use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::forget;
 use std::os::raw::c_char;
@@ -21,7 +19,6 @@ use obs_sys::{
 
 struct DataWrapper<D> {
     data: Option<D>,
-    properties: Vec<Property>,
     hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>>,
 }
 
@@ -54,7 +51,6 @@ impl<D> Default for DataWrapper<D> {
     fn default() -> Self {
         Self {
             data: None,
-            properties: vec![],
             hotkey_callbacks: HashMap::new(),
         }
     }
@@ -64,7 +60,6 @@ impl<D> From<D> for DataWrapper<D> {
     fn from(data: D) -> Self {
         Self {
             data: Some(data),
-            properties: vec![],
             hotkey_callbacks: HashMap::new(),
         }
     }
@@ -101,15 +96,15 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let mut wrapper = DataWrapper::default();
 
     let mut global = GlobalContext::default();
-    let mut settings = DataObj::new_unchecked(settings);
-    let mut create = CreatableSourceContext::from_raw(source, &mut settings, &mut global);
+    let settings = DataObj::new_unchecked(settings);
+    let mut create = CreatableSourceContext::from_raw(source, settings, &mut global);
 
     let source_context = SourceContext { source };
 
     let data = F::create(&mut create, source_context);
 
     wrapper.data = Some(data);
-    forget(settings);
+    forget(create.settings);
 
     let callbacks = create.hotkey_callbacks;
 

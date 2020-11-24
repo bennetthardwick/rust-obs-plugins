@@ -84,7 +84,7 @@ impl FromDataItem for f64 {
 
 impl FromDataItem for bool {
     fn typ() -> DataType {
-        DataType::Int
+        DataType::Boolean
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         obs_data_item_get_bool(item)

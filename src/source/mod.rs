@@ -267,4 +267,5 @@ impl_source_builder! {
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
     filter_audio => FilterAudioSource
+    get_defaults => GetDefaultsSource
 }

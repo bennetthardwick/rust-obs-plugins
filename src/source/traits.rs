@@ -70,3 +70,7 @@ pub trait TransitionStopSource<D> {
 pub trait FilterAudioSource<D> {
     fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
 }
+
+pub trait GetDefaultsSource<D> {
+    fn get_defaults(settings: &mut DataObj);
+}

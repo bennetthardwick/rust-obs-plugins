@@ -173,3 +173,9 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
 }
+
+pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
+    let mut settings = DataObj::new_unchecked(settings);
+    F::get_defaults(&mut settings);
+    forget(settings);
+}

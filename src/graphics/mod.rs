@@ -69,7 +69,7 @@ impl Drop for GraphicsGuard {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ShaderParamType {
     Unknown,
     Bool,
@@ -390,7 +390,7 @@ impl GraphicsEffectContext {
 }
 
 impl GraphicsEffectContext {}
-
+#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum GraphicsColorFormat {
     UNKNOWN,
     A8,

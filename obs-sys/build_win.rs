@@ -3,12 +3,12 @@ use regex::Regex;
 use std::env;
 use std::ffi::OsStr;
 use std::fs::File;
-use std::io::{self, BufWriter};
 use std::io::prelude::*;
+use std::io::{self, BufWriter};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_32KEY};
 use winreg::RegKey;
-use winreg::enums::{KEY_WOW64_32KEY, HKEY_LOCAL_MACHINE, KEY_READ};
 
 fn generate_def<P: AsRef<OsStr>, Q: AsRef<Path>>(
     mut dumpbin: Command,
@@ -21,7 +21,8 @@ fn generate_def<P: AsRef<OsStr>, Q: AsRef<Path>>(
     let mut f = BufWriter::new(f);
     f.write(b"EXPORTS\r\n")?;
     let exports = String::from_utf8_lossy(&exports.stdout);
-    let pattern = Regex::new(r"(?im)^\s*\d+\s+[0-9a-f]+\s+[0-9a-f]+\s+(\S+)(?:\s+=\s+\S+)?\r?$").unwrap();
+    let pattern =
+        Regex::new(r"(?im)^\s*\d+\s+[0-9a-f]+\s+[0-9a-f]+\s+(\S+)(?:\s+=\s+\S+)?\r?$").unwrap();
     for export in pattern.captures_iter(&exports) {
         f.write_fmt(format_args!("{}\r\n", export.get(1).unwrap().as_str()))?;
     }
@@ -51,7 +52,8 @@ pub fn find_windows_obs_lib() {
                 Some((PathBuf::from(base_path).join("bin\\64bit\\obs.dll"), "X64"))
             }
             _ => None,
-        }) {
+        })
+    {
         let dumpbin = cc::windows_registry::find(&target, "dumpbin.exe");
         let lib = cc::windows_registry::find(&target, "lib.exe");
         match (dumpbin, lib) {
@@ -60,14 +62,13 @@ pub fn find_windows_obs_lib() {
                 let def_path = out_path.join("obs.def");
                 let lib_path = out_path.join("obs.lib");
                 if let Ok(()) = generate_def(dumpbin, &dll_path, &def_path) {
-                    assert!(
-                        lib.arg(format!("/DEF:{}", def_path.to_str().unwrap()))
-                            .arg(format!("/OUT:{}", lib_path.to_str().unwrap()))
-                            .arg(format!("/MACHINE:{}", arch))
-                            .status()
-                            .unwrap()
-                            .success()
-                    );
+                    assert!(lib
+                        .arg(format!("/DEF:{}", def_path.to_str().unwrap()))
+                        .arg(format!("/OUT:{}", lib_path.to_str().unwrap()))
+                        .arg(format!("/MACHINE:{}", arch))
+                        .status()
+                        .unwrap()
+                        .success());
                     println!(
                         "cargo:rustc-link-search=native={}",
                         out_path.to_str().unwrap()

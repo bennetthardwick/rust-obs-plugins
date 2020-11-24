@@ -1,16 +1,7 @@
 #![allow(non_upper_case_globals)]
 use std::{borrow::Cow, ffi::CStr, marker::PhantomData};
 
-use obs_sys::{
-    obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t,
-    obs_data_create, obs_data_item_byname, obs_data_item_get_array, obs_data_item_get_bool,
-    obs_data_item_get_double, obs_data_item_get_int, obs_data_item_get_obj,
-    obs_data_item_get_string, obs_data_item_gettype, obs_data_item_numtype, obs_data_item_release,
-    obs_data_item_t, obs_data_number_type, obs_data_number_type_OBS_DATA_NUM_DOUBLE,
-    obs_data_number_type_OBS_DATA_NUM_INT, obs_data_release, obs_data_t, obs_data_type,
-    obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER,
-    obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING, size_t,
-};
+use obs_sys::{obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t, obs_data_clear, obs_data_create, obs_data_create_from_json, obs_data_create_from_json_file, obs_data_create_from_json_file_safe, obs_data_erase, obs_data_get_json, obs_data_item_byname, obs_data_item_get_array, obs_data_item_get_bool, obs_data_item_get_double, obs_data_item_get_int, obs_data_item_get_obj, obs_data_item_get_string, obs_data_item_gettype, obs_data_item_numtype, obs_data_item_release, obs_data_item_t, obs_data_number_type, obs_data_number_type_OBS_DATA_NUM_DOUBLE, obs_data_number_type_OBS_DATA_NUM_INT, obs_data_release, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING, size_t};
 
 use crate::string::ObsString;
 
@@ -124,7 +115,37 @@ impl DataObj<'_> {
         }
     }
 
-    // pub fn from_json(json_str: &str) -> Option<Self> {}
+    pub fn from_json(json_str: impl Into<ObsString>) -> Option<Self> {
+        let json_str = json_str.into();
+        unsafe {
+            let raw = obs_data_create_from_json(json_str.as_ptr());
+            if raw.is_null() {
+                None
+            } else {
+                Some(Self::new_unchecked(raw))
+            }
+        }
+    }
+
+    pub fn from_json_file(
+        json_file: impl Into<ObsString>,
+        backup_ext: impl Into<Option<ObsString>>,
+    ) -> Option<Self> {
+        let json_file = json_file.into();
+
+        unsafe {
+            let raw = if let Some(backup_ext) = backup_ext.into() {
+                obs_data_create_from_json_file_safe(json_file.as_ptr(), backup_ext.as_ptr())
+            } else {
+                obs_data_create_from_json_file(json_file.as_ptr())
+            };
+            if raw.is_null() {
+                None
+            } else {
+                Some(Self::new_unchecked(raw))
+            }
+        }
+    }
 
     pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_t) -> Self {
         Self {
@@ -154,8 +175,33 @@ impl DataObj<'_> {
         }
     }
 
+    pub fn get_json(&self) -> Option<String> {
+        unsafe {
+            let ptr = obs_data_get_json(self.raw);
+            if ptr.is_null() {
+                None
+            } else {
+                let slice = CStr::from_ptr(ptr);
+                Some(slice.to_string_lossy().into_owned())
+            }
+        }
+    }
+
     pub fn as_raw(&self) -> *mut obs_data_t {
         self.raw
+    }
+
+    pub fn clear(&mut self) {
+        unsafe {
+            obs_data_clear(self.raw);
+        }
+    }
+
+    pub fn remove(&mut self, name: impl Into<ObsString>) {
+        let name = name.into();
+        unsafe {
+            obs_data_erase(self.raw, name.as_ptr());
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 use super::audio::AudioDataContext;
 use super::context::{GlobalContext, VideoRenderContext};
-use super::properties::{Properties, SettingsContext};
+use super::properties::Properties;
+use crate::data::DataObj;
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
 use crate::string::ObsString;
@@ -23,11 +24,11 @@ pub trait GetHeightSource<D> {
 }
 
 pub trait CreatableSource<D> {
-    fn create(settings: &mut SettingsContext, source: SourceContext, context: &mut GlobalContext) -> D;
+    fn create(settings: &mut DataObj, source: SourceContext, context: &mut GlobalContext) -> D;
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut GlobalContext);
+    fn update(data: &mut Option<D>, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
 pub trait VideoRenderSource<D> {

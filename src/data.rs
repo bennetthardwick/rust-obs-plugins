@@ -1,12 +1,9 @@
-use std::{
-    borrow::Cow,
-    ffi::{CStr, CString},
-    marker::PhantomData,
-};
+#![allow(non_upper_case_globals)]
+use std::{borrow::Cow, ffi::CStr, marker::PhantomData};
 
 use obs_sys::{
     obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t,
-    obs_data_item_byname, obs_data_item_get_array, obs_data_item_get_bool,
+    obs_data_create, obs_data_item_byname, obs_data_item_get_array, obs_data_item_get_bool,
     obs_data_item_get_double, obs_data_item_get_int, obs_data_item_get_obj,
     obs_data_item_get_string, obs_data_item_gettype, obs_data_item_numtype, obs_data_item_release,
     obs_data_item_t, obs_data_number_type, obs_data_number_type_OBS_DATA_NUM_DOUBLE,
@@ -14,6 +11,8 @@ use obs_sys::{
     obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER,
     obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING, size_t,
 };
+
+use crate::string::ObsString;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DataType {
@@ -76,7 +75,7 @@ impl FromDataItem for i64 {
 
 impl FromDataItem for f64 {
     fn typ() -> DataType {
-        DataType::Int
+        DataType::Double
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         obs_data_item_get_double(item)
@@ -117,15 +116,25 @@ pub struct DataObj<'parent> {
 }
 
 impl DataObj<'_> {
-    unsafe fn new_unchecked(raw: *mut obs_data_t) -> Self {
+    /// Creates a empty data object
+    pub fn new() -> Self {
+        unsafe {
+            let raw = obs_data_create();
+            Self::new_unchecked(raw)
+        }
+    }
+
+    // pub fn from_json(json_str: &str) -> Option<Self> {}
+
+    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_t) -> Self {
         Self {
             raw,
             _parent: PhantomData,
         }
     }
 
-    pub fn get<T: FromDataItem>(&self, name: &str) -> Option<T> {
-        let name = CString::new(name).unwrap();
+    pub fn get<T: FromDataItem, N: Into<ObsString>>(&self, name: N) -> Option<T> {
+        let name = name.into();
         let mut item_ptr = unsafe { obs_data_item_byname(self.raw, name.as_ptr()) };
         if item_ptr.is_null() {
             return None;
@@ -144,6 +153,10 @@ impl DataObj<'_> {
             None
         }
     }
+
+    pub fn as_raw(&self) -> *mut obs_data_t {
+        self.raw
+    }
 }
 
 impl Drop for DataObj<'_> {
@@ -160,7 +173,7 @@ pub struct DataArray<'parent> {
 }
 
 impl DataArray<'_> {
-    unsafe fn new_unchecked(raw: *mut obs_data_array_t) -> Self {
+    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_array_t) -> Self {
         Self {
             raw,
             _parent: PhantomData,

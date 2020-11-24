@@ -1,4 +1,6 @@
+use crate::{Error, Result};
 use core::convert::TryFrom;
+use core::ptr::null_mut;
 use obs_sys::{
     gs_address_mode, gs_address_mode_GS_ADDRESS_BORDER, gs_address_mode_GS_ADDRESS_CLAMP,
     gs_address_mode_GS_ADDRESS_MIRROR, gs_address_mode_GS_ADDRESS_MIRRORONCE,
@@ -26,14 +28,46 @@ use obs_sys::{
     gs_shader_param_type_GS_SHADER_PARAM_STRING, gs_shader_param_type_GS_SHADER_PARAM_TEXTURE,
     gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN, gs_shader_param_type_GS_SHADER_PARAM_VEC2,
     gs_shader_param_type_GS_SHADER_PARAM_VEC3, gs_shader_param_type_GS_SHADER_PARAM_VEC4,
-    obs_allow_direct_render, obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
-    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics, vec2,
-    vec3, vec4,
+    gs_texture_create, gs_texture_destroy, gs_texture_get_height, gs_texture_get_width,
+    gs_texture_map, gs_texture_set_image, gs_texture_t, gs_texture_unmap, obs_allow_direct_render,
+    obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
+    obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
+    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC,
 };
 use paste::item;
-use std::ffi::{CStr, CString};
+use std::{
+    ffi::{CStr, CString},
+    ptr,
+};
+use std::{os::raw::c_int, slice};
 
 use super::string::ObsString;
+
+/// Guard to guarantee that we exit graphics context properly.
+/// This does not prevent one from calling APIs that are not supposed to be called outside of the context.
+struct GraphicsGuard;
+
+impl GraphicsGuard {
+    fn enter() -> Self {
+        unsafe {
+            obs_enter_graphics();
+        }
+        Self
+    }
+
+    pub fn with_enter<T, F: FnOnce() -> T>(f: F) -> T {
+        let _g = Self::enter();
+        f()
+    }
+}
+
+impl Drop for GraphicsGuard {
+    fn drop(&mut self) {
+        unsafe {
+            obs_leave_graphics();
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 pub enum ShaderParamType {
@@ -98,16 +132,13 @@ pub struct GraphicsEffect {
 
 impl GraphicsEffect {
     pub fn from_effect_string(value: ObsString, name: ObsString) -> Option<Self> {
-        unsafe {
-            obs_enter_graphics();
-            let raw = gs_effect_create(value.as_ptr(), name.as_ptr(), std::ptr::null_mut());
-            obs_leave_graphics();
-
-            if raw.is_null() {
-                None
-            } else {
-                Some(Self { raw })
-            }
+        let raw = GraphicsGuard::with_enter(|| unsafe {
+            gs_effect_create(value.as_ptr(), name.as_ptr(), std::ptr::null_mut())
+        });
+        if raw.is_null() {
+            None
+        } else {
+            Some(Self { raw })
         }
     }
 
@@ -134,11 +165,9 @@ impl GraphicsEffect {
 
 impl Drop for GraphicsEffect {
     fn drop(&mut self) {
-        unsafe {
-            obs_enter_graphics();
+        GraphicsGuard::with_enter(|| unsafe {
             gs_effect_destroy(self.raw);
-            obs_leave_graphics();
-        }
+        });
     }
 }
 
@@ -186,12 +215,12 @@ macro_rules! impl_graphics_effects {
                 }
 
                 impl TryFrom<GraphicsEffectParam> for [<GraphicsEffect $t Param>] {
-                    type Error = GraphicsEffectParamConversionError;
+                    type Error = Error;
 
-                    fn try_from(effect: GraphicsEffectParam) -> Result<Self, Self::Error> {
+                    fn try_from(effect: GraphicsEffectParam) -> Result<Self> {
                         match effect.shader_type {
                             ShaderParamType::[<$t>] => Ok([<GraphicsEffect $t Param>] { effect }),
-                            _ => Err(GraphicsEffectParamConversionError::InvalidType),
+                            _ => Err(Error),
                         }
                     }
                 }
@@ -336,23 +365,16 @@ pub struct GraphicsSamplerState {
 
 impl From<GraphicsSamplerInfo> for GraphicsSamplerState {
     fn from(info: GraphicsSamplerInfo) -> GraphicsSamplerState {
-        unsafe {
-            obs_enter_graphics();
-            let raw = gs_samplerstate_create(&info.info);
-            obs_leave_graphics();
-
-            GraphicsSamplerState { raw }
-        }
+        let raw = GraphicsGuard::with_enter(|| unsafe { gs_samplerstate_create(&info.info) });
+        GraphicsSamplerState { raw }
     }
 }
 
 impl Drop for GraphicsSamplerState {
     fn drop(&mut self) {
-        unsafe {
-            obs_enter_graphics();
+        GraphicsGuard::with_enter(|| unsafe {
             gs_samplerstate_destroy(self.raw);
-            obs_leave_graphics();
-        }
+        });
     }
 }
 
@@ -602,4 +624,127 @@ vector_impls! {
     Vec2, vec2 => x y,
     Vec3, vec3 => x y z,
     Vec4, vec4 => x y z w,
+}
+
+/// Wrapper around [`gs_texture_t`](https://obsproject.com/docs/reference-libobs-graphics-graphics.html#c.gs_texture_t)
+pub struct GraphicsTexture {
+    raw: *mut gs_texture_t,
+}
+
+impl GraphicsTexture {
+    pub fn new(width: u32, height: u32, format: GraphicsColorFormat) -> Self {
+        let raw = GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_create(width, height, format.as_raw(), 1, null_mut(), GS_DYNAMIC)
+        });
+        Self { raw }
+    }
+
+    #[inline]
+    pub fn height(&self) -> u32 {
+        unsafe { gs_texture_get_height(self.raw) }
+    }
+
+    #[inline]
+    pub fn width(&self) -> u32 {
+        unsafe { gs_texture_get_width(self.raw) }
+    }
+
+    pub fn set_image(&mut self, data: &[u8], linesize: u32, invert: bool) {
+        GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_set_image(self.raw, data.as_ptr(), linesize, invert);
+        });
+    }
+
+    pub fn draw(&self, x: c_int, y: c_int, cx: u32, cy: u32, flip: bool) {
+        unsafe {
+            obs_source_draw(self.raw, x, y, cx, cy, flip);
+        }
+    }
+
+    #[inline]
+    pub fn map(&mut self) -> Result<MappedTexture> {
+        MappedTexture::new(self)
+    }
+
+    pub unsafe fn as_ptr(&self) -> *mut gs_texture_t {
+        self.raw
+    }
+}
+
+impl Drop for GraphicsTexture {
+    fn drop(&mut self) {
+        GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_destroy(self.raw);
+        });
+    }
+}
+
+/// Represents a mapped texture blob from [`GraphicsTexture`].
+pub struct MappedTexture<'tex> {
+    tex: &'tex mut GraphicsTexture,
+    ptr: *mut u8,
+    len: usize,
+}
+
+impl<'tex> MappedTexture<'tex> {
+    fn new(tex: &'tex mut GraphicsTexture) -> Result<Self> {
+        let mut ptr: *mut u8 = ptr::null_mut();
+        let mut linesize = 0u32;
+        let map_result = GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_map(tex.as_ptr(), &mut ptr, &mut linesize)
+        });
+        if !map_result {
+            return Err(Error);
+        }
+        let len = (linesize * tex.height()) as usize;
+        Ok(Self { tex, ptr, len })
+    }
+
+    #[inline]
+    pub fn as_ptr(&self) -> *const u8 {
+        self.ptr
+    }
+
+    #[inline]
+    pub fn as_mut_ptr(&mut self) -> *mut u8 {
+        self.ptr
+    }
+
+    #[inline]
+    pub fn width(&self) -> u32 {
+        self.tex.width()
+    }
+
+    #[inline]
+    pub fn height(&self) -> u32 {
+        self.tex.height()
+    }
+}
+
+impl std::ops::Deref for MappedTexture<'_> {
+    type Target = [u8];
+
+    fn deref(&self) -> &[u8] {
+        unsafe { slice::from_raw_parts(self.as_ptr(), self.len) }
+    }
+}
+
+impl std::ops::DerefMut for MappedTexture<'_> {
+    fn deref_mut(&mut self) -> &mut [u8] {
+        unsafe { slice::from_raw_parts_mut(self.as_mut_ptr(), self.len) }
+    }
+}
+
+impl std::fmt::Debug for MappedTexture<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Debug::fmt(&**self, f)
+    }
+}
+
+impl Drop for MappedTexture<'_> {
+    fn drop(&mut self) {
+        GraphicsGuard::with_enter(|| unsafe {
+            gs_texture_unmap(self.tex.as_ptr());
+        });
+    }
 }

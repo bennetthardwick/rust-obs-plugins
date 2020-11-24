@@ -28,6 +28,7 @@ use super::{
     },
     string::ObsString,
 };
+use crate::data::DataObj;
 
 use std::marker::PhantomData;
 
@@ -164,7 +165,7 @@ impl SourceContext {
     }
 
     /// Update the source settings based on a settings context.
-    pub fn update_source_settings(&mut self, settings: &SettingsContext) {
+    pub fn update_source_settings(&mut self, settings: &DataObj) {
         unsafe {
             obs_source_update(self.source, settings.as_raw());
         }
@@ -266,4 +267,5 @@ impl_source_builder! {
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
     filter_audio => FilterAudioSource
+    get_defaults => GetDefaultsSource
 }

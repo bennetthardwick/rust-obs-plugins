@@ -28,13 +28,13 @@ pub const __STDC_IEC_559_COMPLEX__: u32 = 1;
 pub const __STDC_ISO_10646__: u32 = 201706;
 pub const __GNU_LIBRARY__: u32 = 6;
 pub const __GLIBC__: u32 = 2;
-pub const __GLIBC_MINOR__: u32 = 31;
+pub const __GLIBC_MINOR__: u32 = 32;
 pub const _SYS_CDEFS_H: u32 = 1;
 pub const __glibc_c99_flexarr_available: u32 = 1;
 pub const __WORDSIZE: u32 = 64;
 pub const __WORDSIZE_TIME64_COMPAT32: u32 = 1;
 pub const __SYSCALL_WORDSIZE: u32 = 64;
-pub const __LONG_DOUBLE_USES_FLOAT128: u32 = 0;
+pub const __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: u32 = 0;
 pub const __HAVE_GENERIC_SELECTION: u32 = 1;
 pub const __GLIBC_USE_LIB_EXT2: u32 = 0;
 pub const __GLIBC_USE_IEC_60559_BFP_EXT: u32 = 0;
@@ -49,6 +49,7 @@ pub const __OFF_T_MATCHES_OFF64_T: u32 = 1;
 pub const __INO_T_MATCHES_INO64_T: u32 = 1;
 pub const __RLIM_T_MATCHES_RLIM64_T: u32 = 1;
 pub const __STATFS_MATCHES_STATFS64: u32 = 1;
+pub const __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64: u32 = 1;
 pub const __FD_SETSIZE: u32 = 1024;
 pub const _BITS_TIME64_H: u32 = 1;
 pub const _BITS_WCHAR_H: u32 = 1;
@@ -115,7 +116,6 @@ pub const BYTE_ORDER: u32 = 1234;
 pub const _BITS_BYTESWAP_H: u32 = 1;
 pub const _BITS_UINTN_IDENTITY_H: u32 = 1;
 pub const _SYS_SELECT_H: u32 = 1;
-pub const __FD_ZERO_STOS: &'static [u8; 6usize] = b"stosq\0";
 pub const __sigset_t_defined: u32 = 1;
 pub const __timeval_defined: u32 = 1;
 pub const _STRUCT_TIMESPEC: u32 = 1;
@@ -588,6 +588,7 @@ pub type __id_t = ::std::os::raw::c_uint;
 pub type __time_t = ::std::os::raw::c_long;
 pub type __useconds_t = ::std::os::raw::c_uint;
 pub type __suseconds_t = ::std::os::raw::c_long;
+pub type __suseconds64_t = ::std::os::raw::c_long;
 pub type __daddr_t = ::std::os::raw::c_int;
 pub type __key_t = ::std::os::raw::c_int;
 pub type __clockid_t = ::std::os::raw::c_int;
@@ -1452,6 +1453,36 @@ impl Default for __pthread_cond_s {
     fn default() -> Self {
         unsafe { ::std::mem::zeroed() }
     }
+}
+pub type __tss_t = ::std::os::raw::c_uint;
+pub type __thrd_t = ::std::os::raw::c_ulong;
+#[repr(C)]
+#[derive(Debug, Default, Copy, Clone)]
+pub struct __once_flag {
+    pub __data: ::std::os::raw::c_int,
+}
+#[test]
+fn bindgen_test_layout___once_flag() {
+    assert_eq!(
+        ::std::mem::size_of::<__once_flag>(),
+        4usize,
+        concat!("Size of: ", stringify!(__once_flag))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<__once_flag>(),
+        4usize,
+        concat!("Alignment of ", stringify!(__once_flag))
+    );
+    assert_eq!(
+        unsafe { &(*(::std::ptr::null::<__once_flag>())).__data as *const _ as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(__once_flag),
+            "::",
+            stringify!(__data)
+        )
+    );
 }
 pub type pthread_t = ::std::os::raw::c_ulong;
 #[repr(C)]

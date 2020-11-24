@@ -1,9 +1,11 @@
 use super::audio::AudioDataContext;
 use super::context::{GlobalContext, VideoRenderContext};
-use super::properties::{Properties, Property, SettingsContext};
+use super::properties::Properties;
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
+use crate::data::DataObj;
 use std::ffi::c_void;
+use std::mem::forget;
 use std::os::raw::c_char;
 
 use obs_sys::{
@@ -13,24 +15,17 @@ use obs_sys::{
 
 struct DataWrapper<D> {
     data: Option<D>,
-    properties: Vec<Property>,
 }
 
 impl<D> Default for DataWrapper<D> {
     fn default() -> Self {
-        Self {
-            data: None,
-            properties: vec![],
-        }
+        Self { data: None }
     }
 }
 
 impl<D> From<D> for DataWrapper<D> {
     fn from(data: D) -> Self {
-        Self {
-            data: Some(data),
-            properties: vec![],
-        }
+        Self { data: Some(data) }
     }
 }
 
@@ -63,15 +58,14 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut wrapper = DataWrapper::default();
-    let mut settings = SettingsContext::from_raw(settings, &wrapper.properties);
+    let mut settings = DataObj::new_unchecked(settings);
 
     let source = SourceContext { source };
     let mut global = GlobalContext::default();
 
     let data = F::create(&mut settings, source, &mut global);
-
     wrapper.data = Some(data);
-
+    forget(settings);
     Box::into_raw(Box::new(wrapper)) as *mut c_void
 }
 
@@ -86,8 +80,9 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
 ) {
     let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = SettingsContext::from_raw(settings, &data.properties);
+    let mut settings = DataObj::new_unchecked(settings);
     F::update(&mut data.data, &mut settings, &mut global);
+    forget(settings);
 }
 
 pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
@@ -120,7 +115,7 @@ pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
 
-    let mut properties = Properties::from_raw(obs_properties_create(), &mut wrapper.properties);
+    let mut properties = Properties::from_raw(obs_properties_create());
 
     F::get_properties(&mut wrapper.data, &mut properties);
 
@@ -177,4 +172,10 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
+}
+
+pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
+    let mut settings = DataObj::new_unchecked(settings);
+    F::get_defaults(&mut settings);
+    forget(settings);
 }

@@ -1,19 +1,37 @@
-pub struct ObsString(&'static str);
+use std::ffi::CString;
+
+#[derive(Debug, Eq, PartialEq, Hash, Clone)]
+pub enum ObsString {
+    Static(&'static str),
+    Dynamic(CString),
+}
 
 impl ObsString {
     /// # Safety
     /// Does no checks for nul terminated strings. This could cause memory overruns if used
     /// incorrectly.
     pub const unsafe fn from_nul_terminted_str(string: &'static str) -> Self {
-        Self(string)
+        Self::Static(string)
     }
 
-    pub fn as_str(&self) -> &'static str {
-        self.0
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::Static(s) => *s,
+            Self::Dynamic(s) => s.as_c_str().to_str().unwrap(),
+        }
     }
 
     pub fn as_ptr(&self) -> *const std::os::raw::c_char {
-        self.0.as_ptr() as *const std::os::raw::c_char
+        match self {
+            Self::Static(s) => (*s).as_ptr() as *const std::os::raw::c_char,
+            Self::Dynamic(s) => s.as_ptr(),
+        }
+    }
+}
+
+impl<T: Into<Vec<u8>>> From<T> for ObsString {
+    fn from(s: T) -> Self {
+        Self::Dynamic(CString::new(s).expect("Failed to convert to CString"))
     }
 }
 

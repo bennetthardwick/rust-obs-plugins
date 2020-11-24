@@ -49,7 +49,7 @@ impl GetNameSource<Data> for RnnoiseDenoiserFilter {
 
 impl CreatableSource<Data> for RnnoiseDenoiserFilter {
     fn create(
-        _settings: &mut SettingsContext,
+        _settings: &mut DataObj,
         mut _source: SourceContext,
         context: &mut GlobalContext,
     ) -> Data {
@@ -73,11 +73,7 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
 }
 
 impl UpdateSource<Data> for RnnoiseDenoiserFilter {
-    fn update(
-        data: &mut Option<Data>,
-        _settings: &mut SettingsContext,
-        context: &mut GlobalContext,
-    ) {
+    fn update(data: &mut Option<Data>, _settings: &mut DataObj, context: &mut GlobalContext) {
         if let Some(data) = data {
             let sample_rate = context.with_audio(|audio| audio.output_sample_rate());
             data.sample_rate = sample_rate as f64;

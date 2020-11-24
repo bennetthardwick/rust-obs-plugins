@@ -126,11 +126,16 @@ pub mod source;
 /// String macros
 pub mod string;
 
+pub mod data;
+
+mod native_enum;
+
 /// Re-exports of a bunch of popular tools
 pub mod prelude {
     pub use crate::module::*;
     pub use crate::source::context::*;
     pub use crate::string::*;
+    pub use crate::data::{DataObj, DataArray, FromDataItem};
 }
 #[derive(Debug)]
 pub struct Error;

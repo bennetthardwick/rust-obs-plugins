@@ -1,6 +1,9 @@
 use super::audio::AudioDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::properties::{Properties, SettingsContext};
+use super::context::{GlobalContext, VideoRenderContext};
+use super::properties::Properties;
+use crate::data::DataObj;
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 
 use crate::string::ObsString;
@@ -27,7 +30,7 @@ pub trait CreatableSource<D> {
 }
 
 pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &mut SettingsContext, context: &mut GlobalContext);
+    fn update(data: &mut Option<D>, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
 pub trait VideoRenderSource<D> {
@@ -68,4 +71,8 @@ pub trait TransitionStopSource<D> {
 
 pub trait FilterAudioSource<D> {
     fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
+}
+
+pub trait GetDefaultsSource<D> {
+    fn get_defaults(settings: &mut DataObj);
 }

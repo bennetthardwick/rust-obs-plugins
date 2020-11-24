@@ -641,12 +641,12 @@ impl GraphicsTexture {
 
     #[inline]
     pub fn height(&self) -> u32 {
-        unsafe { gs_texture_get_height(self.raw) }
+        GraphicsGuard::with_enter(|| unsafe { gs_texture_get_height(self.raw) })
     }
 
     #[inline]
     pub fn width(&self) -> u32 {
-        unsafe { gs_texture_get_width(self.raw) }
+        GraphicsGuard::with_enter(|| unsafe { gs_texture_get_width(self.raw) })
     }
 
     pub fn set_image(&mut self, data: &[u8], linesize: u32, invert: bool) {

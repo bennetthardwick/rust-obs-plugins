@@ -1,8 +1,8 @@
-use super::{audio::AudioDataContext, media::MediaState};
 use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::Properties;
-use crate::data::DataObj;
+use super::{audio::AudioDataContext, media::MediaState};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
+use crate::data::DataObj;
 use crate::string::ObsString;
 
 pub trait Sourceable {
@@ -30,11 +30,7 @@ simple_trait!(
 );
 
 pub trait CreatableSource<D> {
-    fn create(
-        settings: &mut SettingsContext,
-        source: SourceContext,
-        context: &mut GlobalContext,
-    ) -> D;
+    fn create(settings: &mut DataObj, source: SourceContext, context: &mut GlobalContext) -> D;
 }
 
 pub trait UpdateSource<D> {

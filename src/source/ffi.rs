@@ -3,8 +3,8 @@ use super::context::{GlobalContext, VideoRenderContext};
 use super::properties::Properties;
 use super::traits::*;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
-use paste::item;
 use crate::data::DataObj;
+use paste::item;
 use std::ffi::c_void;
 use std::mem::forget;
 use std::os::raw::c_char;
@@ -219,4 +219,3 @@ pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut
     F::get_defaults(&mut settings);
     forget(settings);
 }
-

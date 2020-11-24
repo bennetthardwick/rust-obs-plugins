@@ -275,12 +275,6 @@ impl CreatableSource<Data> for ScrollFocusFilter {
         )
         .expect("Could not load crop filter effect!");
 
-        create.register_hotkey(
-            obs_string!("scroll_focus_filter.Create"),
-            obs_string!("Get stuff"),
-            Box::new(|a, b| println!("WOOOOW!")),
-        );
-
         let settings = &mut create.settings;
 
         if let (

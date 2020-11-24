@@ -125,17 +125,25 @@ impl SourceContext {
         unsafe { obs_source_set_enabled(self.source, enabled) }
     }
 
-    pub fn source_id(&self) -> &str {
+    pub fn source_id(&self) -> Option<&str> {
         unsafe {
             let ptr = obs_source_get_id(self.source);
-            CStr::from_ptr(ptr).to_str().unwrap()
+            if ptr.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(ptr).to_str().unwrap())
+            }
         }
     }
 
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> Option<&str> {
         unsafe {
             let ptr = obs_source_get_name(self.source);
-            CStr::from_ptr(ptr).to_str().unwrap()
+            if ptr.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(ptr).to_str().unwrap())
+            }
         }
     }
 

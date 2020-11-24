@@ -372,10 +372,8 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 
 impl UpdateSource<Data> for ScrollFocusFilter {
     fn update(data: &mut Option<Data>, settings: &mut DataObj, _context: &mut GlobalContext) {
-        println!("up");
         if let Some(data) = data {
             if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
-                println!("{}", zoom);
                 data.from_zoom = data.current_zoom;
                 data.internal_zoom = 1. / zoom;
                 data.target_zoom = 1. / zoom;

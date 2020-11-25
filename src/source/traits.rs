@@ -1,4 +1,4 @@
-use super::context::{GlobalContext, VideoRenderContext};
+use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::properties::Properties;
 use super::{audio::AudioDataContext, media::MediaState};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
@@ -30,7 +30,7 @@ simple_trait!(
 );
 
 pub trait CreatableSource<D> {
-    fn create(settings: &mut DataObj, source: SourceContext, context: &mut GlobalContext) -> D;
+    fn create(create: &mut CreatableSourceContext<D>, source: SourceContext) -> D;
 }
 
 pub trait UpdateSource<D> {

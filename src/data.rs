@@ -1,5 +1,9 @@
 #![allow(non_upper_case_globals)]
-use std::{borrow::Cow, ffi::CStr, marker::PhantomData};
+use std::{
+    borrow::Cow,
+    ffi::{CStr, CString},
+    marker::PhantomData,
+};
 
 use obs_sys::{
     obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t,
@@ -9,12 +13,15 @@ use obs_sys::{
     obs_data_item_get_int, obs_data_item_get_obj, obs_data_item_get_string, obs_data_item_gettype,
     obs_data_item_numtype, obs_data_item_release, obs_data_item_t, obs_data_number_type,
     obs_data_number_type_OBS_DATA_NUM_DOUBLE, obs_data_number_type_OBS_DATA_NUM_INT,
-    obs_data_release, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY,
-    obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT,
-    obs_data_type_OBS_DATA_STRING, size_t,
+    obs_data_release, obs_data_set_default_bool, obs_data_set_default_double,
+    obs_data_set_default_int, obs_data_set_default_obj, obs_data_set_default_string, obs_data_t,
+    obs_data_type, obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN,
+    obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING,
+    size_t,
 };
 
 use crate::string::ObsString;
+use paste::item;
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DataType {
@@ -54,6 +61,7 @@ impl DataType {
 pub trait FromDataItem {
     fn typ() -> DataType;
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self;
+    unsafe fn set_default_unchecked(obj: *mut obs_data_t, name: ObsString, val: Self);
 }
 
 impl FromDataItem for Cow<'_, str> {
@@ -64,34 +72,37 @@ impl FromDataItem for Cow<'_, str> {
         let ptr = obs_data_item_get_string(item);
         CStr::from_ptr(ptr).to_string_lossy()
     }
-}
-
-impl FromDataItem for i64 {
-    fn typ() -> DataType {
-        DataType::Int
-    }
-    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        obs_data_item_get_int(item)
+    unsafe fn set_default_unchecked(obj: *mut obs_data_t, name: ObsString, val: Self) {
+        let s = CString::new(val.as_ref()).unwrap();
+        obs_data_set_default_string(obj, name.as_ptr(), s.as_ptr());
     }
 }
 
-impl FromDataItem for f64 {
-    fn typ() -> DataType {
-        DataType::Double
-    }
-    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        obs_data_item_get_double(item)
-    }
+macro_rules! impl_primitive {
+    ($($data_ty:ty, $func_suffix:ident => $rust_ty:ty)*) => {
+        $(
+            item! {
+                impl FromDataItem for $rust_ty {
+                    fn typ() -> DataType {
+                        $data_ty
+                    }
+                    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+                        [<obs_data_item_get_ $func_suffix>](item)
+                    }
+                    unsafe fn set_default_unchecked(obj: *mut obs_data_t, name: ObsString, val: Self) {
+                        [<obs_data_set_default_ $func_suffix>](obj, name.as_ptr(),val)
+                    }
+                }
+            }
+        )*
+    };
 }
 
-impl FromDataItem for bool {
-    fn typ() -> DataType {
-        DataType::Boolean
-    }
-    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        obs_data_item_get_bool(item)
-    }
-}
+impl_primitive!(
+    DataType::Int, int => i64
+    DataType::Double, double => f64
+    DataType::Boolean, bool => bool
+);
 
 impl FromDataItem for DataObj<'_> {
     fn typ() -> DataType {
@@ -99,6 +110,9 @@ impl FromDataItem for DataObj<'_> {
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         Self::new_unchecked(obs_data_item_get_obj(item))
+    }
+    unsafe fn set_default_unchecked(obj: *mut obs_data_t, name: ObsString, val: Self) {
+        obs_data_set_default_obj(obj, name.as_ptr(), val.as_raw());
     }
 }
 
@@ -108,6 +122,10 @@ impl FromDataItem for DataArray<'_> {
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         Self::new_unchecked(obs_data_item_get_array(item))
+    }
+    unsafe fn set_default_unchecked(_obj: *mut obs_data_t, _name: ObsString, _val: Self) {
+        // obs_data_set_default_array(obj, name.as_ptr(), val.as_raw());
+        // TODO: The function above does not actually exist, document that this is no-op or find an alternative
     }
 }
 
@@ -186,6 +204,20 @@ impl DataObj<'_> {
         }
     }
 
+    /// Sets a default value for the key.
+    ///
+    /// Notes
+    /// -----
+    /// Setting a default value for a [`DataArray`] is current a no-op because of a API
+    /// problem of OBS.
+    pub fn set_default<N: Into<ObsString>, T: FromDataItem, V: Into<T>>(
+        &mut self,
+        name: N,
+        value: V,
+    ) {
+        unsafe { T::set_default_unchecked(self.as_raw(), name.into(), value.into()) }
+    }
+
     pub fn get_json(&self) -> Option<String> {
         unsafe {
             let ptr = obs_data_get_json(self.raw);
@@ -208,7 +240,7 @@ impl DataObj<'_> {
         }
     }
 
-    pub fn remove(&mut self, name: impl Into<ObsString>) {
+    pub fn remove<N: Into<ObsString>>(&mut self, name: N) {
         let name = name.into();
         unsafe {
             obs_data_erase(self.raw, name.as_ptr());
@@ -246,6 +278,10 @@ impl DataArray<'_> {
         } else {
             Some(unsafe { DataObj::new_unchecked(ptr) })
         }
+    }
+
+    pub fn as_raw(&self) -> *mut obs_data_array_t {
+        self.raw
     }
 }
 

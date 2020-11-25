@@ -26,7 +26,7 @@ impl std::error::Error for NativeParsingError {}
 macro_rules! native_enum {
     ($name:ident,$native_name:ident { $($rust:ident => $native:ident),* }) => {
         paste::item! {
-        #[derive(Debug, Clone, Copy)]
+        #[derive(Debug, Clone, Copy, Eq, PartialEq)]
             pub enum $name {
                 $($rust),*
             }

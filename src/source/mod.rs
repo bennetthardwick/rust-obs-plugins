@@ -46,7 +46,7 @@ use std::{
 /// OBS source type
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_get_type)
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum SourceType {
     INPUT,
     SCENE,

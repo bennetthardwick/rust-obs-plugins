@@ -7,6 +7,7 @@ use obs_sys::{
 };
 
 /// OBS media state
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum MediaState {
     None,
     Playing,

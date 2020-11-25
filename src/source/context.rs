@@ -51,13 +51,14 @@ impl<'a, D> CreatableSourceContext<'a, D> {
         }
     }
 
-    pub fn register_hotkey(
+    pub fn register_hotkey<F: FnMut(&mut Hotkey, &mut Option<D>) + 'static>(
         &mut self,
         name: ObsString,
         description: ObsString,
-        func: Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
+        func: F,
     ) {
-        self.hotkey_callbacks.push((name, description, func));
+        self.hotkey_callbacks
+            .push((name, description, Box::new(func)));
     }
 
     // Inherited from child contexts

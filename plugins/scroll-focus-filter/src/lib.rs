@@ -79,61 +79,44 @@ impl GetNameSource<Data> for ScrollFocusFilter {
 impl GetPropertiesSource<Data> for ScrollFocusFilter {
     fn get_properties(_data: &mut Option<Data>, properties: &mut Properties) {
         properties
-            .add_float(
+            .add(
                 obs_string!("zoom"),
                 obs_string!("Amount to zoom in window"),
-                1.,
-                5.,
-                0.001,
-                true,
+                NumberProp::new_float(0.001)
+                    .with_range((1.)..=5.)
+                    .with_slider(),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_x"),
                 obs_string!("Offset relative to top left screen - x"),
-                0,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(..=3840 * 3u32),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_y"),
                 obs_string!("Offset relative to top left screen - y"),
-                0,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(..=3840 * 3u32),
             )
-            .add_float(
+            .add(
                 obs_string!("padding"),
                 obs_string!("Padding around each window"),
-                0.,
-                0.5,
-                0.001,
-                true,
+                NumberProp::new_float(0.001)
+                    .with_range(..=0.5)
+                    .with_slider(),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_width"),
                 obs_string!("Screen width"),
-                1,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(..=3840 * 3u32),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_height"),
                 obs_string!("Screen height"),
-                1,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(..=3840 * 3u32),
             )
-            .add_float(
+            .add(
                 obs_string!("animation_time"),
                 obs_string!("Animation Time (s)"),
-                0.3,
-                10.,
-                0.001,
-                false,
+                NumberProp::new_float(0.001).with_range(0.3..=10.),
             );
     }
 }

@@ -1,6 +1,6 @@
 use super::ObsString;
 use crate::{native_enum, wrapper::PtrWrapper};
-use num::{one, traits::Float, Bounded, Num, NumCast, PrimInt, ToPrimitive};
+use num_traits::{Bounded, Float, Num, NumCast, PrimInt, ToPrimitive, one};
 use obs_sys::{
     obs_combo_format, obs_combo_format_OBS_COMBO_FORMAT_FLOAT,
     obs_combo_format_OBS_COMBO_FORMAT_INT, obs_combo_format_OBS_COMBO_FORMAT_INVALID,

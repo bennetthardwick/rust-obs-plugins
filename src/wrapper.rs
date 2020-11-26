@@ -26,7 +26,7 @@ pub trait PtrWrapper: Sized {
 
     /// Consumes the wrapper and transfers ownershop to the pointer
     ///
-    /// Do **NOT** drop the wrapper
+    /// This does **NOT** drop the wrapper internally.
     fn into_raw(mut self) -> *mut Self::Pointer {
         let raw = self.as_ptr_mut();
         forget(self);

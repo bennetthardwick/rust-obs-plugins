@@ -55,6 +55,8 @@ native_enum!(EditableListType, obs_editable_list_type {
     FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS
 });
 
+/// Wrapper around [`obs_properties_t`], which is used by
+/// OBS to generate a user-friendly configuration UI.
 pub struct Properties {
     pointer: *mut obs_properties_t,
 }
@@ -121,6 +123,8 @@ impl Drop for Properties {
     }
 }
 
+/// Wrapper around [`obs_property_t`], which is a list of possible values for a
+/// property.
 pub struct ListProp<'props, T> {
     raw: *mut obs_property_t,
     _props: PhantomData<&'props mut Properties>,
@@ -229,7 +233,9 @@ enum NumberType {
     Integer,
     Float,
 }
-
+/// ## Panics
+/// This type of property may cause panic when being added to the properties
+/// if the provided `min`, `max` or `step` exceeds [`c_int`].
 pub struct NumberProp<T> {
     min: T,
     max: T,
@@ -252,7 +258,7 @@ impl<T: PrimInt> NumberProp<T> {
 }
 
 impl<T: Float> NumberProp<T> {
-    /// Creates a new float property.
+    /// Creates a new float property with a certain step.
     pub fn new_float(step: T) -> Self {
         Self {
             min: T::min_value(),
@@ -296,7 +302,7 @@ impl<T: Num + Bounded + Copy> NumberProp<T> {
 }
 
 pub trait ObsProp {
-    /// Callback to add this property to a `obs_properties_t`.
+    /// Callback to add this property to a [`obs_properties_t`].
     unsafe fn add_to_props(self, p: *mut obs_properties_t, name: ObsString, description: ObsString);
 }
 

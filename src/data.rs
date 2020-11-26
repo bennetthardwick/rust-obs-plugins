@@ -157,7 +157,7 @@ impl DataObj<'_> {
             Self::from_raw(raw)
         }
     }
-
+    /// Loads data into a object from a JSON string.
     pub fn from_json(json_str: impl Into<ObsString>) -> Option<Self> {
         let json_str = json_str.into();
         unsafe {
@@ -169,7 +169,8 @@ impl DataObj<'_> {
             }
         }
     }
-
+    /// Loads data into a object from a JSON file.
+    /// * `backup_ext`: optional backup file path in case the original file is bad.
     pub fn from_json_file(
         json_file: impl Into<ObsString>,
         backup_ext: impl Into<Option<ObsString>>,
@@ -189,7 +190,7 @@ impl DataObj<'_> {
             }
         }
     }
-
+    /// Fetches a property from this object. Numbers are implicitly casted.
     pub fn get<T: FromDataItem, N: Into<ObsString>>(&self, name: N) -> Option<T> {
         let name = name.into();
         let mut item_ptr = unsafe { obs_data_item_byname(self.raw, name.as_ptr()) };
@@ -210,7 +211,7 @@ impl DataObj<'_> {
             None
         }
     }
-
+    /// Creates a JSON representation of this object.
     pub fn get_json(&self) -> Option<String> {
         unsafe {
             let ptr = obs_data_get_json(self.raw);
@@ -222,11 +223,7 @@ impl DataObj<'_> {
             }
         }
     }
-
-    pub fn as_raw(&self) -> *mut obs_data_t {
-        self.raw
-    }
-
+    /// Clears all values.
     pub fn clear(&mut self) {
         unsafe {
             obs_data_clear(self.raw);

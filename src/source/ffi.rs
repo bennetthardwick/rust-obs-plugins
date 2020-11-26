@@ -5,17 +5,16 @@ use super::properties::Properties;
 use super::traits::*;
 use super::ObsString;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
-use crate::data::DataObj;
+use crate::{data::DataObj, wrapper::PtrWrapper};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
-use std::mem::forget;
 use std::os::raw::c_char;
 
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
-    obs_hotkey_t, obs_media_state, obs_properties, obs_properties_create, obs_source_audio_mix,
-    obs_source_enum_proc_t, obs_source_t, size_t,
+    obs_hotkey_t, obs_media_state, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
+    obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -108,7 +107,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let mut wrapper = DataWrapper::default();
 
     let mut global = GlobalContext::default();
-    let settings = DataObj::new_unchecked(settings);
+    let settings = DataObj::from_ptr_mut(settings);
     let mut create = CreatableSourceContext::from_raw(source, settings, &mut global);
 
     let source_context = SourceContext { source };
@@ -116,7 +115,6 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let data = F::create(&mut create, source_context);
 
     wrapper.data = Some(data);
-    forget(create.settings);
 
     let callbacks = create.hotkey_callbacks;
 
@@ -141,9 +139,8 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
 ) {
     let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = DataObj::new_unchecked(settings);
-    F::update(&mut data.data, &mut settings, &mut global);
-    forget(settings);
+    let settings = DataObj::from_ptr_mut(settings);
+    F::update(&mut data.data, settings, &mut global);
 }
 
 pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
@@ -176,10 +173,8 @@ pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
 
-    let mut properties = Properties::from_raw(obs_properties_create());
-
+    let mut properties = Properties::new();
     F::get_properties(&mut wrapper.data, &mut properties);
-
     properties.into_raw()
 }
 
@@ -264,9 +259,8 @@ impl_media!(
 );
 
 pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
-    let mut settings = DataObj::new_unchecked(settings);
-    F::get_defaults(&mut settings);
-    forget(settings);
+    let settings = DataObj::from_ptr_mut(settings);
+    F::get_defaults(settings);
 }
 
 pub unsafe extern "C" fn hotkey_callback<D>(

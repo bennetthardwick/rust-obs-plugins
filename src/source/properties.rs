@@ -1,5 +1,5 @@
 use super::ObsString;
-use crate::native_enum;
+use crate::{native_enum, wrapper::PtrWrapper};
 use obs_sys::{
     obs_combo_format, obs_combo_format_OBS_COMBO_FORMAT_FLOAT,
     obs_combo_format_OBS_COMBO_FORMAT_INT, obs_combo_format_OBS_COMBO_FORMAT_INVALID,
@@ -13,12 +13,12 @@ use obs_sys::{
     obs_path_type_OBS_PATH_FILE_SAVE, obs_properties_add_bool, obs_properties_add_color,
     obs_properties_add_editable_list, obs_properties_add_float, obs_properties_add_float_slider,
     obs_properties_add_font, obs_properties_add_int, obs_properties_add_int_slider,
-    obs_properties_add_list, obs_properties_add_path, obs_properties_add_text, obs_properties_t,
-    obs_property_list_add_float, obs_property_list_add_int, obs_property_list_add_string,
-    obs_property_list_insert_float, obs_property_list_insert_int, obs_property_list_insert_string,
-    obs_property_list_item_disable, obs_property_list_item_remove, obs_property_t, obs_text_type,
-    obs_text_type_OBS_TEXT_DEFAULT, obs_text_type_OBS_TEXT_MULTILINE,
-    obs_text_type_OBS_TEXT_PASSWORD, size_t,
+    obs_properties_add_list, obs_properties_add_path, obs_properties_add_text,
+    obs_properties_create, obs_properties_destroy, obs_properties_t, obs_property_list_add_float,
+    obs_property_list_add_int, obs_property_list_add_string, obs_property_list_insert_float,
+    obs_property_list_insert_int, obs_property_list_insert_string, obs_property_list_item_disable,
+    obs_property_list_item_remove, obs_property_t, obs_text_type, obs_text_type_OBS_TEXT_DEFAULT,
+    obs_text_type_OBS_TEXT_MULTILINE, obs_text_type_OBS_TEXT_PASSWORD, size_t,
 };
 
 use std::marker::PhantomData;
@@ -58,15 +58,24 @@ pub struct Properties {
     pointer: *mut obs_properties_t,
 }
 
-impl Properties {
-    pub(crate) unsafe fn from_raw(pointer: *mut obs_properties_t) -> Self {
-        Self { pointer }
+impl PtrWrapper for Properties {
+    type Pointer = obs_properties_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
+        Self { pointer: raw }
     }
 
-    /// # Safety
-    /// Modifying this pointer could cause UB
-    pub unsafe fn into_raw(self) -> *mut obs_properties_t {
+    fn as_ptr(&self) -> *const Self::Pointer {
         self.pointer
+    }
+}
+
+impl Properties {
+    pub fn new() -> Self {
+        unsafe {
+            let ptr = obs_properties_create();
+            Self::from_raw(ptr)
+        }
     }
 
     pub fn add_float(
@@ -180,17 +189,20 @@ impl Properties {
         name: ObsString,
         description: ObsString,
         typ: PathType,
-        filter: ObsString,
-        default_path: ObsString,
+        filter: impl Into<Option<ObsString>>,
+        default_path: impl Into<Option<ObsString>>,
     ) -> &mut Self {
+        let filter = filter.into();
+        let default_path = default_path.into();
+
         unsafe {
             obs_properties_add_path(
                 self.pointer,
                 name.as_ptr(),
                 description.as_ptr(),
                 typ.into(),
-                filter.as_ptr(),
-                default_path.as_ptr(),
+                ObsString::ptr_or_null(&filter),
+                ObsString::ptr_or_null(&default_path),
             );
         }
         self
@@ -201,7 +213,7 @@ impl Properties {
         name: ObsString,
         description: ObsString,
         editable: bool,
-    ) -> ListProp<T> {
+    ) -> &mut ListProp<T> {
         unsafe {
             let raw = obs_properties_add_list(
                 self.pointer,
@@ -215,7 +227,7 @@ impl Properties {
                 .into(),
                 T::format().into(),
             );
-            ListProp::new_unchecked(raw)
+            ListProp::from_ptr_mut(raw)
         }
     }
 
@@ -229,13 +241,10 @@ impl Properties {
     /// Adds a font selection property.
     ///
     /// A font is an obs_data sub-object which contains the following items:
-    ///   face:   face name string
-    ///
-    ///   style:  style name string
-    ///
-    ///   size:   size integer
-    ///
-    ///   flags:  font flags integer (OBS_FONT_* defined above)
+    /// * face:   face name string
+    /// * style:  style name string
+    /// * size:   size integer
+    /// * flags:  font flags integer (OBS_FONT_* defined above)
     pub fn add_font(&mut self, name: ObsString, description: ObsString) -> &mut Self {
         unsafe {
             obs_properties_add_font(self.pointer, name.as_ptr(), description.as_ptr());
@@ -248,20 +257,28 @@ impl Properties {
         name: ObsString,
         description: ObsString,
         typ: EditableListType,
-        filter: ObsString,
-        default_path: ObsString,
+        filter: impl Into<Option<ObsString>>,
+        default_path: impl Into<Option<ObsString>>,
     ) -> &mut Self {
+        let filter = filter.into();
+        let default_path = default_path.into();
         unsafe {
             obs_properties_add_editable_list(
                 self.pointer,
                 name.as_ptr(),
                 description.as_ptr(),
                 typ.into(),
-                filter.as_ptr(),
-                default_path.as_ptr(),
+                ObsString::ptr_or_null(&filter),
+                ObsString::ptr_or_null(&default_path),
             );
         }
         self
+    }
+}
+
+impl Drop for Properties {
+    fn drop(&mut self) {
+        unsafe { obs_properties_destroy(self.pointer) }
     }
 }
 
@@ -271,8 +288,10 @@ pub struct ListProp<'props, T> {
     _type: PhantomData<T>,
 }
 
-impl<T: ListType> ListProp<'_, T> {
-    unsafe fn new_unchecked(raw: *mut obs_property_t) -> Self {
+impl<T> PtrWrapper for ListProp<'_, T> {
+    type Pointer = obs_property_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
         Self {
             raw,
             _props: PhantomData,
@@ -280,6 +299,12 @@ impl<T: ListType> ListProp<'_, T> {
         }
     }
 
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
+impl<T: ListType> ListProp<'_, T> {
     pub fn push(&mut self, name: impl Into<ObsString>, value: T) {
         value.push_into(self.raw, name.into());
     }

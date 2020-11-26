@@ -128,6 +128,8 @@ pub mod string;
 
 pub mod data;
 
+pub mod wrapper;
+
 mod native_enum;
 
 /// Re-exports of a bunch of popular tools

@@ -14,7 +14,7 @@ use obs_sys::{
     obs_data_type_OBS_DATA_STRING, size_t,
 };
 
-use crate::string::ObsString;
+use crate::{string::ObsString, wrapper::PtrWrapper};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DataType {
@@ -98,7 +98,7 @@ impl FromDataItem for DataObj<'_> {
         DataType::Object
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        Self::new_unchecked(obs_data_item_get_obj(item))
+        Self::from_raw(obs_data_item_get_obj(item))
     }
 }
 
@@ -107,7 +107,7 @@ impl FromDataItem for DataArray<'_> {
         DataType::Array
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        Self::new_unchecked(obs_data_item_get_array(item))
+        Self::from_raw(obs_data_item_get_array(item))
     }
 }
 
@@ -117,12 +117,27 @@ pub struct DataObj<'parent> {
     _parent: PhantomData<&'parent DataObj<'parent>>,
 }
 
+impl PtrWrapper for DataObj<'_> {
+    type Pointer = obs_data_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
+        Self {
+            raw,
+            _parent: PhantomData,
+        }
+    }
+
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
 impl DataObj<'_> {
     /// Creates a empty data object
     pub fn new() -> Self {
         unsafe {
             let raw = obs_data_create();
-            Self::new_unchecked(raw)
+            Self::from_raw(raw)
         }
     }
 
@@ -133,7 +148,7 @@ impl DataObj<'_> {
             if raw.is_null() {
                 None
             } else {
-                Some(Self::new_unchecked(raw))
+                Some( Self::from_raw(raw))
             }
         }
     }
@@ -153,15 +168,8 @@ impl DataObj<'_> {
             if raw.is_null() {
                 None
             } else {
-                Some(Self::new_unchecked(raw))
+                Some(Self::from_raw(raw))
             }
-        }
-    }
-
-    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_t) -> Self {
-        Self {
-            raw,
-            _parent: PhantomData,
         }
     }
 
@@ -229,22 +237,32 @@ pub struct DataArray<'parent> {
     _parent: PhantomData<&'parent DataArray<'parent>>,
 }
 
-impl DataArray<'_> {
-    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_array_t) -> Self {
+impl PtrWrapper for DataArray<'_> {
+    type Pointer = obs_data_array_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
         Self {
             raw,
             _parent: PhantomData,
         }
     }
+
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
+impl DataArray<'_> {
     pub fn len(&self) -> usize {
         unsafe { obs_data_array_count(self.raw) as usize }
     }
+
     pub fn get(&self, index: usize) -> Option<DataObj> {
         let ptr = unsafe { obs_data_array_item(self.raw, index as size_t) };
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { DataObj::new_unchecked(ptr) })
+            Some(unsafe { DataObj::from_raw(ptr) })
         }
     }
 }

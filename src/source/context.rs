@@ -33,14 +33,14 @@ pub struct CreatableSourceContext<'a, D> {
         ObsString,
         Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
     )>,
-    pub settings: DataObj<'a>,
+    pub settings: &'a mut DataObj<'a>,
     pub global: &'a mut GlobalContext,
 }
 
 impl<'a, D> CreatableSourceContext<'a, D> {
     pub(crate) unsafe fn from_raw(
         source: *mut obs_source_t,
-        settings: DataObj<'a>,
+        settings: &'a mut DataObj<'a>,
         global: &'a mut GlobalContext,
     ) -> Self {
         Self {

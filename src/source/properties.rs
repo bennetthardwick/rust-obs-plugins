@@ -98,7 +98,7 @@ impl Properties {
         name: ObsString,
         description: ObsString,
         editable: bool,
-    ) -> &mut ListProp<T> {
+    ) -> ListProp<T> {
         unsafe {
             let raw = obs_properties_add_list(
                 self.pointer,
@@ -112,7 +112,7 @@ impl Properties {
                 .into(),
                 T::format().into(),
             );
-            ListProp::from_ptr_mut(raw)
+            ListProp::from_raw(raw)
         }
     }
 }

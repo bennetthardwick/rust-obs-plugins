@@ -193,7 +193,7 @@ impl DataObj<'_> {
     /// Fetches a property from this object. Numbers are implicitly casted.
     pub fn get<T: FromDataItem, N: Into<ObsString>>(&self, name: N) -> Option<T> {
         let name = name.into();
-        let mut item_ptr = unsafe { obs_data_item_byname(self.raw, name.as_ptr()) };
+        let mut item_ptr = unsafe { obs_data_item_byname(self.as_ptr() as *mut _, name.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }

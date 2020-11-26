@@ -9,6 +9,7 @@ use crate::{data::DataObj, wrapper::PtrWrapper};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
+use std::mem::forget;
 use std::os::raw::c_char;
 
 use obs_sys::{
@@ -107,7 +108,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let mut wrapper = DataWrapper::default();
 
     let mut global = GlobalContext::default();
-    let settings = DataObj::from_ptr_mut(settings);
+    let settings = DataObj::from_raw(settings);
     let mut create = CreatableSourceContext::from_raw(source, settings, &mut global);
 
     let source_context = SourceContext { source };
@@ -115,7 +116,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
     let data = F::create(&mut create, source_context);
 
     wrapper.data = Some(data);
-
+    forget(create.settings);
     let callbacks = create.hotkey_callbacks;
 
     let pointer = Box::into_raw(Box::new(wrapper));
@@ -139,8 +140,9 @@ pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
 ) {
     let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let settings = DataObj::from_ptr_mut(settings);
-    F::update(&mut data.data, settings, &mut global);
+    let mut settings = DataObj::from_raw(settings);
+    F::update(&mut data.data, &mut settings, &mut global);
+    forget(settings);
 }
 
 pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
@@ -259,8 +261,9 @@ impl_media!(
 );
 
 pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
-    let settings = DataObj::from_ptr_mut(settings);
-    F::get_defaults(settings);
+    let mut settings = DataObj::from_raw(settings);
+    F::get_defaults(&mut settings);
+    forget(settings);
 }
 
 pub unsafe extern "C" fn hotkey_callback<D>(

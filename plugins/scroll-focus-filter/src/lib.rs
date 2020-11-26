@@ -277,11 +277,11 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 
             let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
 
-            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920) as u32;
-            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080) as u32;
+            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920);
+            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080);
 
-            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0) as u32;
-            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0) as u32;
+            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0);
+            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0);
 
             let animation_time = settings.get(obs_string!("animation_time")).unwrap_or(0.3);
 
@@ -360,8 +360,8 @@ impl UpdateSource<Data> for ScrollFocusFilter {
                 data.target_zoom = 1. / zoom;
             }
 
-            if let Some(screen_width) = settings.get::<i64, _>(obs_string!("screen_width")) {
-                data.screen_width = screen_width as u32;
+            if let Some(screen_width) = settings.get(obs_string!("screen_width")) {
+                data.screen_width = screen_width;
             }
 
             if let Some(padding) = settings.get(obs_string!("padding")) {
@@ -372,14 +372,16 @@ impl UpdateSource<Data> for ScrollFocusFilter {
                 data.animation_time = animation_time;
             }
 
-            if let Some(screen_height) = settings.get::<i64, _>(obs_string!("screen_height")) {
-                data.screen_height = screen_height as u32;
+            if let Some(screen_height) = settings.get(obs_string!("screen_height")) {
+                data.screen_height = screen_height;
             }
-            if let Some(screen_x) = settings.get::<i64, _>(obs_string!("screen_x")) {
-                data.screen_x = screen_x as u32;
+
+            if let Some(screen_x) = settings.get(obs_string!("screen_x")) {
+                data.screen_x = screen_x;
             }
-            if let Some(screen_y) = settings.get::<i64, _>(obs_string!("screen_y")) {
-                data.screen_y = screen_y as u32;
+            
+            if let Some(screen_y) = settings.get(obs_string!("screen_y")) {
+                data.screen_y = screen_y;
             }
         }
     }

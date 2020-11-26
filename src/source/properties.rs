@@ -239,6 +239,7 @@ pub struct NumberProp<T> {
 }
 
 impl<T: PrimInt> NumberProp<T> {
+    /// Creates a new integer property with step set to 1.
     pub fn new_int() -> Self {
         Self {
             min: T::min_value(),
@@ -251,6 +252,7 @@ impl<T: PrimInt> NumberProp<T> {
 }
 
 impl<T: Float> NumberProp<T> {
+    /// Creates a new float property.
     pub fn new_float(step: T) -> Self {
         Self {
             min: T::min_value(),
@@ -263,11 +265,13 @@ impl<T: Float> NumberProp<T> {
 }
 
 impl<T: Num + Bounded + Copy> NumberProp<T> {
-    pub fn with_min(mut self, min: T) -> Self {
-        self.min = min;
+    /// Sets the step of the property.
+    pub fn with_step(mut self, step: T) -> Self {
+        self.step = step;
         self
     }
-
+    /// Sets the range of the property, inclusion and exclustion are calucated
+    /// based on the **current step**.
     pub fn with_range<R: RangeBounds<T>>(mut self, range: R) -> Self {
         use std::ops::Bound::*;
         self.min = match range.start_bound() {
@@ -284,7 +288,7 @@ impl<T: Num + Bounded + Copy> NumberProp<T> {
 
         self
     }
-
+    /// Sets this property as a slider.
     pub fn with_slider(mut self) -> Self {
         self.slider = true;
         self
@@ -292,6 +296,7 @@ impl<T: Num + Bounded + Copy> NumberProp<T> {
 }
 
 pub trait ObsProp {
+    /// Callback to add this property to a `obs_properties_t`.
     unsafe fn add_to_props(self, p: *mut obs_properties_t, name: ObsString, description: ObsString);
 }
 
@@ -307,6 +312,7 @@ impl<T: ToPrimitive> ObsProp for NumberProp<T> {
                 let min: c_int = NumCast::from(self.min).unwrap();
                 let max: c_int = NumCast::from(self.max).unwrap();
                 let step: c_int = NumCast::from(self.step).unwrap();
+
                 if self.slider {
                     obs_properties_add_int_slider(
                         p,
@@ -324,6 +330,7 @@ impl<T: ToPrimitive> ObsProp for NumberProp<T> {
                 let min: f64 = NumCast::from(self.min).unwrap();
                 let max: f64 = NumCast::from(self.max).unwrap();
                 let step: f64 = NumCast::from(self.step).unwrap();
+
                 if self.slider {
                     obs_properties_add_float_slider(
                         p,

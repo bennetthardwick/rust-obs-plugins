@@ -66,14 +66,22 @@ impl FromDataItem for Cow<'_, str> {
     }
 }
 
-impl FromDataItem for i64 {
-    fn typ() -> DataType {
-        DataType::Int
-    }
-    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        obs_data_item_get_int(item)
-    }
+macro_rules! impl_get_int {
+    ($($t:ty)*) => {
+        $(
+            impl FromDataItem for $t {
+                fn typ() -> DataType {
+                    DataType::Int
+                }
+                unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+                    obs_data_item_get_int(item) as $t
+                }
+            }
+        )*
+    };
 }
+
+impl_get_int!(i64 u64 i32 u32 i16 u16 i8 u8 isize usize);
 
 impl FromDataItem for f64 {
     fn typ() -> DataType {
@@ -81,6 +89,15 @@ impl FromDataItem for f64 {
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         obs_data_item_get_double(item)
+    }
+}
+
+impl FromDataItem for f32 {
+    fn typ() -> DataType {
+        DataType::Double
+    }
+    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+        obs_data_item_get_double(item) as f32
     }
 }
 
@@ -148,7 +165,7 @@ impl DataObj<'_> {
             if raw.is_null() {
                 None
             } else {
-                Some( Self::from_raw(raw))
+                Some(Self::from_raw(raw))
             }
         }
     }

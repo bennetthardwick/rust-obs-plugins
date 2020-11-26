@@ -125,10 +125,10 @@ pub mod module;
 pub mod source;
 /// String macros
 pub mod string;
-
+/// `obs_data_t` handling
 pub mod data;
-
-pub mod wrapper;
+/// FFI pointer wrapper
+mod wrapper;
 
 mod native_enum;
 
@@ -139,6 +139,7 @@ pub mod prelude {
     pub use crate::source::context::*;
     pub use crate::string::*;
 }
+
 #[derive(Debug)]
 pub struct Error;
 

@@ -83,18 +83,18 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
                 obs_string!("zoom"),
                 obs_string!("Amount to zoom in window"),
                 NumberProp::new_float(0.001)
-                    .with_range((1.)..=5.)
+                    .with_range(1.0..=5.0)
                     .with_slider(),
             )
             .add(
                 obs_string!("screen_x"),
                 obs_string!("Offset relative to top left screen - x"),
-                NumberProp::new_int().with_range(..=3840 * 3u32),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
             .add(
                 obs_string!("screen_y"),
                 obs_string!("Offset relative to top left screen - y"),
-                NumberProp::new_int().with_range(..=3840 * 3u32),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
             .add(
                 obs_string!("padding"),
@@ -106,12 +106,12 @@ impl GetPropertiesSource<Data> for ScrollFocusFilter {
             .add(
                 obs_string!("screen_width"),
                 obs_string!("Screen width"),
-                NumberProp::new_int().with_range(..=3840 * 3u32),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
             .add(
                 obs_string!("screen_height"),
                 obs_string!("Screen height"),
-                NumberProp::new_int().with_range(..=3840 * 3u32),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
             .add(
                 obs_string!("animation_time"),
@@ -379,7 +379,7 @@ impl UpdateSource<Data> for ScrollFocusFilter {
             if let Some(screen_x) = settings.get(obs_string!("screen_x")) {
                 data.screen_x = screen_x;
             }
-            
+
             if let Some(screen_y) = settings.get(obs_string!("screen_y")) {
                 data.screen_y = screen_y;
             }

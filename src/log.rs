@@ -17,7 +17,7 @@ use obs_sys::{blog, LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING};
 ///
 /// A new logger with default settings.
 ///
-/// ```no_run
+/// ```compile_fail
 /// let _ = Logger::new().init();
 /// ```
 pub struct Logger {

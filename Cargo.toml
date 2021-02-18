@@ -5,6 +5,7 @@ authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
 edition = "2018"
 license = "GPL-2.0"
 description = "Safe wrapper of obs-sys"
+repository = "https://github.com/bennetthardwick/rust-obs-plugins"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

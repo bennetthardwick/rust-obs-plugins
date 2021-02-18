@@ -6,6 +6,7 @@ edition = "2018"
 links = "obs"
 description = "Bindgen of <obs/obs.h>"
 license = "GPL-2.0"
+repository = "https://github.com/bennetthardwick/rust-obs-plugins"
 
 [build-dependencies]
 bindgen = "0.53.1"

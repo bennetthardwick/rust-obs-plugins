@@ -79,61 +79,44 @@ impl GetNameSource<Data> for ScrollFocusFilter {
 impl GetPropertiesSource<Data> for ScrollFocusFilter {
     fn get_properties(_data: &mut Option<Data>, properties: &mut Properties) {
         properties
-            .add_float(
+            .add(
                 obs_string!("zoom"),
                 obs_string!("Amount to zoom in window"),
-                1.,
-                5.,
-                0.001,
-                true,
+                NumberProp::new_float(0.001)
+                    .with_range(1.0..=5.0)
+                    .with_slider(),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_x"),
                 obs_string!("Offset relative to top left screen - x"),
-                0,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_y"),
                 obs_string!("Offset relative to top left screen - y"),
-                0,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
-            .add_float(
+            .add(
                 obs_string!("padding"),
                 obs_string!("Padding around each window"),
-                0.,
-                0.5,
-                0.001,
-                true,
+                NumberProp::new_float(0.001)
+                    .with_range(..=0.5)
+                    .with_slider(),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_width"),
                 obs_string!("Screen width"),
-                1,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
-            .add_int(
+            .add(
                 obs_string!("screen_height"),
                 obs_string!("Screen height"),
-                1,
-                3840 * 3,
-                1,
-                false,
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
             )
-            .add_float(
+            .add(
                 obs_string!("animation_time"),
                 obs_string!("Animation Time (s)"),
-                0.3,
-                10.,
-                0.001,
-                false,
+                NumberProp::new_float(0.001).with_range(0.3..=10.),
             );
     }
 }
@@ -294,11 +277,11 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 
             let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
 
-            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920) as u32;
-            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080) as u32;
+            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920);
+            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080);
 
-            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0) as u32;
-            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0) as u32;
+            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0);
+            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0);
 
             let animation_time = settings.get(obs_string!("animation_time")).unwrap_or(0.3);
 
@@ -377,8 +360,8 @@ impl UpdateSource<Data> for ScrollFocusFilter {
                 data.target_zoom = 1. / zoom;
             }
 
-            if let Some(screen_width) = settings.get::<i64, _>(obs_string!("screen_width")) {
-                data.screen_width = screen_width as u32;
+            if let Some(screen_width) = settings.get(obs_string!("screen_width")) {
+                data.screen_width = screen_width;
             }
 
             if let Some(padding) = settings.get(obs_string!("padding")) {
@@ -389,14 +372,16 @@ impl UpdateSource<Data> for ScrollFocusFilter {
                 data.animation_time = animation_time;
             }
 
-            if let Some(screen_height) = settings.get::<i64, _>(obs_string!("screen_height")) {
-                data.screen_height = screen_height as u32;
+            if let Some(screen_height) = settings.get(obs_string!("screen_height")) {
+                data.screen_height = screen_height;
             }
-            if let Some(screen_x) = settings.get::<i64, _>(obs_string!("screen_x")) {
-                data.screen_x = screen_x as u32;
+
+            if let Some(screen_x) = settings.get(obs_string!("screen_x")) {
+                data.screen_x = screen_x;
             }
-            if let Some(screen_y) = settings.get::<i64, _>(obs_string!("screen_y")) {
-                data.screen_y = screen_y as u32;
+
+            if let Some(screen_y) = settings.get(obs_string!("screen_y")) {
+                data.screen_y = screen_y;
             }
         }
     }

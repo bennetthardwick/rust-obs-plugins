@@ -1,5 +1,6 @@
 use super::ObsString;
-use crate::native_enum;
+use crate::{native_enum, wrapper::PtrWrapper};
+use num_traits::{Bounded, Float, Num, NumCast, PrimInt, ToPrimitive, one};
 use obs_sys::{
     obs_combo_format, obs_combo_format_OBS_COMBO_FORMAT_FLOAT,
     obs_combo_format_OBS_COMBO_FORMAT_INT, obs_combo_format_OBS_COMBO_FORMAT_INVALID,
@@ -13,15 +14,15 @@ use obs_sys::{
     obs_path_type_OBS_PATH_FILE_SAVE, obs_properties_add_bool, obs_properties_add_color,
     obs_properties_add_editable_list, obs_properties_add_float, obs_properties_add_float_slider,
     obs_properties_add_font, obs_properties_add_int, obs_properties_add_int_slider,
-    obs_properties_add_list, obs_properties_add_path, obs_properties_add_text, obs_properties_t,
-    obs_property_list_add_float, obs_property_list_add_int, obs_property_list_add_string,
-    obs_property_list_insert_float, obs_property_list_insert_int, obs_property_list_insert_string,
-    obs_property_list_item_disable, obs_property_list_item_remove, obs_property_t, obs_text_type,
-    obs_text_type_OBS_TEXT_DEFAULT, obs_text_type_OBS_TEXT_MULTILINE,
-    obs_text_type_OBS_TEXT_PASSWORD, size_t,
+    obs_properties_add_list, obs_properties_add_path, obs_properties_add_text,
+    obs_properties_create, obs_properties_destroy, obs_properties_t, obs_property_list_add_float,
+    obs_property_list_add_int, obs_property_list_add_string, obs_property_list_insert_float,
+    obs_property_list_insert_int, obs_property_list_insert_string, obs_property_list_item_disable,
+    obs_property_list_item_remove, obs_property_t, obs_text_type, obs_text_type_OBS_TEXT_DEFAULT,
+    obs_text_type_OBS_TEXT_MULTILINE, obs_text_type_OBS_TEXT_PASSWORD, size_t,
 };
 
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::RangeBounds, os::raw::c_int};
 
 native_enum!(TextType, obs_text_type {
     Default => OBS_TEXT_DEFAULT,
@@ -54,144 +55,40 @@ native_enum!(EditableListType, obs_editable_list_type {
     FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS
 });
 
+/// Wrapper around [`obs_properties_t`], which is used by
+/// OBS to generate a user-friendly configuration UI.
 pub struct Properties {
     pointer: *mut obs_properties_t,
 }
 
-impl Properties {
-    pub(crate) unsafe fn from_raw(pointer: *mut obs_properties_t) -> Self {
-        Self { pointer }
+impl PtrWrapper for Properties {
+    type Pointer = obs_properties_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
+        Self { pointer: raw }
     }
 
-    /// # Safety
-    /// Modifying this pointer could cause UB
-    pub unsafe fn into_raw(self) -> *mut obs_properties_t {
+    fn as_ptr(&self) -> *const Self::Pointer {
         self.pointer
     }
+}
 
-    pub fn add_float(
+impl Properties {
+    pub fn new() -> Self {
+        unsafe {
+            let ptr = obs_properties_create();
+            Self::from_raw(ptr)
+        }
+    }
+
+    pub fn add<T: ObsProp>(
         &mut self,
         name: ObsString,
         description: ObsString,
-        min: f64,
-        max: f64,
-        step: f64,
-        slider: bool,
+        prop: T,
     ) -> &mut Self {
         unsafe {
-            if slider {
-                obs_properties_add_float_slider(
-                    self.pointer,
-                    name.as_ptr(),
-                    description.as_ptr(),
-                    min,
-                    max,
-                    step,
-                );
-            } else {
-                obs_properties_add_float(
-                    self.pointer,
-                    name.as_ptr(),
-                    description.as_ptr(),
-                    min,
-                    max,
-                    step,
-                );
-            }
-        }
-        self
-    }
-
-    pub fn add_int(
-        &mut self,
-        name: ObsString,
-        description: ObsString,
-        min: i32,
-        max: i32,
-        step: i32,
-        slider: bool,
-    ) -> &mut Self {
-        unsafe {
-            if slider {
-                obs_properties_add_int_slider(
-                    self.pointer,
-                    name.as_ptr(),
-                    description.as_ptr(),
-                    min,
-                    max,
-                    step,
-                );
-            } else {
-                obs_properties_add_int(
-                    self.pointer,
-                    name.as_ptr(),
-                    description.as_ptr(),
-                    min,
-                    max,
-                    step,
-                );
-            }
-        }
-        self
-    }
-
-    pub fn add_bool(&mut self, name: ObsString, description: ObsString) -> &mut Self {
-        unsafe {
-            obs_properties_add_bool(self.pointer, name.as_ptr(), description.as_ptr());
-        }
-        self
-    }
-
-    pub fn add_text(
-        &mut self,
-        name: ObsString,
-        description: ObsString,
-        typ: TextType,
-    ) -> &mut Self {
-        unsafe {
-            obs_properties_add_text(
-                self.pointer,
-                name.as_ptr(),
-                description.as_ptr(),
-                typ.into(),
-            );
-        }
-        self
-    }
-
-    /// Adds a 'path' property.  Can be a directory or a file.
-    ///
-    /// If target is a file path, the filters should be this format, separated by
-    /// double semi-colens, and extensions separated by space:
-    ///
-    /// "Example types 1 and 2 (*.ex1 *.ex2);;Example type 3 (*.ex3)"
-    ///
-    /// Arguments
-    /// *  `props`: Properties object
-    /// *  `name`: Settings name
-    /// *  `description`: Description (display name) of the property
-    /// *  `type`: Type of path (directory or file)
-    /// *  `filter`: If type is a file path, then describes the file filter
-    ///              that the user can browse.  Items are separated via
-    ///              double semi-colens.  If multiple file types in a
-    ///              filter, separate with space.
-    pub fn add_path(
-        &mut self,
-        name: ObsString,
-        description: ObsString,
-        typ: PathType,
-        filter: ObsString,
-        default_path: ObsString,
-    ) -> &mut Self {
-        unsafe {
-            obs_properties_add_path(
-                self.pointer,
-                name.as_ptr(),
-                description.as_ptr(),
-                typ.into(),
-                filter.as_ptr(),
-                default_path.as_ptr(),
-            );
+            prop.add_to_props(self.pointer, name, description);
         }
         self
     }
@@ -215,64 +112,29 @@ impl Properties {
                 .into(),
                 T::format().into(),
             );
-            ListProp::new_unchecked(raw)
+            ListProp::from_raw(raw)
         }
-    }
-
-    pub fn add_color(&mut self, name: ObsString, description: ObsString) -> &mut Self {
-        unsafe {
-            obs_properties_add_color(self.pointer, name.as_ptr(), description.as_ptr());
-        }
-        self
-    }
-
-    /// Adds a font selection property.
-    ///
-    /// A font is an obs_data sub-object which contains the following items:
-    ///   face:   face name string
-    ///
-    ///   style:  style name string
-    ///
-    ///   size:   size integer
-    ///
-    ///   flags:  font flags integer (OBS_FONT_* defined above)
-    pub fn add_font(&mut self, name: ObsString, description: ObsString) -> &mut Self {
-        unsafe {
-            obs_properties_add_font(self.pointer, name.as_ptr(), description.as_ptr());
-        }
-        self
-    }
-
-    pub fn add_editable_list(
-        &mut self,
-        name: ObsString,
-        description: ObsString,
-        typ: EditableListType,
-        filter: ObsString,
-        default_path: ObsString,
-    ) -> &mut Self {
-        unsafe {
-            obs_properties_add_editable_list(
-                self.pointer,
-                name.as_ptr(),
-                description.as_ptr(),
-                typ.into(),
-                filter.as_ptr(),
-                default_path.as_ptr(),
-            );
-        }
-        self
     }
 }
 
+impl Drop for Properties {
+    fn drop(&mut self) {
+        unsafe { obs_properties_destroy(self.pointer) }
+    }
+}
+
+/// Wrapper around [`obs_property_t`], which is a list of possible values for a
+/// property.
 pub struct ListProp<'props, T> {
     raw: *mut obs_property_t,
     _props: PhantomData<&'props mut Properties>,
     _type: PhantomData<T>,
 }
 
-impl<T: ListType> ListProp<'_, T> {
-    unsafe fn new_unchecked(raw: *mut obs_property_t) -> Self {
+impl<T> PtrWrapper for ListProp<'_, T> {
+    type Pointer = obs_property_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
         Self {
             raw,
             _props: PhantomData,
@@ -280,6 +142,12 @@ impl<T: ListType> ListProp<'_, T> {
         }
     }
 
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
+impl<T: ListType> ListProp<'_, T> {
     pub fn push(&mut self, name: impl Into<ObsString>, value: T) {
         value.push_into(self.raw, name.into());
     }
@@ -358,5 +226,307 @@ impl ListType for f64 {
         unsafe {
             obs_property_list_insert_float(ptr, index as size_t, name.as_ptr(), self);
         }
+    }
+}
+
+enum NumberType {
+    Integer,
+    Float,
+}
+/// ## Panics
+/// This type of property may cause panic when being added to the properties
+/// if the provided `min`, `max` or `step` exceeds [`c_int`].
+pub struct NumberProp<T> {
+    min: T,
+    max: T,
+    step: T,
+    slider: bool,
+    typ: NumberType,
+}
+
+impl<T: PrimInt> NumberProp<T> {
+    /// Creates a new integer property with step set to 1.
+    pub fn new_int() -> Self {
+        Self {
+            min: T::min_value(),
+            max: T::max_value(),
+            step: one(),
+            slider: false,
+            typ: NumberType::Integer,
+        }
+    }
+}
+
+impl<T: Float> NumberProp<T> {
+    /// Creates a new float property with a certain step.
+    pub fn new_float(step: T) -> Self {
+        Self {
+            min: T::min_value(),
+            max: T::max_value(),
+            step,
+            slider: false,
+            typ: NumberType::Float,
+        }
+    }
+}
+
+impl<T: Num + Bounded + Copy> NumberProp<T> {
+    /// Sets the step of the property.
+    pub fn with_step(mut self, step: T) -> Self {
+        self.step = step;
+        self
+    }
+    /// Sets the range of the property, inclusion and exclustion are calucated
+    /// based on the **current step**.
+    pub fn with_range<R: RangeBounds<T>>(mut self, range: R) -> Self {
+        use std::ops::Bound::*;
+        self.min = match range.start_bound() {
+            Included(min) => *min,
+            Excluded(min) => *min + self.step,
+            std::ops::Bound::Unbounded => T::min_value(),
+        };
+
+        self.max = match range.end_bound() {
+            Included(max) => *max,
+            Excluded(max) => *max - self.step,
+            std::ops::Bound::Unbounded => T::max_value(),
+        };
+
+        self
+    }
+    /// Sets this property as a slider.
+    pub fn with_slider(mut self) -> Self {
+        self.slider = true;
+        self
+    }
+}
+
+pub trait ObsProp {
+    /// Callback to add this property to a [`obs_properties_t`].
+    unsafe fn add_to_props(self, p: *mut obs_properties_t, name: ObsString, description: ObsString);
+}
+
+impl<T: ToPrimitive> ObsProp for NumberProp<T> {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        match self.typ {
+            NumberType::Integer => {
+                let min: c_int = NumCast::from(self.min).unwrap();
+                let max: c_int = NumCast::from(self.max).unwrap();
+                let step: c_int = NumCast::from(self.step).unwrap();
+
+                if self.slider {
+                    obs_properties_add_int_slider(
+                        p,
+                        name.as_ptr(),
+                        description.as_ptr(),
+                        min,
+                        max,
+                        step,
+                    );
+                } else {
+                    obs_properties_add_int(p, name.as_ptr(), description.as_ptr(), min, max, step);
+                }
+            }
+            NumberType::Float => {
+                let min: f64 = NumCast::from(self.min).unwrap();
+                let max: f64 = NumCast::from(self.max).unwrap();
+                let step: f64 = NumCast::from(self.step).unwrap();
+
+                if self.slider {
+                    obs_properties_add_float_slider(
+                        p,
+                        name.as_ptr(),
+                        description.as_ptr(),
+                        min,
+                        max,
+                        step,
+                    );
+                } else {
+                    obs_properties_add_float(
+                        p,
+                        name.as_ptr(),
+                        description.as_ptr(),
+                        min,
+                        max,
+                        step,
+                    );
+                }
+            }
+        }
+    }
+}
+
+pub struct BoolProp;
+
+impl ObsProp for BoolProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_bool(p, name.as_ptr(), description.as_ptr());
+    }
+}
+pub struct TextProp {
+    typ: TextType,
+}
+
+impl TextProp {
+    pub fn new(typ: TextType) -> Self {
+        Self { typ }
+    }
+}
+
+impl ObsProp for TextProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_text(p, name.as_ptr(), description.as_ptr(), self.typ.into());
+    }
+}
+
+pub struct ColorProp;
+
+impl ObsProp for ColorProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_color(p, name.as_ptr(), description.as_ptr());
+    }
+}
+
+/// Adds a font selection property.
+///
+/// A font is an obs_data sub-object which contains the following items:
+/// * face:   face name string
+/// * style:  style name string
+/// * size:   size integer
+/// * flags:  font flags integer (OBS_FONT_* defined above)
+pub struct FontProp;
+
+impl ObsProp for FontProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_font(p, name.as_ptr(), description.as_ptr());
+    }
+}
+
+/// Adds a 'path' property.  Can be a directory or a file.
+///
+/// If target is a file path, the filters should be this format, separated by
+/// double semi-colens, and extensions separated by space:
+///
+/// "Example types 1 and 2 (*.ex1 *.ex2);;Example type 3 (*.ex3)"
+///
+/// Arguments
+/// *  `props`: Properties object
+/// *  `name`: Settings name
+/// *  `description`: Description (display name) of the property
+/// *  `type`: Type of path (directory or file)
+/// *  `filter`: If type is a file path, then describes the file filter
+///              that the user can browse.  Items are separated via
+///              double semi-colens.  If multiple file types in a
+///              filter, separate with space.
+pub struct PathProp {
+    typ: PathType,
+    filter: Option<ObsString>,
+    default_path: Option<ObsString>,
+}
+
+impl PathProp {
+    pub fn new(typ: PathType) -> Self {
+        Self {
+            typ,
+            filter: None,
+            default_path: None,
+        }
+    }
+
+    pub fn with_filter(mut self, f: ObsString) -> Self {
+        self.filter = Some(f);
+        self
+    }
+
+    pub fn with_default_path(mut self, d: ObsString) -> Self {
+        self.default_path = Some(d);
+        self
+    }
+}
+
+impl ObsProp for PathProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_path(
+            p,
+            name.as_ptr(),
+            description.as_ptr(),
+            self.typ.into(),
+            ObsString::ptr_or_null(&self.filter),
+            ObsString::ptr_or_null(&self.default_path),
+        );
+    }
+}
+
+pub struct EditableListProp {
+    typ: EditableListType,
+    filter: Option<ObsString>,
+    default_path: Option<ObsString>,
+}
+
+impl EditableListProp {
+    pub fn new(typ: EditableListType) -> Self {
+        Self {
+            typ,
+            filter: None,
+            default_path: None,
+        }
+    }
+
+    pub fn with_filter(mut self, f: ObsString) -> Self {
+        self.filter = Some(f);
+        self
+    }
+
+    pub fn with_default_path(mut self, d: ObsString) -> Self {
+        self.default_path = Some(d);
+        self
+    }
+}
+
+impl ObsProp for EditableListProp {
+    unsafe fn add_to_props(
+        self,
+        p: *mut obs_properties_t,
+        name: ObsString,
+        description: ObsString,
+    ) {
+        obs_properties_add_editable_list(
+            p,
+            name.as_ptr(),
+            description.as_ptr(),
+            self.typ.into(),
+            ObsString::ptr_or_null(&self.filter),
+            ObsString::ptr_or_null(&self.default_path),
+        );
     }
 }

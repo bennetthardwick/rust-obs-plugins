@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::{ffi::CString, ptr::null};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub enum ObsString {
@@ -26,6 +26,10 @@ impl ObsString {
             Self::Static(s) => (*s).as_ptr() as *const std::os::raw::c_char,
             Self::Dynamic(s) => s.as_ptr(),
         }
+    }
+
+    pub fn ptr_or_null(opt: &Option<Self>) -> *const std::os::raw::c_char {
+        opt.as_ref().map(|s| s.as_ptr()).unwrap_or(null())
     }
 }
 

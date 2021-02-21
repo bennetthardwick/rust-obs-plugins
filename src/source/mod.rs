@@ -36,7 +36,7 @@ use super::{
     },
     string::ObsString,
 };
-use crate::data::DataObj;
+use crate::{data::DataObj, wrapper::PtrWrapper};
 
 use std::{
     ffi::{CStr, CString},
@@ -288,9 +288,9 @@ impl SourceContext {
     }
 
     /// Update the source settings based on a settings context.
-    pub fn update_source_settings(&mut self, settings: &DataObj) {
+    pub fn update_source_settings(&mut self, settings: &mut DataObj) {
         unsafe {
-            obs_source_update(self.source, settings.as_raw());
+            obs_source_update(self.source, settings.as_ptr_mut());
         }
     }
 }

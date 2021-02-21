@@ -14,7 +14,7 @@ use obs_sys::{
     obs_data_type_OBS_DATA_STRING, size_t,
 };
 
-use crate::string::ObsString;
+use crate::{string::ObsString, wrapper::PtrWrapper};
 
 #[derive(Debug, Eq, PartialEq, Copy, Clone)]
 pub enum DataType {
@@ -66,14 +66,22 @@ impl FromDataItem for Cow<'_, str> {
     }
 }
 
-impl FromDataItem for i64 {
-    fn typ() -> DataType {
-        DataType::Int
-    }
-    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        obs_data_item_get_int(item)
-    }
+macro_rules! impl_get_int {
+    ($($t:ty)*) => {
+        $(
+            impl FromDataItem for $t {
+                fn typ() -> DataType {
+                    DataType::Int
+                }
+                unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+                    obs_data_item_get_int(item) as $t
+                }
+            }
+        )*
+    };
 }
+
+impl_get_int!(i64 u64 i32 u32 i16 u16 i8 u8 isize usize);
 
 impl FromDataItem for f64 {
     fn typ() -> DataType {
@@ -81,6 +89,15 @@ impl FromDataItem for f64 {
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
         obs_data_item_get_double(item)
+    }
+}
+
+impl FromDataItem for f32 {
+    fn typ() -> DataType {
+        DataType::Double
+    }
+    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+        obs_data_item_get_double(item) as f32
     }
 }
 
@@ -98,7 +115,7 @@ impl FromDataItem for DataObj<'_> {
         DataType::Object
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        Self::new_unchecked(obs_data_item_get_obj(item))
+        Self::from_raw(obs_data_item_get_obj(item))
     }
 }
 
@@ -107,7 +124,7 @@ impl FromDataItem for DataArray<'_> {
         DataType::Array
     }
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
-        Self::new_unchecked(obs_data_item_get_array(item))
+        Self::from_raw(obs_data_item_get_array(item))
     }
 }
 
@@ -117,15 +134,30 @@ pub struct DataObj<'parent> {
     _parent: PhantomData<&'parent DataObj<'parent>>,
 }
 
+impl PtrWrapper for DataObj<'_> {
+    type Pointer = obs_data_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
+        Self {
+            raw,
+            _parent: PhantomData,
+        }
+    }
+
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
 impl DataObj<'_> {
     /// Creates a empty data object
     pub fn new() -> Self {
         unsafe {
             let raw = obs_data_create();
-            Self::new_unchecked(raw)
+            Self::from_raw(raw)
         }
     }
-
+    /// Loads data into a object from a JSON string.
     pub fn from_json(json_str: impl Into<ObsString>) -> Option<Self> {
         let json_str = json_str.into();
         unsafe {
@@ -133,11 +165,12 @@ impl DataObj<'_> {
             if raw.is_null() {
                 None
             } else {
-                Some(Self::new_unchecked(raw))
+                Some(Self::from_raw(raw))
             }
         }
     }
-
+    /// Loads data into a object from a JSON file.
+    /// * `backup_ext`: optional backup file path in case the original file is bad.
     pub fn from_json_file(
         json_file: impl Into<ObsString>,
         backup_ext: impl Into<Option<ObsString>>,
@@ -153,21 +186,14 @@ impl DataObj<'_> {
             if raw.is_null() {
                 None
             } else {
-                Some(Self::new_unchecked(raw))
+                Some(Self::from_raw(raw))
             }
         }
     }
-
-    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_t) -> Self {
-        Self {
-            raw,
-            _parent: PhantomData,
-        }
-    }
-
+    /// Fetches a property from this object. Numbers are implicitly casted.
     pub fn get<T: FromDataItem, N: Into<ObsString>>(&self, name: N) -> Option<T> {
         let name = name.into();
-        let mut item_ptr = unsafe { obs_data_item_byname(self.raw, name.as_ptr()) };
+        let mut item_ptr = unsafe { obs_data_item_byname(self.as_ptr() as *mut _, name.as_ptr()) };
         if item_ptr.is_null() {
             return None;
         }
@@ -185,7 +211,7 @@ impl DataObj<'_> {
             None
         }
     }
-
+    /// Creates a JSON representation of this object.
     pub fn get_json(&self) -> Option<String> {
         unsafe {
             let ptr = obs_data_get_json(self.raw);
@@ -197,11 +223,7 @@ impl DataObj<'_> {
             }
         }
     }
-
-    pub fn as_raw(&self) -> *mut obs_data_t {
-        self.raw
-    }
-
+    /// Clears all values.
     pub fn clear(&mut self) {
         unsafe {
             obs_data_clear(self.raw);
@@ -229,22 +251,32 @@ pub struct DataArray<'parent> {
     _parent: PhantomData<&'parent DataArray<'parent>>,
 }
 
-impl DataArray<'_> {
-    pub(crate) unsafe fn new_unchecked(raw: *mut obs_data_array_t) -> Self {
+impl PtrWrapper for DataArray<'_> {
+    type Pointer = obs_data_array_t;
+
+    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
         Self {
             raw,
             _parent: PhantomData,
         }
     }
+
+    fn as_ptr(&self) -> *const Self::Pointer {
+        self.raw
+    }
+}
+
+impl DataArray<'_> {
     pub fn len(&self) -> usize {
         unsafe { obs_data_array_count(self.raw) as usize }
     }
+
     pub fn get(&self, index: usize) -> Option<DataObj> {
         let ptr = unsafe { obs_data_array_item(self.raw, index as size_t) };
         if ptr.is_null() {
             None
         } else {
-            Some(unsafe { DataObj::new_unchecked(ptr) })
+            Some(unsafe { DataObj::from_raw(ptr) })
         }
     }
 }

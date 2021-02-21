@@ -27,7 +27,7 @@ impl Default for GlobalContext {
 }
 
 pub struct CreatableSourceContext<'a, D> {
-    source: *mut obs_source_t,
+    _source: *mut obs_source_t,
     pub(crate) hotkey_callbacks: Vec<(
         ObsString,
         ObsString,
@@ -44,7 +44,7 @@ impl<'a, D> CreatableSourceContext<'a, D> {
         global: &'a mut GlobalContext,
     ) -> Self {
         Self {
-            source,
+            _source: source,
             hotkey_callbacks: Default::default(),
             settings,
             global,

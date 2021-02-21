@@ -8,9 +8,10 @@ A safe wrapper around the OBS API, useful for creating OBS sources, filters and 
 This repo also includes plugins creating using the wrapper in the `/plugins` folder.
 
 ## Plugins
-| Folder               | Description                                                      |
-|----------------------|------------------------------------------------------------------|
-| /scroll-focus-filter | an OBS filter that will zoom into the currently focused X window |
+| Folder                    | Description                                                      |
+|---------------------------|------------------------------------------------------------------|
+| /scroll-focus-filter      | an OBS filter that will zoom into the currently focused X window |
+| /rnnoise-denoiser-filter  | an OBS filter for removing background noise from your Mic        |
 
 ## Usage
 
@@ -19,7 +20,7 @@ the module:
 
 ```toml
 [dependencies]
-obs-wrapper = "0.1"
+obs-wrapper = "0.2"
 
 [lib]
 name = "<module-name>"

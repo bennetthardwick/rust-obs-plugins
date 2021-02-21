@@ -30,20 +30,20 @@ jobs:
           cargo build --verbose --workspace
           cargo test --workspace
 
-  # build_windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         submodules: true
-  #     - uses: actions/cache@v1
-  #       with:
-  #         path: ${{ github.workspace }}/target
-  #         key: windows-rust-target-directory
-  #     - run: |
-  #         choco install obs-studio llvm
-  #         cargo build --verbose --workspace --exclude scroll-focus-filter
-  #         cargo test --workspace --exclude scroll-focus-filter
+  build_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: windows-rust-target-directory
+      - run: |
+          choco install obs-studio llvm
+          cargo build --verbose --workspace --exclude scroll-focus-filter
+          cargo test --workspace --exclude scroll-focus-filter
 
   # build_macos:
   #   runs-on: macos-latest

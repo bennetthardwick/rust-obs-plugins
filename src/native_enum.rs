@@ -1,11 +1,11 @@
 #[derive(Debug)]
 pub struct NativeParsingError {
     struct_name: &'static str,
-    value: u32,
+    value: i64,
 }
 
 impl NativeParsingError {
-    pub(crate) fn new(struct_name: &'static str, value: u32) -> Self {
+    pub(crate) fn new(struct_name: &'static str, value: i64) -> Self {
         Self { struct_name, value }
     }
 }
@@ -44,7 +44,7 @@ macro_rules! native_enum {
                 fn try_from(value: $native_name) -> Result<Self, Self::Error> {
                     match value {
                         $([<$native_name _ $native>] => Ok(Self::$rust)),*,
-                        _ => Err(crate::native_enum::NativeParsingError::new(stringify!($name), value))
+                        _ => Err(crate::native_enum::NativeParsingError::new(stringify!($name), value as i64))
                     }
                 }
             }

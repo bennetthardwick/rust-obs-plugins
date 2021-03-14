@@ -404,5 +404,6 @@ impl_source_builder! {
     media_previous => MediaPreviousSource
     media_get_duration => MediaGetDurationSource
     media_get_time => MediaGetTimeSource
+    media_set_time => MediaSetTimeSource
     media_get_state => MediaGetStateSource
 }

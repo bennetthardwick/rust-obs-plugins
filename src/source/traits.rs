@@ -82,6 +82,10 @@ pub trait MediaGetStateSource<D> {
     fn get_state(data: &mut Option<D>) -> MediaState;
 }
 
+pub trait MediaSetTimeSource<D> {
+    fn set_time(data: &mut Option<D>, milliseconds: i64);
+}
+
 pub trait GetDefaultsSource<D> {
     fn get_defaults(settings: &mut DataObj);
 }

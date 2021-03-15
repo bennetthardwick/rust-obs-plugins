@@ -238,6 +238,14 @@ pub unsafe extern "C" fn media_get_state<D, F: MediaGetStateSource<D>>(
     F::get_state(&mut wrapper.data).to_native()
 }
 
+pub unsafe extern "C" fn media_set_time<D, F: MediaSetTimeSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+    milliseconds: i64,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    F::set_time(&mut wrapper.data, milliseconds);
+}
+
 macro_rules! impl_media {
     ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
         item! {

@@ -13,8 +13,7 @@ repository = "https://github.com/bennetthardwick/rust-obs-plugins"
 
 members = [
   "obs-sys",
-  "plugins/scroll-focus-filter",
-  "plugins/rnnoise-denoiser-filter"
+  "plugins/*",
 ]
 
 [dependencies]

@@ -1,7 +1,7 @@
 use std::os::raw::c_char;
 
 use log::{Level, LevelFilter, Log, Metadata, Record, SetLoggerError};
-use obs_sys::{blog, LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING, _bindgen_ty_1};
+use obs_sys::{_bindgen_ty_1, blog, LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING};
 
 /// A logger that plugs into OBS's logging system.
 ///
@@ -28,7 +28,7 @@ pub struct Logger {
 impl Default for Logger {
     fn default() -> Self {
         Self {
-            max_level: LevelFilter::Info,
+            max_level: LevelFilter::Trace,
             promote_debug: false,
         }
     }
@@ -67,7 +67,7 @@ impl Logger {
 
 impl Log for Logger {
     fn enabled(&self, metadata: &Metadata) -> bool {
-        metadata.level() >= self.max_level
+        self.max_level >= metadata.level()
     }
 
     fn log(&self, record: &Record) {

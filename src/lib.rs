@@ -115,6 +115,8 @@
 /// Raw bindings of OBS C API
 pub use obs_sys;
 
+/// `obs_data_t` handling
+pub mod data;
 /// Tools required for manipulating graphics in OBS
 pub mod graphics;
 /// Logger for logging to OBS console
@@ -125,8 +127,6 @@ pub mod module;
 pub mod source;
 /// String macros
 pub mod string;
-/// `obs_data_t` handling
-pub mod data;
 /// FFI pointer wrapper
 mod wrapper;
 

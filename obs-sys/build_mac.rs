@@ -18,7 +18,7 @@ pub fn find_mac_obs_lib() {
     for c in candidates.iter() {
         if let Ok(meta) = fs::metadata(c.join("libobs.0.dylib")) {
             if meta.is_file() {
-                println!("cargo:rustc-link-search=native={}", c.display());
+                println!("cargo:rustc-link-search=native=/Applications/OBS.app/Contents/Frameworks");
                 return;
             }
         }

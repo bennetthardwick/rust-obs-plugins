@@ -9,6 +9,7 @@ mod hotkey;
 pub mod media;
 pub mod properties;
 pub mod traits;
+pub mod video;
 
 pub use context::*;
 pub use media::*;
@@ -396,6 +397,7 @@ impl_source_builder! {
     transition_stop => TransitionStopSource
     video_tick => VideoTickSource
     filter_audio => FilterAudioSource
+    filter_video => FilterVideoSource
     get_defaults => GetDefaultsSource
     media_play_pause => MediaPlayPauseSource
     media_restart => MediaRestartSource

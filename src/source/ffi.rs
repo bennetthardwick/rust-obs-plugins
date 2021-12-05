@@ -1,4 +1,5 @@
 use super::audio::AudioDataContext;
+use super::video::VideoDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::hotkey::Hotkey;
 use super::properties::Properties;
@@ -15,7 +16,7 @@ use std::os::raw::c_char;
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
     obs_hotkey_t, obs_media_state, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
-    obs_source_t, size_t,
+    obs_source_t, size_t, obs_source_frame
 };
 
 struct DataWrapper<D> {
@@ -221,6 +222,16 @@ pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     F::filter_audio(&mut wrapper.data, &mut context);
     audio
+}
+
+pub unsafe extern "C" fn filter_video<D, F: FilterVideoSource<D>>(
+    data: *mut ::std::os::raw::c_void,
+    video: *mut obs_source_frame,
+) -> *mut obs_source_frame {
+    let mut context = VideoDataContext::from_raw(video);
+    let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
+    F::filter_video(&mut wrapper.data, &mut context);
+    video
 }
 
 pub unsafe extern "C" fn media_play_pause<D, F: MediaPlayPauseSource<D>>(

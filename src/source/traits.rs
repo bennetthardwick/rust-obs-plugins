@@ -1,6 +1,7 @@
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::properties::Properties;
 use super::{audio::AudioDataContext, media::MediaState};
+use super::{video::VideoDataContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 use crate::data::DataObj;
 use crate::string::ObsString;
@@ -72,6 +73,10 @@ simple_trait!(
 
 pub trait FilterAudioSource<D> {
     fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
+}
+
+pub trait FilterVideoSource<D> {
+    fn filter_video(data: &mut Option<D>, audio: &mut VideoDataContext);
 }
 
 pub trait MediaPlayPauseSource<D> {

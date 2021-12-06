@@ -12,6 +12,7 @@ pub fn find_mac_obs_lib() {
         PathBuf::from(&*shellexpand::tilde(
             "~/Applications/OBS.app/Contents/MacOS",
         )),
+        PathBuf::from("/Applications/OBS.app/Contents/Frameworks"),
         PathBuf::from("/Applications/OBS.app/Contents/MacOS"),
     ];
 

@@ -12,13 +12,14 @@ pub fn find_mac_obs_lib() {
         PathBuf::from(&*shellexpand::tilde(
             "~/Applications/OBS.app/Contents/MacOS",
         )),
+        PathBuf::from("/Applications/OBS.app/Contents/Frameworks"),
         PathBuf::from("/Applications/OBS.app/Contents/MacOS"),
     ];
 
     for c in candidates.iter() {
         if let Ok(meta) = fs::metadata(c.join("libobs.0.dylib")) {
             if meta.is_file() {
-                println!("cargo:rustc-link-search=native=/Applications/OBS.app/Contents/Frameworks");
+                println!("cargo:rustc-link-search=native={}", c.display());
                 return;
             }
         }

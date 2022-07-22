@@ -19,7 +19,7 @@ impl LoadContext {
         }
     }
 
-    pub fn create_source_builder<T: Sourceable, D>(&self) -> SourceInfoBuilder<T, D> {
+    pub fn create_source_builder<D: Sourceable>(&self) -> SourceInfoBuilder<D> {
         SourceInfoBuilder::new()
     }
 

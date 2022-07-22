@@ -14,7 +14,7 @@ enum ServerMessage {
     Snapshot(WindowSnapshot),
 }
 
-struct Data {
+struct ScrollFocusFilter {
     source: SourceContext,
     effect: GraphicsEffect,
 
@@ -51,13 +51,13 @@ struct Data {
     screen_y: u32,
 }
 
-impl Drop for Data {
+impl Drop for ScrollFocusFilter {
     fn drop(&mut self) {
         self.send.send(FilterMessage::CloseConnection).unwrap_or(());
     }
 }
 
-struct ScrollFocusFilter {
+struct TheModule {
     context: ModuleContext,
 }
 
@@ -70,14 +70,14 @@ impl Sourceable for ScrollFocusFilter {
     }
 }
 
-impl GetNameSource<Data> for ScrollFocusFilter {
+impl GetNameSource for ScrollFocusFilter {
     fn get_name() -> ObsString {
         obs_string!("Scroll Focus Filter")
     }
 }
 
-impl GetPropertiesSource<Data> for ScrollFocusFilter {
-    fn get_properties(_data: &mut Option<Data>, properties: &mut Properties) {
+impl GetPropertiesSource for ScrollFocusFilter {
+    fn get_properties(_data: &mut Option<Self>, properties: &mut Properties) {
         properties
             .add(
                 obs_string!("zoom"),
@@ -126,8 +126,8 @@ fn smooth_step(x: f32) -> f32 {
     t * t * (3. - 2. * t)
 }
 
-impl VideoTickSource<Data> for ScrollFocusFilter {
-    fn video_tick(data: &mut Option<Data>, seconds: f32) {
+impl VideoTickSource for ScrollFocusFilter {
+    fn video_tick(data: &mut Option<Self>, seconds: f32) {
         if let Some(data) = data {
             for ServerMessage::Snapshot(snapshot) in data.receive.try_iter() {
                 let window_zoom = ((snapshot.width / (data.screen_width as f32))
@@ -195,9 +195,9 @@ impl VideoTickSource<Data> for ScrollFocusFilter {
     }
 }
 
-impl VideoRenderSource<Data> for ScrollFocusFilter {
+impl VideoRenderSource for ScrollFocusFilter {
     fn video_render(
-        data: &mut Option<Data>,
+        data: &mut Option<Self>,
         _context: &mut GlobalContext,
         render: &mut VideoRenderContext,
     ) {
@@ -250,8 +250,8 @@ impl VideoRenderSource<Data> for ScrollFocusFilter {
     }
 }
 
-impl CreatableSource<Data> for ScrollFocusFilter {
-    fn create(create: &mut CreatableSourceContext<Data>, mut source: SourceContext) -> Data {
+impl CreatableSource for ScrollFocusFilter {
+    fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceContext) -> Self {
         let mut effect = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),
@@ -310,7 +310,7 @@ impl CreatableSource<Data> for ScrollFocusFilter {
 
             source.update_source_settings(settings);
 
-            return Data {
+            return Self {
                 source,
                 effect,
                 add_val,
@@ -351,8 +351,8 @@ impl CreatableSource<Data> for ScrollFocusFilter {
     }
 }
 
-impl UpdateSource<Data> for ScrollFocusFilter {
-    fn update(data: &mut Option<Data>, settings: &mut DataObj, _context: &mut GlobalContext) {
+impl UpdateSource for ScrollFocusFilter {
+    fn update(data: &mut Option<Self>, settings: &mut DataObj, _context: &mut GlobalContext) {
         if let Some(data) = data {
             if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
                 data.from_zoom = data.current_zoom;
@@ -387,7 +387,7 @@ impl UpdateSource<Data> for ScrollFocusFilter {
     }
 }
 
-impl Module for ScrollFocusFilter {
+impl Module for TheModule {
     fn new(context: ModuleContext) -> Self {
         Self { context }
     }
@@ -397,7 +397,7 @@ impl Module for ScrollFocusFilter {
 
     fn load(&mut self, load_context: &mut LoadContext) -> bool {
         let source = load_context
-            .create_source_builder::<ScrollFocusFilter, Data>()
+            .create_source_builder::<ScrollFocusFilter>()
             .enable_get_name()
             .enable_create()
             .enable_get_properties()
@@ -422,4 +422,4 @@ impl Module for ScrollFocusFilter {
     }
 }
 
-obs_register_module!(ScrollFocusFilter);
+obs_register_module!(TheModule);

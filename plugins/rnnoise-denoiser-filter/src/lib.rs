@@ -18,7 +18,7 @@ struct Output {
     last_output: (f32, f32),
 }
 
-struct Data {
+struct RnnoiseDenoiserFilter {
     output: Output,
     input: VecDeque<f32>,
     state: Box<DenoiseState>,
@@ -28,7 +28,7 @@ struct Data {
     channels: usize,
 }
 
-struct RnnoiseDenoiserFilter {
+struct TheModule {
     context: ModuleContext,
 }
 
@@ -41,18 +41,18 @@ impl Sourceable for RnnoiseDenoiserFilter {
     }
 }
 
-impl GetNameSource<Data> for RnnoiseDenoiserFilter {
+impl GetNameSource for RnnoiseDenoiserFilter {
     fn get_name() -> ObsString {
         obs_string!("Rnnoise Noise Suppression Filter")
     }
 }
 
-impl CreatableSource<Data> for RnnoiseDenoiserFilter {
-    fn create(create: &mut CreatableSourceContext<Data>, mut _source: SourceContext) -> Data {
+impl CreatableSource for RnnoiseDenoiserFilter {
+    fn create(create: &mut CreatableSourceContext<Self>, mut _source: SourceContext) -> Self {
         let (sample_rate, channels) =
             create.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
 
-        Data {
+        Self {
             input: VecDeque::with_capacity(FRAME_SIZE * 3),
             output: Output {
                 buffer: VecDeque::with_capacity(FRAME_SIZE * 3),
@@ -68,8 +68,8 @@ impl CreatableSource<Data> for RnnoiseDenoiserFilter {
     }
 }
 
-impl UpdateSource<Data> for RnnoiseDenoiserFilter {
-    fn update(data: &mut Option<Data>, _settings: &mut DataObj, context: &mut GlobalContext) {
+impl UpdateSource for RnnoiseDenoiserFilter {
+    fn update(data: &mut Option<Self>, _settings: &mut DataObj, context: &mut GlobalContext) {
         if let Some(data) = data {
             let sample_rate = context.with_audio(|audio| audio.output_sample_rate());
             data.sample_rate = sample_rate as f64;
@@ -77,8 +77,8 @@ impl UpdateSource<Data> for RnnoiseDenoiserFilter {
     }
 }
 
-impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
-    fn filter_audio(data: &mut Option<Data>, audio: &mut audio::AudioDataContext) {
+impl FilterAudioSource for RnnoiseDenoiserFilter {
+    fn filter_audio(data: &mut Option<Self>, audio: &mut audio::AudioDataContext) {
         if let Some(data) = data {
             let state = &mut data.state;
             let input_ring_buffer = &mut data.input;
@@ -177,7 +177,7 @@ impl FilterAudioSource<Data> for RnnoiseDenoiserFilter {
     }
 }
 
-impl Module for RnnoiseDenoiserFilter {
+impl Module for TheModule {
     fn new(context: ModuleContext) -> Self {
         Self { context }
     }
@@ -187,7 +187,7 @@ impl Module for RnnoiseDenoiserFilter {
 
     fn load(&mut self, load_context: &mut LoadContext) -> bool {
         let source = load_context
-            .create_source_builder::<RnnoiseDenoiserFilter, Data>()
+            .create_source_builder::<RnnoiseDenoiserFilter>()
             .enable_get_name()
             .enable_create()
             .enable_update()
@@ -210,4 +210,4 @@ impl Module for RnnoiseDenoiserFilter {
     }
 }
 
-obs_register_module!(RnnoiseDenoiserFilter);
+obs_register_module!(TheModule);

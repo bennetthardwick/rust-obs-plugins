@@ -13,13 +13,13 @@ pub trait Sourceable {
 
 macro_rules! simple_trait {
     ($($f:ident => $t:ident $(-> $ret:ty)?)*) => ($(
-        pub trait $t<D> {
-            fn $f(data: &mut Option<D>) $(-> $ret)?;
+        pub trait $t: Sized {
+            fn $f(data: &mut Option<Self>) $(-> $ret)?;
         }
     )*)
 }
 
-pub trait GetNameSource<D> {
+pub trait GetNameSource {
     fn get_name() -> ObsString;
 }
 
@@ -30,40 +30,40 @@ simple_trait!(
     deactivate => DeactivateSource
 );
 
-pub trait CreatableSource<D> {
-    fn create(create: &mut CreatableSourceContext<D>, source: SourceContext) -> D;
+pub trait CreatableSource: Sized {
+    fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self;
 }
 
-pub trait UpdateSource<D> {
-    fn update(data: &mut Option<D>, settings: &mut DataObj, context: &mut GlobalContext);
+pub trait UpdateSource: Sized {
+    fn update(data: &mut Option<Self>, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
-pub trait VideoRenderSource<D> {
+pub trait VideoRenderSource: Sized {
     fn video_render(
-        data: &mut Option<D>,
+        data: &mut Option<Self>,
         context: &mut GlobalContext,
         render: &mut VideoRenderContext,
     );
 }
 
-pub trait AudioRenderSource<D> {
-    fn audio_render(data: &mut Option<D>, context: &mut GlobalContext);
+pub trait AudioRenderSource: Sized {
+    fn audio_render(data: &mut Option<Self>, context: &mut GlobalContext);
 }
 
-pub trait GetPropertiesSource<D> {
-    fn get_properties(data: &mut Option<D>, properties: &mut Properties);
+pub trait GetPropertiesSource: Sized {
+    fn get_properties(data: &mut Option<Self>, properties: &mut Properties);
 }
 
-pub trait VideoTickSource<D> {
-    fn video_tick(data: &mut Option<D>, seconds: f32);
+pub trait VideoTickSource: Sized {
+    fn video_tick(data: &mut Option<Self>, seconds: f32);
 }
 
-pub trait EnumActiveSource<D> {
-    fn enum_active_sources(data: &mut Option<D>, context: &EnumActiveContext);
+pub trait EnumActiveSource: Sized {
+    fn enum_active_sources(data: &mut Option<Self>, context: &EnumActiveContext);
 }
 
-pub trait EnumAllSource<D> {
-    fn enum_all_sources(data: &mut Option<D>, context: &EnumAllContext);
+pub trait EnumAllSource: Sized {
+    fn enum_all_sources(data: &mut Option<Self>, context: &EnumAllContext);
 }
 
 simple_trait!(
@@ -71,27 +71,27 @@ simple_trait!(
     transition_stop => TransitionStopSource
 );
 
-pub trait FilterAudioSource<D> {
-    fn filter_audio(data: &mut Option<D>, audio: &mut AudioDataContext);
+pub trait FilterAudioSource: Sized {
+    fn filter_audio(data: &mut Option<Self>, audio: &mut AudioDataContext);
 }
 
-pub trait FilterVideoSource<D> {
-    fn filter_video(data: &mut Option<D>, audio: &mut VideoDataContext);
+pub trait FilterVideoSource: Sized {
+    fn filter_video(data: &mut Option<Self>, audio: &mut VideoDataContext);
 }
 
-pub trait MediaPlayPauseSource<D> {
-    fn play_pause(data: &mut Option<D>, pause: bool);
+pub trait MediaPlayPauseSource: Sized {
+    fn play_pause(data: &mut Option<Self>, pause: bool);
 }
 
-pub trait MediaGetStateSource<D> {
-    fn get_state(data: &mut Option<D>) -> MediaState;
+pub trait MediaGetStateSource: Sized {
+    fn get_state(data: &mut Option<Self>) -> MediaState;
 }
 
-pub trait MediaSetTimeSource<D> {
-    fn set_time(data: &mut Option<D>, milliseconds: i64);
+pub trait MediaSetTimeSource: Sized {
+    fn set_time(data: &mut Option<Self>, milliseconds: i64);
 }
 
-pub trait GetDefaultsSource<D> {
+pub trait GetDefaultsSource {
     fn get_defaults(settings: &mut DataObj);
 }
 

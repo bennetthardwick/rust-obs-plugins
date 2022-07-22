@@ -326,20 +326,18 @@ impl SourceInfo {
 ///  .build();
 /// ```
 ///
-pub struct SourceInfoBuilder<T: Sourceable, D> {
-    __source: PhantomData<T>,
+pub struct SourceInfoBuilder<D: Sourceable> {
     __data: PhantomData<D>,
     info: obs_source_info,
 }
 
-impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
+impl<D: Sourceable> SourceInfoBuilder<D> {
     pub(crate) fn new() -> Self {
         Self {
-            __source: PhantomData,
             __data: PhantomData,
             info: obs_source_info {
-                id: T::get_id().as_ptr(),
-                type_: T::get_type().to_native(),
+                id: D::get_id().as_ptr(),
+                type_: D::get_type().to_native(),
                 create: Some(ffi::create_default_data::<D>),
                 destroy: Some(ffi::destroy::<D>),
                 type_data: std::ptr::null_mut(),
@@ -370,9 +368,9 @@ impl<T: Sourceable, D> SourceInfoBuilder<T, D> {
 macro_rules! impl_source_builder {
     ($($f:ident => $t:ident)*) => ($(
         item! {
-            impl<D, T: Sourceable + [<$t>]<D>> SourceInfoBuilder<T, D> {
+            impl<D: Sourceable + [<$t>]> SourceInfoBuilder<D> {
                 pub fn [<enable_$f>](mut self) -> Self {
-                    self.info.[<$f>] = Some(ffi::[<$f>]::<D, T>);
+                    self.info.[<$f>] = Some(ffi::[<$f>]::<D>);
                     self
                 }
             }

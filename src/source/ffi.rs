@@ -70,20 +70,20 @@ impl<D> From<D> for DataWrapper<D> {
 macro_rules! impl_simple_fn {
     ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
         item! {
-            pub unsafe extern "C" fn $name<D, F: $trait<D>>(
+            pub unsafe extern "C" fn $name<D: $trait>(
                 data: *mut ::std::os::raw::c_void,
             ) $(-> $ret)? {
                 let wrapper = &mut *(data as *mut DataWrapper<D>);
-                F::$name(&mut wrapper.data)
+                D::$name(&mut wrapper.data)
             }
         }
     )*)
 }
 
-pub unsafe extern "C" fn get_name<D, F: GetNameSource<D>>(
+pub unsafe extern "C" fn get_name<D: GetNameSource>(
     _type_data: *mut c_void,
 ) -> *const c_char {
-    F::get_name().as_ptr()
+    D::get_name().as_ptr()
 }
 
 impl_simple_fn!(
@@ -102,7 +102,7 @@ pub unsafe extern "C" fn create_default_data<D>(
     Box::into_raw(data) as *mut c_void
 }
 
-pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
+pub unsafe extern "C" fn create<D: CreatableSource>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
@@ -114,7 +114,7 @@ pub unsafe extern "C" fn create<D, F: CreatableSource<D>>(
 
     let source_context = SourceContext { source };
 
-    let data = F::create(&mut create, source_context);
+    let data = D::create(&mut create, source_context);
 
     wrapper.data = Some(data);
     forget(create.settings);
@@ -135,28 +135,28 @@ pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
     drop(wrapper);
 }
 
-pub unsafe extern "C" fn update<D, F: UpdateSource<D>>(
+pub unsafe extern "C" fn update<D: UpdateSource>(
     data: *mut c_void,
     settings: *mut obs_data_t,
 ) {
     let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut settings = DataObj::from_raw(settings);
-    F::update(&mut data.data, &mut settings, &mut global);
+    D::update(&mut data.data, &mut settings, &mut global);
     forget(settings);
 }
 
-pub unsafe extern "C" fn video_render<D, F: VideoRenderSource<D>>(
+pub unsafe extern "C" fn video_render<D: VideoRenderSource>(
     data: *mut ::std::os::raw::c_void,
     _effect: *mut gs_effect_t,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut global = GlobalContext::default();
     let mut render = VideoRenderContext::default();
-    F::video_render(&mut wrapper.data, &mut global, &mut render);
+    D::video_render(&mut wrapper.data, &mut global, &mut render);
 }
 
-pub unsafe extern "C" fn audio_render<D, F: AudioRenderSource<D>>(
+pub unsafe extern "C" fn audio_render<D: AudioRenderSource>(
     data: *mut ::std::os::raw::c_void,
     _ts_out: *mut u64,
     _audio_output: *mut obs_source_audio_mix,
@@ -166,39 +166,39 @@ pub unsafe extern "C" fn audio_render<D, F: AudioRenderSource<D>>(
 ) -> bool {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut global = GlobalContext::default();
-    F::audio_render(&mut wrapper.data, &mut global);
+    D::audio_render(&mut wrapper.data, &mut global);
     // TODO: understand what this bool is
     true
 }
 
-pub unsafe extern "C" fn get_properties<D, F: GetPropertiesSource<D>>(
+pub unsafe extern "C" fn get_properties<D: GetPropertiesSource>(
     data: *mut ::std::os::raw::c_void,
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
 
     let mut properties = Properties::new();
-    F::get_properties(&mut wrapper.data, &mut properties);
+    D::get_properties(&mut wrapper.data, &mut properties);
     properties.into_raw()
 }
 
-pub unsafe extern "C" fn enum_active_sources<D, F: EnumActiveSource<D>>(
+pub unsafe extern "C" fn enum_active_sources<D: EnumActiveSource>(
     data: *mut ::std::os::raw::c_void,
     _enum_callback: obs_source_enum_proc_t,
     _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let context = EnumActiveContext {};
-    F::enum_active_sources(&mut wrapper.data, &context);
+    D::enum_active_sources(&mut wrapper.data, &context);
 }
 
-pub unsafe extern "C" fn enum_all_sources<D, F: EnumAllSource<D>>(
+pub unsafe extern "C" fn enum_all_sources<D: EnumAllSource>(
     data: *mut ::std::os::raw::c_void,
     _enum_callback: obs_source_enum_proc_t,
     _param: *mut ::std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let context = EnumAllContext {};
-    F::enum_all_sources(&mut wrapper.data, &context);
+    D::enum_all_sources(&mut wrapper.data, &context);
 }
 
 impl_simple_fn!(
@@ -206,65 +206,65 @@ impl_simple_fn!(
     transition_stop => TransitionStopSource
 );
 
-pub unsafe extern "C" fn video_tick<D, F: VideoTickSource<D>>(
+pub unsafe extern "C" fn video_tick<D: VideoTickSource>(
     data: *mut ::std::os::raw::c_void,
     seconds: f32,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::video_tick(&mut wrapper.data, seconds);
+    D::video_tick(&mut wrapper.data, seconds);
 }
 
-pub unsafe extern "C" fn filter_audio<D, F: FilterAudioSource<D>>(
+pub unsafe extern "C" fn filter_audio<D: FilterAudioSource>(
     data: *mut ::std::os::raw::c_void,
     audio: *mut obs_audio_data,
 ) -> *mut obs_audio_data {
     let mut context = AudioDataContext::from_raw(audio);
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::filter_audio(&mut wrapper.data, &mut context);
+    D::filter_audio(&mut wrapper.data, &mut context);
     audio
 }
 
-pub unsafe extern "C" fn filter_video<D, F: FilterVideoSource<D>>(
+pub unsafe extern "C" fn filter_video<D: FilterVideoSource>(
     data: *mut ::std::os::raw::c_void,
     video: *mut obs_source_frame,
 ) -> *mut obs_source_frame {
     let mut context = VideoDataContext::from_raw(video);
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    F::filter_video(&mut wrapper.data, &mut context);
+    D::filter_video(&mut wrapper.data, &mut context);
     video
 }
 
-pub unsafe extern "C" fn media_play_pause<D, F: MediaPlayPauseSource<D>>(
+pub unsafe extern "C" fn media_play_pause<D: MediaPlayPauseSource>(
     data: *mut ::std::os::raw::c_void,
     pause: bool,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    F::play_pause(&mut wrapper.data, pause);
+    D::play_pause(&mut wrapper.data, pause);
 }
 
-pub unsafe extern "C" fn media_get_state<D, F: MediaGetStateSource<D>>(
+pub unsafe extern "C" fn media_get_state<D: MediaGetStateSource>(
     data: *mut ::std::os::raw::c_void,
 ) -> obs_media_state {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    F::get_state(&mut wrapper.data).to_native()
+    D::get_state(&mut wrapper.data).to_native()
 }
 
-pub unsafe extern "C" fn media_set_time<D, F: MediaSetTimeSource<D>>(
+pub unsafe extern "C" fn media_set_time<D: MediaSetTimeSource>(
     data: *mut ::std::os::raw::c_void,
     milliseconds: i64,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    F::set_time(&mut wrapper.data, milliseconds);
+    D::set_time(&mut wrapper.data, milliseconds);
 }
 
 macro_rules! impl_media {
     ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
         item! {
-            pub unsafe extern "C" fn [<media_$name>]<D, F: $trait<D>>(
+            pub unsafe extern "C" fn [<media_$name>]<D: $trait>(
                 data: *mut ::std::os::raw::c_void,
             ) $(-> $ret)? {
                 let wrapper = &mut *(data as *mut DataWrapper<D>);
-                F::$name(&mut wrapper.data)
+                D::$name(&mut wrapper.data)
             }
         }
     )*)
@@ -279,9 +279,9 @@ impl_media!(
     get_time => MediaGetTimeSource -> i64
 );
 
-pub unsafe extern "C" fn get_defaults<D, F: GetDefaultsSource<D>>(settings: *mut obs_data_t) {
+pub unsafe extern "C" fn get_defaults<D: GetDefaultsSource>(settings: *mut obs_data_t) {
     let mut settings = DataObj::from_raw(settings);
-    F::get_defaults(&mut settings);
+    D::get_defaults(&mut settings);
     forget(settings);
 }
 

@@ -1,5 +1,6 @@
-use super::ObsString;
-use crate::{native_enum, wrapper::PtrWrapper};
+#![allow(non_upper_case_globals)]
+
+use crate::{native_enum, wrapper::PtrWrapper, string::ObsString};
 use num_traits::{one, Bounded, Float, Num, NumCast, PrimInt, ToPrimitive};
 use obs_sys::{
     obs_combo_format, obs_combo_format_OBS_COMBO_FORMAT_FLOAT,

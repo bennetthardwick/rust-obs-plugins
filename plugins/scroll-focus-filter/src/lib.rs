@@ -2,7 +2,7 @@ mod server;
 
 use server::{Server, WindowSnapshot};
 
-use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*};
+use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*, properties::*};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -77,7 +77,8 @@ impl GetNameSource for ScrollFocusFilter {
 }
 
 impl GetPropertiesSource for ScrollFocusFilter {
-    fn get_properties(_data: &mut Option<Self>, properties: &mut Properties) {
+    fn get_properties(_data: &mut Option<Self>) -> Properties {
+        let mut properties = Properties::new();
         properties
             .add(
                 obs_string!("zoom"),
@@ -118,6 +119,7 @@ impl GetPropertiesSource for ScrollFocusFilter {
                 obs_string!("Animation Time (s)"),
                 NumberProp::new_float(0.001).with_range(0.3..=10.),
             );
+        properties
     }
 }
 

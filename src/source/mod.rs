@@ -7,13 +7,11 @@ pub mod context;
 mod ffi;
 mod hotkey;
 pub mod media;
-pub mod properties;
 pub mod traits;
 pub mod video;
 
 pub use context::*;
 pub use media::*;
-pub use properties::*;
 pub use traits::*;
 
 use obs_sys::{

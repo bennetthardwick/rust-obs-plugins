@@ -2,11 +2,9 @@ use super::audio::AudioDataContext;
 use super::video::VideoDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::hotkey::Hotkey;
-use super::properties::Properties;
 use super::traits::*;
-use super::ObsString;
 use super::{EnumActiveContext, EnumAllContext, SourceContext};
-use crate::{data::DataObj, wrapper::PtrWrapper};
+use crate::{data::DataObj, string::ObsString, wrapper::PtrWrapper};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
@@ -175,9 +173,7 @@ pub unsafe extern "C" fn get_properties<D: GetPropertiesSource>(
     data: *mut ::std::os::raw::c_void,
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-
-    let mut properties = Properties::new();
-    D::get_properties(&mut wrapper.data, &mut properties);
+    let properties = D::get_properties(&mut wrapper.data);
     properties.into_raw()
 }
 

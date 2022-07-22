@@ -123,8 +123,12 @@ pub mod graphics;
 pub mod log;
 /// Tools for creating modules
 pub mod module;
+/// Tools for creating properties
+pub mod properties;
 /// Tools for creating sources
 pub mod source;
+/// Tools for creating outputs
+pub mod output;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper

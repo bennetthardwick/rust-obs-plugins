@@ -1,11 +1,18 @@
 use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
+use crate::output::{traits::Outputable, OutputInfo, OutputInfoBuilder};
 use crate::string::ObsString;
-use obs_sys::{obs_module_t, obs_register_source_s, obs_source_info, size_t};
+use obs_sys::{
+    obs_module_t,
+    obs_register_source_s, obs_register_output_s,
+    obs_source_info, obs_output_info,
+    size_t,
+};
 use std::marker::PhantomData;
 
 pub struct LoadContext {
     __marker: PhantomData<()>,
     sources: Vec<*mut obs_source_info>,
+    outputs: Vec<*mut obs_output_info>,
 }
 
 impl LoadContext {
@@ -16,11 +23,16 @@ impl LoadContext {
         LoadContext {
             __marker: PhantomData,
             sources: vec![],
+            outputs: vec![],
         }
     }
 
     pub fn create_source_builder<D: Sourceable>(&self) -> SourceInfoBuilder<D> {
         SourceInfoBuilder::new()
+    }
+
+    pub fn create_output_builder<D: Outputable>(&self) -> OutputInfoBuilder<D> {
+        OutputInfoBuilder::new()
     }
 
     pub fn register_source(&mut self, source: SourceInfo) {
@@ -31,12 +43,24 @@ impl LoadContext {
         };
         self.sources.push(pointer);
     }
+
+    pub fn register_output(&mut self, output: OutputInfo) {
+        let pointer = unsafe {
+            let pointer = output.into_raw();
+            obs_register_output_s(pointer, std::mem::size_of::<obs_output_info>() as size_t);
+            pointer
+        };
+        self.outputs.push(pointer);
+    }
 }
 
 impl Drop for LoadContext {
     fn drop(&mut self) {
         unsafe {
             for pointer in self.sources.drain(..) {
+                drop(Box::from_raw(pointer))
+            }
+            for pointer in self.outputs.drain(..) {
                 drop(Box::from_raw(pointer))
             }
         }

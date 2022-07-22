@@ -1,5 +1,5 @@
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::properties::Properties;
+use crate::properties::Properties;
 use super::{audio::AudioDataContext, media::MediaState};
 use super::{video::VideoDataContext};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
@@ -51,7 +51,7 @@ pub trait AudioRenderSource: Sized {
 }
 
 pub trait GetPropertiesSource: Sized {
-    fn get_properties(data: &mut Option<Self>, properties: &mut Properties);
+    fn get_properties(data: &mut Option<Self>) -> Properties;
 }
 
 pub trait VideoTickSource: Sized {

@@ -31,7 +31,7 @@ pub struct CreatableSourceContext<'a, D> {
     pub(crate) hotkey_callbacks: Vec<(
         ObsString,
         ObsString,
-        Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
+        Box<dyn FnMut(&mut Hotkey, &mut D)>,
     )>,
     pub settings: DataObj<'a>,
     pub global: &'a mut GlobalContext,
@@ -51,7 +51,7 @@ impl<'a, D> CreatableSourceContext<'a, D> {
         }
     }
 
-    pub fn register_hotkey<F: FnMut(&mut Hotkey, &mut Option<D>) + 'static>(
+    pub fn register_hotkey<F: FnMut(&mut Hotkey, &mut D) + 'static>(
         &mut self,
         name: ObsString,
         description: ObsString,

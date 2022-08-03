@@ -17,9 +17,10 @@ use obs_sys::{
     obs_source_t, size_t, obs_source_frame
 };
 
+#[derive(Default)]
 struct DataWrapper<D> {
-    data: Option<D>,
-    hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>>,
+    data: D,
+    hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut D)>>,
 }
 
 impl<D> DataWrapper<D> {
@@ -28,7 +29,7 @@ impl<D> DataWrapper<D> {
         callbacks: Vec<(
             ObsString,
             ObsString,
-            Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
+            Box<dyn FnMut(&mut Hotkey, &mut D)>,
         )>,
         source: *mut obs_source_t,
         data: *mut c_void,
@@ -47,19 +48,10 @@ impl<D> DataWrapper<D> {
     }
 }
 
-impl<D> Default for DataWrapper<D> {
-    fn default() -> Self {
-        Self {
-            data: None,
-            hotkey_callbacks: HashMap::new(),
-        }
-    }
-}
-
 impl<D> From<D> for DataWrapper<D> {
     fn from(data: D) -> Self {
         Self {
-            data: Some(data),
+            data,
             hotkey_callbacks: HashMap::new(),
         }
     }
@@ -92,7 +84,7 @@ impl_simple_fn!(
     deactivate => DeactivateSource
 );
 
-pub unsafe extern "C" fn create_default_data<D>(
+pub unsafe extern "C" fn create_default_data<D: Default>(
     _settings: *mut obs_data_t,
     _source: *mut obs_source_t,
 ) -> *mut c_void {
@@ -104,8 +96,6 @@ pub unsafe extern "C" fn create<D: CreatableSource>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
-    let mut wrapper = DataWrapper::default();
-
     let mut global = GlobalContext::default();
     let settings = DataObj::from_raw(settings);
     let mut create = CreatableSourceContext::from_raw(source, settings, &mut global);
@@ -114,7 +104,7 @@ pub unsafe extern "C" fn create<D: CreatableSource>(
 
     let data = D::create(&mut create, source_context);
 
-    wrapper.data = Some(data);
+    let wrapper = DataWrapper::from(data);
     forget(create.settings);
     let callbacks = create.hotkey_callbacks;
 

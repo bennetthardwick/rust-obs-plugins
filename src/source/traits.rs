@@ -14,7 +14,7 @@ pub trait Sourceable {
 macro_rules! simple_trait {
     ($($f:ident => $t:ident $(-> $ret:ty)?)*) => ($(
         pub trait $t: Sized {
-            fn $f(data: &mut Option<Self>) $(-> $ret)?;
+            fn $f(&mut self) $(-> $ret)?;
         }
     )*)
 }
@@ -35,35 +35,35 @@ pub trait CreatableSource: Sized {
 }
 
 pub trait UpdateSource: Sized {
-    fn update(data: &mut Option<Self>, settings: &mut DataObj, context: &mut GlobalContext);
+    fn update(&mut self, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
 pub trait VideoRenderSource: Sized {
     fn video_render(
-        data: &mut Option<Self>,
+        &mut self,
         context: &mut GlobalContext,
         render: &mut VideoRenderContext,
     );
 }
 
 pub trait AudioRenderSource: Sized {
-    fn audio_render(data: &mut Option<Self>, context: &mut GlobalContext);
+    fn audio_render(&mut self, context: &mut GlobalContext);
 }
 
 pub trait GetPropertiesSource: Sized {
-    fn get_properties(data: &mut Option<Self>) -> Properties;
+    fn get_properties(&mut self) -> Properties;
 }
 
 pub trait VideoTickSource: Sized {
-    fn video_tick(data: &mut Option<Self>, seconds: f32);
+    fn video_tick(&mut self, seconds: f32);
 }
 
 pub trait EnumActiveSource: Sized {
-    fn enum_active_sources(data: &mut Option<Self>, context: &EnumActiveContext);
+    fn enum_active_sources(&mut self, context: &EnumActiveContext);
 }
 
 pub trait EnumAllSource: Sized {
-    fn enum_all_sources(data: &mut Option<Self>, context: &EnumAllContext);
+    fn enum_all_sources(&mut self, context: &EnumAllContext);
 }
 
 simple_trait!(
@@ -72,23 +72,23 @@ simple_trait!(
 );
 
 pub trait FilterAudioSource: Sized {
-    fn filter_audio(data: &mut Option<Self>, audio: &mut AudioDataContext);
+    fn filter_audio(&mut self, audio: &mut AudioDataContext);
 }
 
 pub trait FilterVideoSource: Sized {
-    fn filter_video(data: &mut Option<Self>, audio: &mut VideoDataContext);
+    fn filter_video(&mut self, audio: &mut VideoDataContext);
 }
 
 pub trait MediaPlayPauseSource: Sized {
-    fn play_pause(data: &mut Option<Self>, pause: bool);
+    fn play_pause(&mut self, pause: bool);
 }
 
 pub trait MediaGetStateSource: Sized {
-    fn get_state(data: &mut Option<Self>) -> MediaState;
+    fn get_state(&mut self) -> MediaState;
 }
 
 pub trait MediaSetTimeSource: Sized {
-    fn set_time(data: &mut Option<Self>, milliseconds: i64);
+    fn set_time(&mut self, milliseconds: i64);
 }
 
 pub trait GetDefaultsSource {

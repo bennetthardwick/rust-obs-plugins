@@ -41,8 +41,8 @@ pub struct OutputInfoBuilder<D: Outputable> {
     info: obs_output_info,
 }
 
-impl<D: Outputable> OutputInfoBuilder<D> {
-    pub(crate) fn new() -> Self {
+impl<D: Outputable+Default> Default for OutputInfoBuilder<D> {
+    fn default() -> Self {
         Self {
             __data: PhantomData,
             info: obs_output_info {
@@ -54,7 +54,23 @@ impl<D: Outputable> OutputInfoBuilder<D> {
             },
         }
     }
+}
+impl<D: Outputable+CreatableOutput> OutputInfoBuilder<D> {
+    pub(crate) fn new() -> Self {
+        Self {
+            __data: PhantomData,
+            info: obs_output_info {
+                id: D::get_id().as_ptr(),
+                create: Some(ffi::create::<D>),
+                destroy: Some(ffi::destroy::<D>),
+                type_data: std::ptr::null_mut(),
+                ..Default::default()
+            },
+        }
+    }
+}
 
+impl<D: Outputable> OutputInfoBuilder<D> {
     pub fn build(mut self) -> OutputInfo {
         if self.info.raw_video.is_some() {
             self.info.flags |= OBS_OUTPUT_VIDEO;

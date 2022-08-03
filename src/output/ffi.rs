@@ -10,25 +10,41 @@ use obs_sys::{
     obs_data_t, obs_output_t
 };
 
+#[derive(Default)]
 struct DataWrapper<D> {
-    data: Option<D>,
+    data: D,
     // hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>>,
 }
 
-impl<D> Default for DataWrapper<D> {
-    fn default() -> Self {
-        Self {
-            data: None,
-        }
+impl<D> From<D> for DataWrapper<D> {
+    fn from(data: D) -> Self {
+        DataWrapper { data }
     }
 }
 
-pub unsafe extern "C" fn create_default_data<D>(
+pub struct CreatableOutputContext<'a> {
+    pub settings: &'a obs_data_t,
+    pub output: &'a obs_output_t,
+}
+
+pub unsafe extern "C" fn create_default_data<D: Default>(
     _settings: *mut obs_data_t,
     _output: *mut obs_output_t,
 ) -> *mut c_void {
     let data = Box::new(DataWrapper::<D>::default());
     Box::into_raw(data) as *mut c_void
+}
+
+pub unsafe extern "C" fn create<D: CreatableOutput>(
+    settings: *mut obs_data_t,
+    output: *mut obs_output_t,
+) -> *mut c_void {
+    let data = D::create(CreatableOutputContext {
+        settings: &*settings,
+        output: &*output,
+    });
+    let data_wrapper = Box::new(DataWrapper::from(data));
+    Box::into_raw(data_wrapper) as *mut c_void
 }
 
 pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {

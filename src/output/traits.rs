@@ -2,8 +2,14 @@ use obs_sys::{video_data, audio_data, encoder_packet};
 
 use crate::{string::ObsString, prelude::DataObj, properties::Properties};
 
+use super::ffi::CreatableOutputContext;
+
 pub trait Outputable {
     fn get_id() -> ObsString;
+}
+
+pub trait CreatableOutput: Sized {
+    fn create(context: CreatableOutputContext<'_>) -> Self;
 }
 
 pub trait GetNameOutput {
@@ -13,7 +19,7 @@ pub trait GetNameOutput {
 macro_rules! simple_trait {
     ($($f:ident$(($($params:tt)*))? => $t:ident $(-> $ret:ty)?)*) => ($(
         pub trait $t: Sized {
-            fn $f(data: &mut Option<Self> $(, $($params)*)?) $(-> $ret)?;
+            fn $f(&mut self $(, $($params)*)?) $(-> $ret)?;
         }
     )*)
 }
@@ -24,23 +30,23 @@ simple_trait!{
 }
 
 pub trait RawVideoOutput: Sized {
-    fn raw_video(data: &mut Option<Self>, frame: &mut video_data);
+    fn raw_video(&mut self, frame: &mut video_data);
 }
 
 pub trait RawAudioOutput: Sized {
-    fn raw_audio(data: &mut Option<Self>, frame: &mut audio_data);
+    fn raw_audio(&mut self, frame: &mut audio_data);
 }
 
 pub trait RawAudio2Output: Sized {
-    fn raw_audio2(data: &mut Option<Self>, idx: usize, frame: &mut audio_data);
+    fn raw_audio2(&mut self, idx: usize, frame: &mut audio_data);
 }
 
 pub trait EncodedPacketOutput: Sized {
-    fn encoded_packet(data: &mut Option<Self>, packet: &mut encoder_packet);
+    fn encoded_packet(&mut self, packet: &mut encoder_packet);
 }
 
 pub trait UpdateOutput: Sized {
-    fn update(data: &mut Option<Self>, settings: &mut DataObj);
+    fn update(&mut self, settings: &mut DataObj);
 }
 
 pub trait GetDefaultsOutput {
@@ -48,7 +54,7 @@ pub trait GetDefaultsOutput {
 }
 
 pub trait GetPropertiesOutput: Sized {
-    fn get_properties(data: &mut Option<Self>) -> Properties;
+    fn get_properties(&mut self) -> Properties;
 }
 
 simple_trait! {

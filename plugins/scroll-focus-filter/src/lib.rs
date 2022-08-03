@@ -68,6 +68,104 @@ impl Sourceable for ScrollFocusFilter {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
+    fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceContext) -> Self {
+        let mut effect = GraphicsEffect::from_effect_string(
+            obs_string!(include_str!("./crop_filter.effect")),
+            obs_string!("crop_filter.effect"),
+        )
+        .expect("Could not load crop filter effect!");
+
+        let settings = &mut create.settings;
+
+        if let (
+            Some(image),
+            Some(add_val),
+            Some(base_dimension),
+            Some(base_dimension_i),
+            Some(mul_val),
+        ) = (
+            effect.get_effect_param_by_name(obs_string!("image")),
+            effect.get_effect_param_by_name(obs_string!("add_val")),
+            effect.get_effect_param_by_name(obs_string!("base_dimension")),
+            effect.get_effect_param_by_name(obs_string!("base_dimension_i")),
+            effect.get_effect_param_by_name(obs_string!("mul_val")),
+        ) {
+            let zoom = 1. / settings.get(obs_string!("zoom")).unwrap_or(1.);
+
+            let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
+
+            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920);
+            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080);
+
+            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0);
+            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0);
+
+            let animation_time = settings.get(obs_string!("animation_time")).unwrap_or(0.3);
+
+            let (send_filter, receive_filter) = unbounded::<FilterMessage>();
+            let (send_server, receive_server) = unbounded::<ServerMessage>();
+
+            std::thread::spawn(move || {
+                let mut server = Server::new().unwrap();
+
+                loop {
+                    if let Some(snapshot) = server.wait_for_event() {
+                        send_server
+                            .send(ServerMessage::Snapshot(snapshot))
+                            .unwrap_or(());
+                    }
+
+                    if let Ok(msg) = receive_filter.try_recv() {
+                        match msg {
+                            FilterMessage::CloseConnection => {
+                                return;
+                            }
+                        }
+                    }
+                }
+            });
+
+            source.update_source_settings(settings);
+
+            return Self {
+                source,
+                effect,
+                add_val,
+                mul_val,
+
+                base_dimension,
+                base_dimension_i,
+
+                image,
+
+                sampler,
+
+                animation_time,
+
+                current_zoom: zoom,
+                from_zoom: zoom,
+                target_zoom: zoom,
+                internal_zoom: zoom,
+
+                send: send_filter,
+                receive: receive_server,
+
+                current: Vec2::new(0., 0.),
+                from: Vec2::new(0., 0.),
+                target: Vec2::new(0., 0.),
+                padding: 0.1,
+
+                progress: 1.,
+
+                screen_height,
+                screen_width,
+                screen_x,
+                screen_y,
+            };
+        }
+
+        panic!("Failed to find correct effect params!");
+    }
 }
 
 impl GetNameSource for ScrollFocusFilter {
@@ -247,107 +345,6 @@ impl VideoRenderSource for ScrollFocusFilter {
                 image.set_next_sampler(context, sampler);
             },
         );
-    }
-}
-
-impl CreatableSource for ScrollFocusFilter {
-    fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceContext) -> Self {
-        let mut effect = GraphicsEffect::from_effect_string(
-            obs_string!(include_str!("./crop_filter.effect")),
-            obs_string!("crop_filter.effect"),
-        )
-        .expect("Could not load crop filter effect!");
-
-        let settings = &mut create.settings;
-
-        if let (
-            Some(image),
-            Some(add_val),
-            Some(base_dimension),
-            Some(base_dimension_i),
-            Some(mul_val),
-        ) = (
-            effect.get_effect_param_by_name(obs_string!("image")),
-            effect.get_effect_param_by_name(obs_string!("add_val")),
-            effect.get_effect_param_by_name(obs_string!("base_dimension")),
-            effect.get_effect_param_by_name(obs_string!("base_dimension_i")),
-            effect.get_effect_param_by_name(obs_string!("mul_val")),
-        ) {
-            let zoom = 1. / settings.get(obs_string!("zoom")).unwrap_or(1.);
-
-            let sampler = GraphicsSamplerState::from(GraphicsSamplerInfo::default());
-
-            let screen_width = settings.get(obs_string!("screen_width")).unwrap_or(1920);
-            let screen_height = settings.get(obs_string!("screen_height")).unwrap_or(1080);
-
-            let screen_x = settings.get(obs_string!("screen_x")).unwrap_or(0);
-            let screen_y = settings.get(obs_string!("screen_y")).unwrap_or(0);
-
-            let animation_time = settings.get(obs_string!("animation_time")).unwrap_or(0.3);
-
-            let (send_filter, receive_filter) = unbounded::<FilterMessage>();
-            let (send_server, receive_server) = unbounded::<ServerMessage>();
-
-            std::thread::spawn(move || {
-                let mut server = Server::new().unwrap();
-
-                loop {
-                    if let Some(snapshot) = server.wait_for_event() {
-                        send_server
-                            .send(ServerMessage::Snapshot(snapshot))
-                            .unwrap_or(());
-                    }
-
-                    if let Ok(msg) = receive_filter.try_recv() {
-                        match msg {
-                            FilterMessage::CloseConnection => {
-                                return;
-                            }
-                        }
-                    }
-                }
-            });
-
-            source.update_source_settings(settings);
-
-            return Self {
-                source,
-                effect,
-                add_val,
-                mul_val,
-
-                base_dimension,
-                base_dimension_i,
-
-                image,
-
-                sampler,
-
-                animation_time,
-
-                current_zoom: zoom,
-                from_zoom: zoom,
-                target_zoom: zoom,
-                internal_zoom: zoom,
-
-                send: send_filter,
-                receive: receive_server,
-
-                current: Vec2::new(0., 0.),
-                from: Vec2::new(0., 0.),
-                target: Vec2::new(0., 0.),
-                padding: 0.1,
-
-                progress: 1.,
-
-                screen_height,
-                screen_width,
-                screen_x,
-                screen_y,
-            };
-        }
-
-        panic!("Failed to find correct effect params!");
     }
 }
 

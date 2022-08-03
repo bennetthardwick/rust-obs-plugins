@@ -1,5 +1,5 @@
-use crate::source::{traits::{CreatableSource, Sourceable}, SourceInfo, SourceInfoBuilder};
-use crate::output::{traits::{CreatableOutput, Outputable}, OutputInfo, OutputInfoBuilder};
+use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
+use crate::output::{traits::Outputable, OutputInfo, OutputInfoBuilder};
 use crate::string::ObsString;
 use obs_sys::{
     obs_module_t,
@@ -27,18 +27,12 @@ impl LoadContext {
         }
     }
 
-    pub fn create_source_builder<D: Sourceable+CreatableSource>(&self) -> SourceInfoBuilder<D> {
+    pub fn create_source_builder<D: Sourceable>(&self) -> SourceInfoBuilder<D> {
         SourceInfoBuilder::new()
     }
-    pub fn create_source_builder_with_default<D: Sourceable+Default>(&self) -> SourceInfoBuilder<D> {
-        SourceInfoBuilder::default()
-    }
 
-    pub fn create_output_builder<D: Outputable+CreatableOutput>(&self) -> OutputInfoBuilder<D> {
+    pub fn create_output_builder<D: Outputable>(&self) -> OutputInfoBuilder<D> {
         OutputInfoBuilder::new()
-    }
-    pub fn create_output_builder_with_default<D: Outputable+Default>(&self) -> OutputInfoBuilder<D> {
-        OutputInfoBuilder::default()
     }
 
     pub fn register_source(&mut self, source: SourceInfo) {

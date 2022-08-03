@@ -329,23 +329,7 @@ pub struct SourceInfoBuilder<D: Sourceable> {
     info: obs_source_info,
 }
 
-impl<D: Sourceable+Default> Default for SourceInfoBuilder<D> {
-    fn default() -> Self {
-        Self {
-            __data: PhantomData,
-            info: obs_source_info {
-                id: D::get_id().as_ptr(),
-                type_: D::get_type().to_native(),
-                create: Some(ffi::create_default_data::<D>),
-                destroy: Some(ffi::destroy::<D>),
-                type_data: std::ptr::null_mut(),
-                ..Default::default()
-            },
-        }
-    }
-}
-
-impl<D: Sourceable+CreatableSource> SourceInfoBuilder<D> {
+impl<D: Sourceable> SourceInfoBuilder<D> {
     pub(crate) fn new() -> Self {
         Self {
             __data: PhantomData,
@@ -359,9 +343,7 @@ impl<D: Sourceable+CreatableSource> SourceInfoBuilder<D> {
             },
         }
     }
-}
 
-impl<D: Sourceable> SourceInfoBuilder<D> {
     pub fn build(mut self) -> SourceInfo {
         if self.info.video_render.is_some() {
             self.info.output_flags |= OBS_SOURCE_VIDEO;

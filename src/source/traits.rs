@@ -2,13 +2,14 @@ use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use crate::properties::Properties;
 use super::{audio::AudioDataContext, media::MediaState};
 use super::{video::VideoDataContext};
-use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
+use super::{EnumActiveContext, EnumAllContext, SourceType, SourceContext};
 use crate::data::DataObj;
 use crate::string::ObsString;
 
-pub trait Sourceable {
+pub trait Sourceable: Sized {
     fn get_id() -> ObsString;
     fn get_type() -> SourceType;
+    fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self;
 }
 
 macro_rules! simple_trait {
@@ -29,10 +30,6 @@ simple_trait!(
     activate => ActivateSource
     deactivate => DeactivateSource
 );
-
-pub trait CreatableSource: Sized {
-    fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self;
-}
 
 pub trait UpdateSource: Sized {
     fn update(&mut self, settings: &mut DataObj, context: &mut GlobalContext);

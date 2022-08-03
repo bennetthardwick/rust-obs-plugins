@@ -1,4 +1,4 @@
-use super::traits::*;
+use super::{traits::*, OutputContext};
 use crate::{data::DataObj, wrapper::PtrWrapper};
 use obs_sys::{audio_data, encoder_packet, obs_properties, video_data};
 use paste::item;
@@ -22,27 +22,14 @@ impl<D> From<D> for DataWrapper<D> {
     }
 }
 
-pub struct CreatableOutputContext<'a> {
-    pub settings: &'a obs_data_t,
-    pub output: &'a obs_output_t,
-}
-
-pub unsafe extern "C" fn create_default_data<D: Default>(
-    _settings: *mut obs_data_t,
-    _output: *mut obs_output_t,
-) -> *mut c_void {
-    let data = Box::new(DataWrapper::<D>::default());
-    Box::into_raw(data) as *mut c_void
-}
-
-pub unsafe extern "C" fn create<D: CreatableOutput>(
+pub unsafe extern "C" fn create<D: Outputable>(
     settings: *mut obs_data_t,
     output: *mut obs_output_t,
 ) -> *mut c_void {
-    let data = D::create(CreatableOutputContext {
-        settings: &*settings,
-        output: &*output,
-    });
+    let settings = DataObj::from_raw(settings);
+    let mut context = CreatableOutputContext { settings };
+
+    let data = D::create(&mut context, OutputContext { output });
     let data_wrapper = Box::new(DataWrapper::from(data));
     Box::into_raw(data_wrapper) as *mut c_void
 }

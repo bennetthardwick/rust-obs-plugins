@@ -3,12 +3,19 @@ use paste::item;
 
 use std::marker::PhantomData;
 
-use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO, OBS_OUTPUT_CAN_PAUSE};
+use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO, OBS_OUTPUT_CAN_PAUSE, obs_output_t};
 
 pub mod traits;
 mod ffi;
 
 pub use traits::*;
+
+/// Context wrapping an OBS output - video / audio elements which are displayed to the screen.
+///
+/// See [OBS documentation](https://obsproject.com/docs/reference-outputs.html#c.obs_output_t)
+pub struct OutputContext {
+    output: *mut obs_output_t,
+}
 
 pub struct OutputInfo {
     info: Box<obs_output_info>,
@@ -41,21 +48,7 @@ pub struct OutputInfoBuilder<D: Outputable> {
     info: obs_output_info,
 }
 
-impl<D: Outputable+Default> Default for OutputInfoBuilder<D> {
-    fn default() -> Self {
-        Self {
-            __data: PhantomData,
-            info: obs_output_info {
-                id: D::get_id().as_ptr(),
-                create: Some(ffi::create_default_data::<D>),
-                destroy: Some(ffi::destroy::<D>),
-                type_data: std::ptr::null_mut(),
-                ..Default::default()
-            },
-        }
-    }
-}
-impl<D: Outputable+CreatableOutput> OutputInfoBuilder<D> {
+impl<D: Outputable> OutputInfoBuilder<D> {
     pub(crate) fn new() -> Self {
         Self {
             __data: PhantomData,
@@ -68,9 +61,7 @@ impl<D: Outputable+CreatableOutput> OutputInfoBuilder<D> {
             },
         }
     }
-}
 
-impl<D: Outputable> OutputInfoBuilder<D> {
     pub fn build(mut self) -> OutputInfo {
         if self.info.raw_video.is_some() {
             self.info.flags |= OBS_OUTPUT_VIDEO;

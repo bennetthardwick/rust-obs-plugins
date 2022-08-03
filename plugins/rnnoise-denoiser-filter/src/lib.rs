@@ -39,16 +39,7 @@ impl Sourceable for RnnoiseDenoiserFilter {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
-}
-
-impl GetNameSource for RnnoiseDenoiserFilter {
-    fn get_name() -> ObsString {
-        obs_string!("Rnnoise Noise Suppression Filter")
-    }
-}
-
-impl CreatableSource for RnnoiseDenoiserFilter {
-    fn create(create: &mut CreatableSourceContext<Self>, mut _source: SourceContext) -> Self {
+    fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
         let (sample_rate, channels) =
             create.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
 
@@ -65,6 +56,12 @@ impl CreatableSource for RnnoiseDenoiserFilter {
             sample_rate: sample_rate as f64,
             channels,
         }
+    }
+}
+
+impl GetNameSource for RnnoiseDenoiserFilter {
+    fn get_name() -> ObsString {
+        obs_string!("Rnnoise Noise Suppression Filter")
     }
 }
 

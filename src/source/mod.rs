@@ -112,7 +112,7 @@ impl SourceContext {
                 SourceType::from_native(obs_source_get_type(self.inner))
             {
                 let target = obs_filter_get_target(self.inner);
-                let mut context = self.clone();
+                let mut context = SourceContext::from_raw(target);
                 func(&mut context);
             }
         }
@@ -328,6 +328,12 @@ impl SourceInfo {
     /// Creates a raw pointer from a box and could cause UB is misused.
     pub unsafe fn into_raw(self) -> *mut obs_source_info {
         Box::into_raw(self.info)
+    }
+}
+
+impl AsRef<obs_source_info> for SourceInfo {
+    fn as_ref(&self) -> &obs_source_info {
+        self.info.as_ref()
     }
 }
 

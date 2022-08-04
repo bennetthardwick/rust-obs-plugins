@@ -7,6 +7,9 @@ use super::{OutputContext, CreatableOutputContext};
 pub trait Outputable: Sized {
     fn get_id() -> ObsString;
     fn create(context: &mut CreatableOutputContext<'_, Self>, output: OutputContext) -> Self;
+
+    fn start(&mut self) -> bool { true }
+    fn stop(&mut self, _ts: u64) { }
 }
 
 pub trait GetNameOutput {
@@ -19,11 +22,6 @@ macro_rules! simple_trait {
             fn $f(&mut self $(, $($params)*)?) $(-> $ret)?;
         }
     )*)
-}
-
-simple_trait!{
-    start => StartOutput -> bool
-    stop(ts: u64) => StopOutput
 }
 
 pub trait RawVideoOutput: Sized {

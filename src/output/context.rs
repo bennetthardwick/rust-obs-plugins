@@ -32,7 +32,7 @@ impl OutputContext {
         let output = unsafe {
             obs_output_create(id.as_ptr(), name.as_ptr(), settings, std::ptr::null_mut())
         };
-        Self { inner: output }
+        Self::from_raw(output)
     }
 }
 

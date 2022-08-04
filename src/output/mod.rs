@@ -3,7 +3,7 @@ use paste::item;
 
 use std::marker::PhantomData;
 
-use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO, OBS_OUTPUT_CAN_PAUSE};
+use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO};
 
 pub mod traits;
 mod ffi;
@@ -21,6 +21,12 @@ impl OutputInfo {
     /// Creates a raw pointer from a box and could cause UB is misused.
     pub unsafe fn into_raw(self) -> *mut obs_output_info {
         Box::into_raw(self.info)
+    }
+}
+
+impl AsRef<obs_output_info> for OutputInfo {
+    fn as_ref(&self) -> &obs_output_info {
+        self.info.as_ref()
     }
 }
 
@@ -51,6 +57,8 @@ impl<D: Outputable> OutputInfoBuilder<D> {
                 id: D::get_id().as_ptr(),
                 create: Some(ffi::create::<D>),
                 destroy: Some(ffi::destroy::<D>),
+                start: Some(ffi::start::<D>),
+                stop: Some(ffi::stop::<D>),
                 type_data: std::ptr::null_mut(),
                 ..Default::default()
             },
@@ -64,10 +72,6 @@ impl<D: Outputable> OutputInfoBuilder<D> {
 
         if self.info.raw_audio.is_some() || self.info.raw_audio2.is_some() {
             self.info.flags |= OBS_OUTPUT_AUDIO;
-        }
-
-        if self.info.start.is_some() || self.info.stop.is_some() {
-            self.info.flags |= OBS_OUTPUT_CAN_PAUSE;
         }
 
         OutputInfo {
@@ -91,8 +95,9 @@ macro_rules! impl_output_builder {
 
 impl_output_builder! {
     get_name => GetNameOutput
-    start => StartOutput
-    stop => StopOutput
+    // this two is required
+    // start => StartOutput
+    // stop => StopOutput
     raw_video => RawVideoOutput
     raw_audio => RawAudioOutput
     raw_audio2 => RawAudio2Output

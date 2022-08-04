@@ -65,7 +65,7 @@ pub unsafe extern "C" fn create<D: Outputable>(
     forget(context.settings);
     let callbacks = context.hotkey_callbacks;
 
-    let pointer = Box::into_raw(Box::new(wrapper));
+    let pointer = Box::into_raw(wrapper);
 
     pointer
         .as_mut()
@@ -101,8 +101,8 @@ pub unsafe extern "C" fn get_name<D: GetNameOutput>(
 }
 
 impl_simple_fn! {
-    start => StartOutput -> bool
-    stop(ts: u64) => StopOutput
+    start => Outputable -> bool
+    stop(ts: u64) => Outputable
 }
 
 pub unsafe extern "C" fn raw_video<D: RawVideoOutput>(

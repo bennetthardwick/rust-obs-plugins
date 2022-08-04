@@ -3,19 +3,14 @@ use paste::item;
 
 use std::marker::PhantomData;
 
-use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO, OBS_OUTPUT_CAN_PAUSE, obs_output_t};
+use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO, OBS_OUTPUT_CAN_PAUSE};
 
 pub mod traits;
 mod ffi;
+pub mod context;
 
 pub use traits::*;
-
-/// Context wrapping an OBS output - video / audio elements which are displayed to the screen.
-///
-/// See [OBS documentation](https://obsproject.com/docs/reference-outputs.html#c.obs_output_t)
-pub struct OutputContext {
-    output: *mut obs_output_t,
-}
+pub use context::*;
 
 pub struct OutputInfo {
     info: Box<obs_output_info>,

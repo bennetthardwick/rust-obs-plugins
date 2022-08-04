@@ -5,7 +5,6 @@ use paste::item;
 pub mod audio;
 pub mod context;
 mod ffi;
-mod hotkey;
 pub mod media;
 pub mod traits;
 pub mod video;
@@ -26,7 +25,7 @@ use obs_sys::{
     obs_source_showing, obs_source_skip_video_filter, obs_source_t, obs_source_type,
     obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO,
+    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO, obs_source_get_ref, obs_source_release,
 };
 
 use super::{
@@ -78,7 +77,29 @@ impl SourceType {
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
 pub struct SourceContext {
-    source: *mut obs_source_t,
+    inner: *mut obs_source_t,
+}
+
+impl SourceContext {
+    pub fn from_raw(source: *mut obs_source_t) -> Self {
+        Self {
+            inner: unsafe { obs_source_get_ref(source) }
+        }
+    }
+}
+
+impl Clone for SourceContext {
+    fn clone(&self) -> Self {
+        Self::from_raw(self.inner)
+    }
+}
+
+impl Drop for SourceContext {
+    fn drop(&mut self) {
+        unsafe {
+            obs_source_release(self.inner)
+        }
+    }
 }
 
 impl SourceContext {
@@ -88,10 +109,10 @@ impl SourceContext {
     pub fn do_with_target<F: FnOnce(&mut SourceContext)>(&mut self, func: F) {
         unsafe {
             if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.source))
+                SourceType::from_native(obs_source_get_type(self.inner))
             {
-                let target = obs_filter_get_target(self.source);
-                let mut context = SourceContext { source: target };
+                let target = obs_filter_get_target(self.inner);
+                let mut context = self.clone();
                 func(&mut context);
             }
         }
@@ -99,36 +120,36 @@ impl SourceContext {
 
     /// Return a unique id for the filter
     pub fn id(&self) -> usize {
-        self.source as usize
+        self.inner as usize
     }
 
     pub fn get_base_width(&self) -> u32 {
-        unsafe { obs_source_get_base_width(self.source) }
+        unsafe { obs_source_get_base_width(self.inner) }
     }
 
     pub fn get_base_height(&self) -> u32 {
-        unsafe { obs_source_get_base_height(self.source) }
+        unsafe { obs_source_get_base_height(self.inner) }
     }
 
     pub fn showing(&self) -> bool {
-        unsafe { obs_source_showing(self.source) }
+        unsafe { obs_source_showing(self.inner) }
     }
 
     pub fn active(&self) -> bool {
-        unsafe { obs_source_active(self.source) }
+        unsafe { obs_source_active(self.inner) }
     }
 
     pub fn enabled(&self) -> bool {
-        unsafe { obs_source_enabled(self.source) }
+        unsafe { obs_source_enabled(self.inner) }
     }
 
     pub fn set_enabled(&mut self, enabled: bool) {
-        unsafe { obs_source_set_enabled(self.source, enabled) }
+        unsafe { obs_source_set_enabled(self.inner, enabled) }
     }
 
     pub fn source_id(&self) -> Option<&str> {
         unsafe {
-            let ptr = obs_source_get_id(self.source);
+            let ptr = obs_source_get_id(self.inner);
             if ptr.is_null() {
                 None
             } else {
@@ -139,7 +160,7 @@ impl SourceContext {
 
     pub fn name(&self) -> Option<&str> {
         unsafe {
-            let ptr = obs_source_get_name(self.source);
+            let ptr = obs_source_get_name(self.inner);
             if ptr.is_null() {
                 None
             } else {
@@ -151,81 +172,81 @@ impl SourceContext {
     pub fn set_name(&mut self, name: &str) {
         let cstr = CString::new(name).unwrap();
         unsafe {
-            obs_source_set_name(self.source, cstr.as_ptr());
+            obs_source_set_name(self.inner, cstr.as_ptr());
         }
     }
 
     pub fn width(&self) -> u32 {
-        unsafe { obs_source_get_width(self.source) }
+        unsafe { obs_source_get_width(self.inner) }
     }
 
     pub fn height(&self) -> u32 {
-        unsafe { obs_source_get_height(self.source) }
+        unsafe { obs_source_get_height(self.inner) }
     }
 
     pub fn media_play_pause(&mut self, pause: bool) {
         unsafe {
-            obs_source_media_play_pause(self.source, pause);
+            obs_source_media_play_pause(self.inner, pause);
         }
     }
 
     pub fn media_restart(&mut self) {
         unsafe {
-            obs_source_media_restart(self.source);
+            obs_source_media_restart(self.inner);
         }
     }
 
     pub fn media_stop(&mut self) {
         unsafe {
-            obs_source_media_stop(self.source);
+            obs_source_media_stop(self.inner);
         }
     }
 
     pub fn media_next(&mut self) {
         unsafe {
-            obs_source_media_next(self.source);
+            obs_source_media_next(self.inner);
         }
     }
 
     pub fn media_previous(&mut self) {
         unsafe {
-            obs_source_media_previous(self.source);
+            obs_source_media_previous(self.inner);
         }
     }
 
     pub fn media_duration(&self) -> i64 {
-        unsafe { obs_source_media_get_duration(self.source) }
+        unsafe { obs_source_media_get_duration(self.inner) }
     }
 
     pub fn media_time(&self) -> i64 {
-        unsafe { obs_source_media_get_time(self.source) }
+        unsafe { obs_source_media_get_time(self.inner) }
     }
 
     pub fn media_set_time(&mut self, ms: i64) {
-        unsafe { obs_source_media_set_time(self.source, ms) }
+        unsafe { obs_source_media_set_time(self.inner, ms) }
     }
 
     pub fn media_state(&self) -> MediaState {
-        let ret = unsafe { obs_source_media_get_state(self.source) };
+        let ret = unsafe { obs_source_media_get_state(self.inner) };
         MediaState::from_native(ret).expect("Invalid media state value")
     }
 
     pub fn media_started(&mut self) {
         unsafe {
-            obs_source_media_started(self.source);
+            obs_source_media_started(self.inner);
         }
     }
 
     pub fn media_ended(&mut self) {
         unsafe {
-            obs_source_media_ended(self.source);
+            obs_source_media_ended(self.inner);
         }
     }
 
     /// Skips the video filter if it's invalid
     pub fn skip_video_filter(&mut self) {
         unsafe {
-            obs_source_skip_video_filter(self.source);
+            obs_source_skip_video_filter(self.inner);
         }
     }
 
@@ -246,12 +267,12 @@ impl SourceContext {
     ) {
         unsafe {
             if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.source))
+                SourceType::from_native(obs_source_get_type(self.inner))
             {
-                if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
+                if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
-                    obs_source_process_filter_end(self.source, effect.as_ptr(), cx, cy);
+                    obs_source_process_filter_end(self.inner, effect.as_ptr(), cx, cy);
                 }
             }
         }
@@ -269,13 +290,13 @@ impl SourceContext {
     ) {
         unsafe {
             if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.source))
+                SourceType::from_native(obs_source_get_type(self.inner))
             {
-                if obs_source_process_filter_begin(self.source, format.as_raw(), direct.as_raw()) {
+                if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
                     obs_source_process_filter_tech_end(
-                        self.source,
+                        self.inner,
                         effect.as_ptr(),
                         cx,
                         cy,
@@ -289,7 +310,7 @@ impl SourceContext {
     /// Update the source settings based on a settings context.
     pub fn update_source_settings(&mut self, settings: &mut DataObj) {
         unsafe {
-            obs_source_update(self.source, settings.as_ptr_mut());
+            obs_source_update(self.inner, settings.as_ptr_mut());
         }
     }
 }

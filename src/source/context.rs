@@ -1,5 +1,5 @@
 use super::audio::AudioRef;
-use super::hotkey::Hotkey;
+use crate::hotkey::Hotkey;
 use crate::prelude::DataObj;
 use crate::string::ObsString;
 use obs_sys::obs_get_audio;

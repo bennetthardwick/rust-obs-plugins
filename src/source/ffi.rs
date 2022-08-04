@@ -1,10 +1,9 @@
 use super::audio::AudioDataContext;
 use super::video::VideoDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::hotkey::Hotkey;
 use super::{traits::*, SourceContext};
 use super::{EnumActiveContext, EnumAllContext};
-use crate::{data::DataObj, string::ObsString, wrapper::PtrWrapper};
+use crate::{data::DataObj, hotkey::Hotkey, string::ObsString, wrapper::PtrWrapper};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
@@ -90,8 +89,9 @@ pub unsafe extern "C" fn create<D: Sourceable>(
     let mut global = GlobalContext::default();
     let settings = DataObj::from_raw(settings);
     let mut context = CreatableSourceContext::from_raw(settings, &mut global);
+    let source_context = SourceContext::from_raw(source);
 
-    let data = D::create(&mut context, SourceContext { source });
+    let data = D::create(&mut context, source_context);
 
     let wrapper = DataWrapper::from(data);
     forget(context.settings);

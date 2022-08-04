@@ -2,15 +2,11 @@ use obs_sys::{video_data, audio_data, encoder_packet};
 
 use crate::{string::ObsString, prelude::DataObj, properties::Properties};
 
-use super::OutputContext;
+use super::{OutputContext, CreatableOutputContext};
 
-pub struct CreatableOutputContext<'a> {
-    pub settings: DataObj<'a>,
-}
-
-pub trait Outputable {
+pub trait Outputable: Sized {
     fn get_id() -> ObsString;
-    fn create(context: &mut CreatableOutputContext<'_>, output: OutputContext) -> Self;
+    fn create(context: &mut CreatableOutputContext<'_, Self>, output: OutputContext) -> Self;
 }
 
 pub trait GetNameOutput {

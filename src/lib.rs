@@ -119,6 +119,7 @@ pub use obs_sys;
 pub mod data;
 /// Tools required for manipulating graphics in OBS
 pub mod graphics;
+mod hotkey;
 /// Logger for logging to OBS console
 pub mod log;
 /// Tools for creating modules

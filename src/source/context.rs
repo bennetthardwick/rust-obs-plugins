@@ -1,4 +1,4 @@
-use super::audio::AudioRef;
+use crate::media::audio::AudioRef;
 use crate::hotkey::{Hotkey, HotkeyCallbacks};
 use crate::prelude::DataObj;
 use crate::string::ObsString;

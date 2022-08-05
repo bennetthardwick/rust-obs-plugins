@@ -1,5 +1,5 @@
 use nnnoiseless::DenoiseState;
-use obs_wrapper::{obs_register_module, obs_string, prelude::*, source::*};
+use obs_wrapper::{obs_register_module, obs_string, prelude::*, source::*, media::audio};
 
 use std::collections::VecDeque;
 

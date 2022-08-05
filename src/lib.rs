@@ -80,7 +80,7 @@
 //!     fn get_ctx(&self) -> &ModuleContext {
 //!         &self.context
 //!     }
-//!    
+//!
 //!     // Load the module - create all sources, returning true if all went
 //!     // well.
 //!     fn load(&mut self, load_context: &mut LoadContext) -> bool {
@@ -91,14 +91,14 @@
 //!             // called to enable it.
 //!             .enable_get_name()
 //!             .build();
-//!    
+//!
 //!         // Tell OBS about the source so that it will show it.
 //!         load_context.register_source(source);
-//!    
+//!
 //!         // Nothing could have gone wrong, so return true.
 //!         true
 //!     }
-//!    
+//!
 //!     fn description() -> ObsString {
 //!         obs_string!("A great test module.")
 //!     }
@@ -134,6 +134,8 @@ pub mod log;
 pub mod module;
 /// Tools for creating outputs
 pub mod output;
+/// Tools for access media like video and audio
+pub mod media;
 /// Tools for creating properties
 pub mod properties;
 /// Tools for creating sources

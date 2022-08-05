@@ -5,7 +5,7 @@ pub struct AudioDataContext {
 }
 
 impl AudioDataContext {
-    pub(crate) unsafe fn from_raw(pointer: *mut obs_audio_data) -> Self {
+    pub fn from_raw(pointer: *mut obs_audio_data) -> Self {
         Self { pointer }
     }
 

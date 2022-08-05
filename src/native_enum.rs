@@ -42,6 +42,7 @@ macro_rules! native_enum {
 
             impl std::convert::TryFrom<$native_name> for $name {
                 type Error = $crate::native_enum::NativeParsingError;
+                #[allow(non_upper_case_globals)]
                 fn try_from(value: $native_name) -> Result<Self, Self::Error> {
                     match value {
                         $([<$native_name _ $native>] => Ok(Self::$rust)),*,

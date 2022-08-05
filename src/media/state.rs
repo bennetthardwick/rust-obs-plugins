@@ -20,8 +20,8 @@ pub enum MediaState {
 }
 
 impl MediaState {
-    #[allow(dead_code)]
-    pub(crate) fn from_native(state: obs_media_state) -> Option<Self> {
+    #[allow(non_upper_case_globals)]
+    pub fn from_native(state: obs_media_state) -> Option<Self> {
         match state {
             obs_media_state_OBS_MEDIA_STATE_NONE => Some(Self::None),
             obs_media_state_OBS_MEDIA_STATE_PLAYING => Some(Self::Playing),
@@ -35,7 +35,7 @@ impl MediaState {
         }
     }
 
-    pub(crate) fn to_native(self) -> obs_media_state {
+    pub fn to_native(self) -> obs_media_state {
         match self {
             Self::None => obs_media_state_OBS_MEDIA_STATE_NONE,
             Self::Playing => obs_media_state_OBS_MEDIA_STATE_PLAYING,

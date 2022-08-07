@@ -42,9 +42,6 @@
 //! // The source that will be shown inside OBS.
 //! struct TestSource;
 //!
-//! // The state of the source that is managed by OBS and used in each trait method.
-//! struct SourceData;
-//!
 //! // Implement the Sourceable trait for TestSource, this is required for each source.
 //! // It allows you to specify the source ID and type.
 //! impl Sourceable for TestSource {
@@ -55,10 +52,14 @@
 //!     fn get_type() -> SourceType {
 //!         SourceType::FILTER
 //!     }
+//!
+//!     fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
+//!         Self
+//!     }
 //! }
 //!
 //! // Allow OBS to show a name for the source
-//! impl GetNameSource<SourceData> for TestSource {
+//! impl GetNameSource for TestSource {
 //!     fn get_name() -> ObsString {
 //!         obs_string!("Test Source")
 //!     }
@@ -79,7 +80,7 @@
 //!     fn load(&mut self, load_context: &mut LoadContext) -> bool {
 //!         // Create the source
 //!         let source = load_context
-//!             .create_source_builder::<TestSource, SourceData>()
+//!             .create_source_builder::<TestSource>()
 //!             // Since GetNameSource is implemented, this method needs to be called to
 //!             // enable it.
 //!             .enable_get_name()

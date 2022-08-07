@@ -2,7 +2,7 @@ mod server;
 
 use server::{Server, WindowSnapshot};
 
-use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*};
+use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*, properties::*};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -68,189 +68,6 @@ impl Sourceable for ScrollFocusFilter {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
-}
-
-impl GetNameSource for ScrollFocusFilter {
-    fn get_name() -> ObsString {
-        obs_string!("Scroll Focus Filter")
-    }
-}
-
-impl GetPropertiesSource for ScrollFocusFilter {
-    fn get_properties(_data: &mut Option<Self>, properties: &mut Properties) {
-        properties
-            .add(
-                obs_string!("zoom"),
-                obs_string!("Amount to zoom in window"),
-                NumberProp::new_float(0.001)
-                    .with_range(1.0..=5.0)
-                    .with_slider(),
-            )
-            .add(
-                obs_string!("screen_x"),
-                obs_string!("Offset relative to top left screen - x"),
-                NumberProp::new_int().with_range(1u32..=3840 * 3),
-            )
-            .add(
-                obs_string!("screen_y"),
-                obs_string!("Offset relative to top left screen - y"),
-                NumberProp::new_int().with_range(1u32..=3840 * 3),
-            )
-            .add(
-                obs_string!("padding"),
-                obs_string!("Padding around each window"),
-                NumberProp::new_float(0.001)
-                    .with_range(..=0.5)
-                    .with_slider(),
-            )
-            .add(
-                obs_string!("screen_width"),
-                obs_string!("Screen width"),
-                NumberProp::new_int().with_range(1u32..=3840 * 3),
-            )
-            .add(
-                obs_string!("screen_height"),
-                obs_string!("Screen height"),
-                NumberProp::new_int().with_range(1u32..=3840 * 3),
-            )
-            .add(
-                obs_string!("animation_time"),
-                obs_string!("Animation Time (s)"),
-                NumberProp::new_float(0.001).with_range(0.3..=10.),
-            );
-    }
-}
-
-fn smooth_step(x: f32) -> f32 {
-    let t = ((x / 1.).max(0.)).min(1.);
-    t * t * (3. - 2. * t)
-}
-
-impl VideoTickSource for ScrollFocusFilter {
-    fn video_tick(data: &mut Option<Self>, seconds: f32) {
-        if let Some(data) = data {
-            for ServerMessage::Snapshot(snapshot) in data.receive.try_iter() {
-                let window_zoom = ((snapshot.width / (data.screen_width as f32))
-                    .max(snapshot.height / (data.screen_height as f32))
-                    as f64
-                    + data.padding)
-                    .max(data.internal_zoom)
-                    .min(1.);
-
-                if snapshot.x > (data.screen_width + data.screen_x) as f32
-                    || snapshot.x < data.screen_x as f32
-                    || snapshot.y < data.screen_y as f32
-                    || snapshot.y > (data.screen_height + data.screen_y) as f32
-                {
-                    if data.target_zoom != 1. && data.target.x() != 0. && data.target.y() != 0. {
-                        data.progress = 0.;
-                        data.from_zoom = data.current_zoom;
-                        data.target_zoom = 1.;
-
-                        data.from.set(data.current.x(), data.current.y());
-                        data.target.set(0., 0.);
-                    }
-                } else {
-                    let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
-                        / (data.screen_width as f32);
-                    let y = (snapshot.y + (snapshot.height / 2.) - (data.screen_y as f32))
-                        / (data.screen_height as f32);
-
-                    let target_x = (x - (0.5 * window_zoom as f32))
-                        .min(1. - window_zoom as f32)
-                        .max(0.);
-
-                    let target_y = (y - (0.5 * window_zoom as f32))
-                        .min(1. - window_zoom as f32)
-                        .max(0.);
-
-                    if (target_y - data.target.y()).abs() > 0.001
-                        || (target_x - data.target.x()).abs() > 0.001
-                        || (window_zoom - data.target_zoom).abs() > 0.001
-                    {
-                        data.progress = 0.;
-
-                        data.from_zoom = data.current_zoom;
-                        data.target_zoom = window_zoom;
-
-                        data.from.set(data.current.x(), data.current.y());
-
-                        data.target.set(target_x, target_y);
-                    }
-                }
-            }
-
-            data.progress = (data.progress + seconds as f64 / data.animation_time).min(1.);
-
-            let adjusted_progress = smooth_step(data.progress as f32);
-
-            data.current.set(
-                data.from.x() + (data.target.x() - data.from.x()) * adjusted_progress,
-                data.from.y() + (data.target.y() - data.from.y()) * adjusted_progress,
-            );
-
-            data.current_zoom =
-                data.from_zoom + (data.target_zoom - data.from_zoom) * adjusted_progress as f64;
-        }
-    }
-}
-
-impl VideoRenderSource for ScrollFocusFilter {
-    fn video_render(
-        data: &mut Option<Self>,
-        _context: &mut GlobalContext,
-        render: &mut VideoRenderContext,
-    ) {
-        if let Some(data) = data {
-            let effect = &mut data.effect;
-            let source = &mut data.source;
-            let param_add = &mut data.add_val;
-
-            let param_mul = &mut data.mul_val;
-
-            let param_base = &mut data.base_dimension;
-            let param_base_i = &mut data.base_dimension_i;
-
-            let image = &mut data.image;
-            let sampler = &mut data.sampler;
-
-            let current = &mut data.current;
-
-            let zoom = data.current_zoom as f32;
-
-            let mut target_cx: u32 = 1;
-            let mut target_cy: u32 = 1;
-
-            let cx = source.get_base_width();
-            let cy = source.get_base_height();
-
-            source.do_with_target(|target| {
-                target_cx = target.get_base_width();
-                target_cy = target.get_base_height();
-            });
-
-            source.process_filter_tech(
-                render,
-                effect,
-                (target_cx, target_cy),
-                GraphicsColorFormat::RGBA,
-                GraphicsAllowDirectRendering::NoDirectRendering,
-                obs_string!("DrawUndistort"),
-                |context, _effect| {
-                    param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
-                    param_mul.set_vec2(context, &Vec2::new(zoom, zoom));
-
-                    param_base.set_vec2(context, &Vec2::new(cx as _, cy as _));
-                    param_base_i.set_vec2(context, &Vec2::new(1. / (cx as f32), 1. / (cy as f32)));
-
-                    image.set_next_sampler(context, sampler);
-                },
-            );
-        }
-    }
-}
-
-impl CreatableSource for ScrollFocusFilter {
     fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceContext) -> Self {
         let mut effect = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
@@ -351,38 +168,217 @@ impl CreatableSource for ScrollFocusFilter {
     }
 }
 
+impl GetNameSource for ScrollFocusFilter {
+    fn get_name() -> ObsString {
+        obs_string!("Scroll Focus Filter")
+    }
+}
+
+impl GetPropertiesSource for ScrollFocusFilter {
+    fn get_properties(&mut self) -> Properties {
+        let mut properties = Properties::new();
+        properties
+            .add(
+                obs_string!("zoom"),
+                obs_string!("Amount to zoom in window"),
+                NumberProp::new_float(0.001)
+                    .with_range(1.0..=5.0)
+                    .with_slider(),
+            )
+            .add(
+                obs_string!("screen_x"),
+                obs_string!("Offset relative to top left screen - x"),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
+            )
+            .add(
+                obs_string!("screen_y"),
+                obs_string!("Offset relative to top left screen - y"),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
+            )
+            .add(
+                obs_string!("padding"),
+                obs_string!("Padding around each window"),
+                NumberProp::new_float(0.001)
+                    .with_range(..=0.5)
+                    .with_slider(),
+            )
+            .add(
+                obs_string!("screen_width"),
+                obs_string!("Screen width"),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
+            )
+            .add(
+                obs_string!("screen_height"),
+                obs_string!("Screen height"),
+                NumberProp::new_int().with_range(1u32..=3840 * 3),
+            )
+            .add(
+                obs_string!("animation_time"),
+                obs_string!("Animation Time (s)"),
+                NumberProp::new_float(0.001).with_range(0.3..=10.),
+            );
+        properties
+    }
+}
+
+fn smooth_step(x: f32) -> f32 {
+    let t = ((x / 1.).max(0.)).min(1.);
+    t * t * (3. - 2. * t)
+}
+
+impl VideoTickSource for ScrollFocusFilter {
+    fn video_tick(&mut self, seconds: f32) {
+        let data = self;
+        for ServerMessage::Snapshot(snapshot) in data.receive.try_iter() {
+            let window_zoom = ((snapshot.width / (data.screen_width as f32))
+                .max(snapshot.height / (data.screen_height as f32))
+                as f64
+                + data.padding)
+                .max(data.internal_zoom)
+                .min(1.);
+
+            if snapshot.x > (data.screen_width + data.screen_x) as f32
+                || snapshot.x < data.screen_x as f32
+                || snapshot.y < data.screen_y as f32
+                || snapshot.y > (data.screen_height + data.screen_y) as f32
+            {
+                if data.target_zoom != 1. && data.target.x() != 0. && data.target.y() != 0. {
+                    data.progress = 0.;
+                    data.from_zoom = data.current_zoom;
+                    data.target_zoom = 1.;
+
+                    data.from.set(data.current.x(), data.current.y());
+                    data.target.set(0., 0.);
+                }
+            } else {
+                let x = (snapshot.x + (snapshot.width / 2.) - (data.screen_x as f32))
+                    / (data.screen_width as f32);
+                let y = (snapshot.y + (snapshot.height / 2.) - (data.screen_y as f32))
+                    / (data.screen_height as f32);
+
+                let target_x = (x - (0.5 * window_zoom as f32))
+                    .min(1. - window_zoom as f32)
+                    .max(0.);
+
+                let target_y = (y - (0.5 * window_zoom as f32))
+                    .min(1. - window_zoom as f32)
+                    .max(0.);
+
+                if (target_y - data.target.y()).abs() > 0.001
+                    || (target_x - data.target.x()).abs() > 0.001
+                    || (window_zoom - data.target_zoom).abs() > 0.001
+                {
+                    data.progress = 0.;
+
+                    data.from_zoom = data.current_zoom;
+                    data.target_zoom = window_zoom;
+
+                    data.from.set(data.current.x(), data.current.y());
+
+                    data.target.set(target_x, target_y);
+                }
+            }
+        }
+
+        data.progress = (data.progress + seconds as f64 / data.animation_time).min(1.);
+
+        let adjusted_progress = smooth_step(data.progress as f32);
+
+        data.current.set(
+            data.from.x() + (data.target.x() - data.from.x()) * adjusted_progress,
+            data.from.y() + (data.target.y() - data.from.y()) * adjusted_progress,
+        );
+
+        data.current_zoom =
+            data.from_zoom + (data.target_zoom - data.from_zoom) * adjusted_progress as f64;
+    }
+}
+
+impl VideoRenderSource for ScrollFocusFilter {
+    fn video_render(
+        &mut self,
+        _context: &mut GlobalContext,
+        render: &mut VideoRenderContext,
+    ) {
+        let data = self;
+        let effect = &mut data.effect;
+        let source = &mut data.source;
+        let param_add = &mut data.add_val;
+
+        let param_mul = &mut data.mul_val;
+
+        let param_base = &mut data.base_dimension;
+        let param_base_i = &mut data.base_dimension_i;
+
+        let image = &mut data.image;
+        let sampler = &mut data.sampler;
+
+        let current = &mut data.current;
+
+        let zoom = data.current_zoom as f32;
+
+        let mut target_cx: u32 = 1;
+        let mut target_cy: u32 = 1;
+
+        let cx = source.get_base_width();
+        let cy = source.get_base_height();
+
+        source.do_with_target(|target| {
+            target_cx = target.get_base_width();
+            target_cy = target.get_base_height();
+        });
+
+        source.process_filter_tech(
+            render,
+            effect,
+            (target_cx, target_cy),
+            GraphicsColorFormat::RGBA,
+            GraphicsAllowDirectRendering::NoDirectRendering,
+            obs_string!("DrawUndistort"),
+            |context, _effect| {
+                param_add.set_vec2(context, &Vec2::new(current.x(), current.y()));
+                param_mul.set_vec2(context, &Vec2::new(zoom, zoom));
+
+                param_base.set_vec2(context, &Vec2::new(cx as _, cy as _));
+                param_base_i.set_vec2(context, &Vec2::new(1. / (cx as f32), 1. / (cy as f32)));
+
+                image.set_next_sampler(context, sampler);
+            },
+        );
+    }
+}
+
 impl UpdateSource for ScrollFocusFilter {
-    fn update(data: &mut Option<Self>, settings: &mut DataObj, _context: &mut GlobalContext) {
-        if let Some(data) = data {
-            if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
-                data.from_zoom = data.current_zoom;
-                data.internal_zoom = 1. / zoom;
-                data.target_zoom = 1. / zoom;
-            }
+    fn update(&mut self, settings: &mut DataObj, _context: &mut GlobalContext) {
+        let data = self;
+        if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
+            data.from_zoom = data.current_zoom;
+            data.internal_zoom = 1. / zoom;
+            data.target_zoom = 1. / zoom;
+        }
 
-            if let Some(screen_width) = settings.get(obs_string!("screen_width")) {
-                data.screen_width = screen_width;
-            }
+        if let Some(screen_width) = settings.get(obs_string!("screen_width")) {
+            data.screen_width = screen_width;
+        }
 
-            if let Some(padding) = settings.get(obs_string!("padding")) {
-                data.padding = padding;
-            }
+        if let Some(padding) = settings.get(obs_string!("padding")) {
+            data.padding = padding;
+        }
 
-            if let Some(animation_time) = settings.get(obs_string!("animation_time")) {
-                data.animation_time = animation_time;
-            }
+        if let Some(animation_time) = settings.get(obs_string!("animation_time")) {
+            data.animation_time = animation_time;
+        }
 
-            if let Some(screen_height) = settings.get(obs_string!("screen_height")) {
-                data.screen_height = screen_height;
-            }
+        if let Some(screen_height) = settings.get(obs_string!("screen_height")) {
+            data.screen_height = screen_height;
+        }
 
-            if let Some(screen_x) = settings.get(obs_string!("screen_x")) {
-                data.screen_x = screen_x;
-            }
+        if let Some(screen_x) = settings.get(obs_string!("screen_x")) {
+            data.screen_x = screen_x;
+        }
 
-            if let Some(screen_y) = settings.get(obs_string!("screen_y")) {
-                data.screen_y = screen_y;
-            }
+        if let Some(screen_y) = settings.get(obs_string!("screen_y")) {
+            data.screen_y = screen_y;
         }
     }
 }
@@ -399,7 +395,6 @@ impl Module for TheModule {
         let source = load_context
             .create_source_builder::<ScrollFocusFilter>()
             .enable_get_name()
-            .enable_create()
             .enable_get_properties()
             .enable_update()
             .enable_video_render()

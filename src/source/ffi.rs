@@ -1,12 +1,9 @@
 use super::audio::AudioDataContext;
 use super::video::VideoDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::hotkey::Hotkey;
-use super::properties::Properties;
-use super::traits::*;
-use super::ObsString;
-use super::{EnumActiveContext, EnumAllContext, SourceContext};
-use crate::{data::DataObj, wrapper::PtrWrapper};
+use super::{traits::*, SourceContext};
+use super::{EnumActiveContext, EnumAllContext};
+use crate::{data::DataObj, hotkey::Hotkey, string::ObsString, wrapper::PtrWrapper};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
@@ -20,8 +17,8 @@ use obs_sys::{
 };
 
 struct DataWrapper<D> {
-    data: Option<D>,
-    hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>>,
+    data: D,
+    hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut D)>>,
 }
 
 impl<D> DataWrapper<D> {
@@ -30,7 +27,7 @@ impl<D> DataWrapper<D> {
         callbacks: Vec<(
             ObsString,
             ObsString,
-            Box<dyn FnMut(&mut Hotkey, &mut Option<D>)>,
+            Box<dyn FnMut(&mut Hotkey, &mut D)>,
         )>,
         source: *mut obs_source_t,
         data: *mut c_void,
@@ -49,19 +46,10 @@ impl<D> DataWrapper<D> {
     }
 }
 
-impl<D> Default for DataWrapper<D> {
-    fn default() -> Self {
-        Self {
-            data: None,
-            hotkey_callbacks: HashMap::new(),
-        }
-    }
-}
-
 impl<D> From<D> for DataWrapper<D> {
     fn from(data: D) -> Self {
         Self {
-            data: Some(data),
+            data,
             hotkey_callbacks: HashMap::new(),
         }
     }
@@ -94,31 +82,20 @@ impl_simple_fn!(
     deactivate => DeactivateSource
 );
 
-pub unsafe extern "C" fn create_default_data<D>(
-    _settings: *mut obs_data_t,
-    _source: *mut obs_source_t,
-) -> *mut c_void {
-    let data = Box::new(DataWrapper::<D>::default());
-    Box::into_raw(data) as *mut c_void
-}
-
-pub unsafe extern "C" fn create<D: CreatableSource>(
+pub unsafe extern "C" fn create<D: Sourceable>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
-    let mut wrapper = DataWrapper::default();
-
     let mut global = GlobalContext::default();
     let settings = DataObj::from_raw(settings);
-    let mut create = CreatableSourceContext::from_raw(source, settings, &mut global);
+    let mut context = CreatableSourceContext::from_raw(settings, &mut global);
+    let source_context = SourceContext::from_raw(source);
 
-    let source_context = SourceContext { source };
+    let data = D::create(&mut context, source_context);
 
-    let data = D::create(&mut create, source_context);
-
-    wrapper.data = Some(data);
-    forget(create.settings);
-    let callbacks = create.hotkey_callbacks;
+    let wrapper = DataWrapper::from(data);
+    forget(context.settings);
+    let callbacks = context.hotkey_callbacks;
 
     let pointer = Box::into_raw(Box::new(wrapper));
 
@@ -175,9 +152,7 @@ pub unsafe extern "C" fn get_properties<D: GetPropertiesSource>(
     data: *mut ::std::os::raw::c_void,
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-
-    let mut properties = Properties::new();
-    D::get_properties(&mut wrapper.data, &mut properties);
+    let properties = D::get_properties(&mut wrapper.data);
     properties.into_raw()
 }
 

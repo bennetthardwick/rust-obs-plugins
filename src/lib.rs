@@ -42,9 +42,6 @@
 //! // The source that will be shown inside OBS.
 //! struct TestSource;
 //!
-//! // The state of the source that is managed by OBS and used in each trait method.
-//! struct SourceData;
-//!
 //! // Implement the Sourceable trait for TestSource, this is required for each source.
 //! // It allows you to specify the source ID and type.
 //! impl Sourceable for TestSource {
@@ -55,10 +52,14 @@
 //!     fn get_type() -> SourceType {
 //!         SourceType::FILTER
 //!     }
+//!
+//!     fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
+//!         Self
+//!     }
 //! }
 //!
 //! // Allow OBS to show a name for the source
-//! impl GetNameSource<SourceData> for TestSource {
+//! impl GetNameSource for TestSource {
 //!     fn get_name() -> ObsString {
 //!         obs_string!("Test Source")
 //!     }
@@ -79,7 +80,7 @@
 //!     fn load(&mut self, load_context: &mut LoadContext) -> bool {
 //!         // Create the source
 //!         let source = load_context
-//!             .create_source_builder::<TestSource, SourceData>()
+//!             .create_source_builder::<TestSource>()
 //!             // Since GetNameSource is implemented, this method needs to be called to
 //!             // enable it.
 //!             .enable_get_name()
@@ -119,12 +120,17 @@ pub use obs_sys;
 pub mod data;
 /// Tools required for manipulating graphics in OBS
 pub mod graphics;
+mod hotkey;
 /// Logger for logging to OBS console
 pub mod log;
 /// Tools for creating modules
 pub mod module;
+/// Tools for creating properties
+pub mod properties;
 /// Tools for creating sources
 pub mod source;
+/// Tools for creating outputs
+pub mod output;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper

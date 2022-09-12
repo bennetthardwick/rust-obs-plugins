@@ -7,7 +7,7 @@ use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::forget;
-use std::os::raw::{c_char, c_int};
+use std::os::raw::{c_char, c_int, c_ulong};
 
 use obs_sys::{
     obs_data_t, obs_output_t
@@ -123,7 +123,7 @@ pub unsafe extern "C" fn raw_audio<D: RawAudioOutput>(
 
 pub unsafe extern "C" fn raw_audio2<D: RawAudio2Output>(
     data: *mut c_void,
-    idx: u64,
+    idx: c_ulong,
     frame: *mut audio_data,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);

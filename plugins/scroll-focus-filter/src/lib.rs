@@ -2,7 +2,9 @@ mod server;
 
 use server::{Server, WindowSnapshot};
 
-use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*, properties::*};
+use obs_wrapper::{
+    graphics::*, obs_register_module, obs_string, prelude::*, properties::*, source::*,
+};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -295,11 +297,7 @@ impl VideoTickSource for ScrollFocusFilter {
 }
 
 impl VideoRenderSource for ScrollFocusFilter {
-    fn video_render(
-        &mut self,
-        _context: &mut GlobalContext,
-        render: &mut VideoRenderContext,
-    ) {
+    fn video_render(&mut self, _context: &mut GlobalContext, render: &mut VideoRenderContext) {
         let data = self;
         let effect = &mut data.effect;
         let source = &mut data.source;

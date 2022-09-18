@@ -1,10 +1,8 @@
-use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
 use crate::output::{traits::Outputable, OutputInfo, OutputInfoBuilder};
+use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
 use crate::string::ObsString;
 use obs_sys::{
-    obs_module_t,
-    obs_register_source_s, obs_register_output_s,
-    obs_source_info, obs_output_info,
+    obs_module_t, obs_output_info, obs_register_output_s, obs_register_source_s, obs_source_info,
     size_t,
 };
 use std::marker::PhantomData;
@@ -17,8 +15,8 @@ pub struct LoadContext {
 
 impl LoadContext {
     /// # Safety
-    /// LoadContext can only be used at specific times. Creating it could cause UB if done at the
-    /// wrong time.
+    /// LoadContext can only be used at specific times. Creating it could cause
+    /// UB if done at the wrong time.
     pub unsafe fn new() -> LoadContext {
         LoadContext {
             __marker: PhantomData,
@@ -159,8 +157,8 @@ pub struct ModuleContext {
 
 impl ModuleContext {
     /// # Safety
-    /// Creates a ModuleContext from a pointer to the raw obs_module data which if modified could
-    /// cause UB.
+    /// Creates a ModuleContext from a pointer to the raw obs_module data which
+    /// if modified could cause UB.
     pub unsafe fn new(raw: *mut obs_module_t) -> Self {
         Self { raw }
     }

@@ -1,10 +1,6 @@
 use obs_sys::{
-    obs_source_frame,
-    video_output_get_width,
-    video_output_get_height,
-    video_output_get_frame_rate,
-    video_output_get_format,
-    video_t,
+    obs_source_frame, video_output_get_format, video_output_get_frame_rate,
+    video_output_get_height, video_output_get_width, video_t,
 };
 
 #[derive(Debug, PartialEq)]
@@ -97,12 +93,12 @@ impl VideoRef {
 
     pub(crate) fn get_width(&self) -> u32 {
         unsafe { video_output_get_width(self.pointer) }
-    } 
+    }
 
     pub(crate) fn get_height(&self) -> u32 {
         unsafe { video_output_get_height(self.pointer) }
     }
-    
+
     pub(crate) fn get_frame_rate(&self) -> f64 {
         unsafe { video_output_get_frame_rate(self.pointer) }
     }

@@ -27,20 +27,13 @@ impl Default for GlobalContext {
 }
 
 pub struct CreatableSourceContext<'a, D> {
-    pub(crate) hotkey_callbacks: Vec<(
-        ObsString,
-        ObsString,
-        Box<dyn FnMut(&mut Hotkey, &mut D)>,
-    )>,
+    pub(crate) hotkey_callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
     pub settings: DataObj<'a>,
     pub global: &'a mut GlobalContext,
 }
 
 impl<'a, D> CreatableSourceContext<'a, D> {
-    pub(crate) unsafe fn from_raw(
-        settings: DataObj<'a>,
-        global: &'a mut GlobalContext,
-    ) -> Self {
+    pub(crate) unsafe fn from_raw(settings: DataObj<'a>, global: &'a mut GlobalContext) -> Self {
         Self {
             hotkey_callbacks: Default::default(),
             settings,

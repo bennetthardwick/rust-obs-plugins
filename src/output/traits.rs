@@ -1,15 +1,17 @@
-use obs_sys::{video_data, audio_data, encoder_packet};
+use obs_sys::{audio_data, encoder_packet, video_data};
 
-use crate::{string::ObsString, prelude::DataObj, properties::Properties};
+use crate::{prelude::DataObj, properties::Properties, string::ObsString};
 
-use super::{OutputContext, CreatableOutputContext};
+use super::{CreatableOutputContext, OutputContext};
 
 pub trait Outputable: Sized {
     fn get_id() -> ObsString;
     fn create(context: &mut CreatableOutputContext<'_, Self>, output: OutputContext) -> Self;
 
-    fn start(&mut self) -> bool { true }
-    fn stop(&mut self, _ts: u64) { }
+    fn start(&mut self) -> bool {
+        true
+    }
+    fn stop(&mut self, _ts: u64) {}
 }
 
 pub trait GetNameOutput {

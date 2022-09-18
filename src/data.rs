@@ -170,7 +170,8 @@ impl DataObj<'_> {
         }
     }
     /// Loads data into a object from a JSON file.
-    /// * `backup_ext`: optional backup file path in case the original file is bad.
+    /// * `backup_ext`: optional backup file path in case the original file is
+    ///   bad.
     pub fn from_json_file(
         json_file: impl Into<ObsString>,
         backup_ext: impl Into<Option<ObsString>>,

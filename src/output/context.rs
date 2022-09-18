@@ -1,8 +1,9 @@
-use obs_sys::{obs_output_t, obs_output_create, obs_output_release, obs_output_get_ref};
+use obs_sys::{obs_output_create, obs_output_get_ref, obs_output_release, obs_output_t};
 
-use crate::{string::ObsString, hotkey::Hotkey, prelude::DataObj, wrapper::PtrWrapper};
+use crate::{hotkey::Hotkey, prelude::DataObj, string::ObsString, wrapper::PtrWrapper};
 
-/// Context wrapping an OBS output - video / audio elements which are displayed to the screen.
+/// Context wrapping an OBS output - video / audio elements which are displayed
+/// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-outputs.html#c.obs_output_t)
 pub struct OutputContext {
@@ -12,7 +13,7 @@ pub struct OutputContext {
 impl OutputContext {
     pub fn from_raw(output: *mut obs_output_t) -> Self {
         Self {
-            inner: unsafe { obs_output_get_ref(output) }
+            inner: unsafe { obs_output_get_ref(output) },
         }
     }
 }
@@ -43,17 +44,16 @@ impl Drop for OutputContext {
 }
 
 pub struct CreatableOutputContext<'a, D> {
-    pub(crate) hotkey_callbacks: Vec<(
-        ObsString,
-        ObsString,
-        Box<dyn FnMut(&mut Hotkey, &mut D)>,
-    )>,
+    pub(crate) hotkey_callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
     pub settings: DataObj<'a>,
 }
 
 impl<'a, D> CreatableOutputContext<'a, D> {
     pub fn from_raw(settings: DataObj<'a>) -> Self {
-        Self { hotkey_callbacks: vec![], settings }
+        Self {
+            hotkey_callbacks: vec![],
+            settings,
+        }
     }
 
     pub fn register_hotkey<F: FnMut(&mut Hotkey, &mut D) + 'static>(

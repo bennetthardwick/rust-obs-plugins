@@ -8,8 +8,8 @@ pub enum ObsString {
 
 impl ObsString {
     /// # Safety
-    /// Does no checks for nul terminated strings. This could cause memory overruns if used
-    /// incorrectly.
+    /// Does no checks for nul terminated strings. This could cause memory
+    /// overruns if used incorrectly.
     pub const unsafe fn from_nul_terminted_str(string: &'static str) -> Self {
         Self::Static(string)
     }

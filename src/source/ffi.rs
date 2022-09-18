@@ -1,6 +1,6 @@
 use super::audio::AudioDataContext;
-use super::video::VideoDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
+use super::video::VideoDataContext;
 use super::{traits::*, SourceContext};
 use super::{EnumActiveContext, EnumAllContext};
 use crate::{data::DataObj, hotkey::Hotkey, string::ObsString, wrapper::PtrWrapper};
@@ -13,7 +13,7 @@ use std::os::raw::c_char;
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
     obs_hotkey_t, obs_media_state, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
-    obs_source_t, size_t, obs_source_frame
+    obs_source_frame, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -24,11 +24,7 @@ struct DataWrapper<D> {
 impl<D> DataWrapper<D> {
     pub(crate) unsafe fn register_callbacks(
         &mut self,
-        callbacks: Vec<(
-            ObsString,
-            ObsString,
-            Box<dyn FnMut(&mut Hotkey, &mut D)>,
-        )>,
+        callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
         source: *mut obs_source_t,
         data: *mut c_void,
     ) {
@@ -68,9 +64,7 @@ macro_rules! impl_simple_fn {
     )*)
 }
 
-pub unsafe extern "C" fn get_name<D: GetNameSource>(
-    _type_data: *mut c_void,
-) -> *const c_char {
+pub unsafe extern "C" fn get_name<D: GetNameSource>(_type_data: *mut c_void) -> *const c_char {
     D::get_name().as_ptr()
 }
 
@@ -112,10 +106,7 @@ pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
     drop(wrapper);
 }
 
-pub unsafe extern "C" fn update<D: UpdateSource>(
-    data: *mut c_void,
-    settings: *mut obs_data_t,
-) {
+pub unsafe extern "C" fn update<D: UpdateSource>(data: *mut c_void, settings: *mut obs_data_t) {
     let mut global = GlobalContext::default();
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut settings = DataObj::from_raw(settings);

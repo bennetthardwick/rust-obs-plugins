@@ -1,17 +1,18 @@
-use super::{traits::*, OutputContext, CreatableOutputContext};
+use super::{traits::*, CreatableOutputContext, OutputContext};
 use crate::hotkey::Hotkey;
 use crate::string::ObsString;
 use crate::{data::DataObj, wrapper::PtrWrapper};
-use obs_sys::{audio_data, encoder_packet, obs_properties, video_data, obs_hotkey_id, obs_hotkey_register_output, obs_hotkey_t};
+use obs_sys::{
+    audio_data, encoder_packet, obs_hotkey_id, obs_hotkey_register_output, obs_hotkey_t,
+    obs_properties, video_data,
+};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::forget;
 use std::os::raw::{c_char, c_int, c_ulong};
 
-use obs_sys::{
-    obs_data_t, obs_output_t
-};
+use obs_sys::{obs_data_t, obs_output_t};
 
 struct DataWrapper<D> {
     data: D,
@@ -21,11 +22,7 @@ struct DataWrapper<D> {
 impl<D> DataWrapper<D> {
     pub(crate) unsafe fn register_callbacks(
         &mut self,
-        callbacks: Vec<(
-            ObsString,
-            ObsString,
-            Box<dyn FnMut(&mut Hotkey, &mut D)>,
-        )>,
+        callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
         output: *mut obs_output_t,
         data: *mut c_void,
     ) {
@@ -94,9 +91,7 @@ macro_rules! impl_simple_fn {
     )*)
 }
 
-pub unsafe extern "C" fn get_name<D: GetNameOutput>(
-    _type_data: *mut c_void,
-) -> *const c_char {
+pub unsafe extern "C" fn get_name<D: GetNameOutput>(_type_data: *mut c_void) -> *const c_char {
     D::get_name().as_ptr()
 }
 
@@ -105,18 +100,12 @@ impl_simple_fn! {
     stop(ts: u64) => Outputable
 }
 
-pub unsafe extern "C" fn raw_video<D: RawVideoOutput>(
-    data: *mut c_void,
-    frame: *mut video_data,
-) {
+pub unsafe extern "C" fn raw_video<D: RawVideoOutput>(data: *mut c_void, frame: *mut video_data) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
     D::raw_video(&mut wrapper.data, &mut *frame)
 }
 
-pub unsafe extern "C" fn raw_audio<D: RawAudioOutput>(
-    data: *mut c_void,
-    frame: *mut audio_data,
-) {
+pub unsafe extern "C" fn raw_audio<D: RawAudioOutput>(data: *mut c_void, frame: *mut audio_data) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
     D::raw_audio(&mut wrapper.data, &mut *frame)
 }
@@ -138,10 +127,7 @@ pub unsafe extern "C" fn encoded_packet<D: EncodedPacketOutput>(
     D::encoded_packet(&mut wrapper.data, &mut *packet)
 }
 
-pub unsafe extern "C" fn update<D: UpdateOutput>(
-    data: *mut c_void,
-    settings: *mut obs_data_t,
-) {
+pub unsafe extern "C" fn update<D: UpdateOutput>(data: *mut c_void, settings: *mut obs_data_t) {
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut settings = DataObj::from_raw(settings);
     D::update(&mut data.data, &mut settings);

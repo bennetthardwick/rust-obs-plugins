@@ -16,16 +16,17 @@ pub use traits::*;
 use obs_sys::{
     obs_filter_get_target, obs_source_active, obs_source_enabled, obs_source_get_base_height,
     obs_source_get_base_width, obs_source_get_height, obs_source_get_id, obs_source_get_name,
-    obs_source_get_type, obs_source_get_width, obs_source_info, obs_source_media_ended,
-    obs_source_media_get_duration, obs_source_media_get_state, obs_source_media_get_time,
-    obs_source_media_next, obs_source_media_play_pause, obs_source_media_previous,
-    obs_source_media_restart, obs_source_media_set_time, obs_source_media_started,
-    obs_source_media_stop, obs_source_process_filter_begin, obs_source_process_filter_end,
-    obs_source_process_filter_tech_end, obs_source_set_enabled, obs_source_set_name,
-    obs_source_showing, obs_source_skip_video_filter, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
-    obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO, obs_source_get_ref, obs_source_release,
+    obs_source_get_ref, obs_source_get_type, obs_source_get_width, obs_source_info,
+    obs_source_media_ended, obs_source_media_get_duration, obs_source_media_get_state,
+    obs_source_media_get_time, obs_source_media_next, obs_source_media_play_pause,
+    obs_source_media_previous, obs_source_media_restart, obs_source_media_set_time,
+    obs_source_media_started, obs_source_media_stop, obs_source_process_filter_begin,
+    obs_source_process_filter_end, obs_source_process_filter_tech_end, obs_source_release,
+    obs_source_set_enabled, obs_source_set_name, obs_source_showing, obs_source_skip_video_filter,
+    obs_source_t, obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER,
+    obs_source_type_OBS_SOURCE_TYPE_INPUT, obs_source_type_OBS_SOURCE_TYPE_SCENE,
+    obs_source_type_OBS_SOURCE_TYPE_TRANSITION, obs_source_update, OBS_SOURCE_AUDIO,
+    OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -73,7 +74,8 @@ impl SourceType {
     }
 }
 
-/// Context wrapping an OBS source - video / audio elements which are displayed to the screen.
+/// Context wrapping an OBS source - video / audio elements which are displayed
+/// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
 pub struct SourceContext {
@@ -83,7 +85,7 @@ pub struct SourceContext {
 impl SourceContext {
     pub fn from_raw(source: *mut obs_source_t) -> Self {
         Self {
-            inner: unsafe { obs_source_get_ref(source) }
+            inner: unsafe { obs_source_get_ref(source) },
         }
     }
 }
@@ -96,9 +98,7 @@ impl Clone for SourceContext {
 
 impl Drop for SourceContext {
     fn drop(&mut self) {
-        unsafe {
-            obs_source_release(self.inner)
-        }
+        unsafe { obs_source_release(self.inner) }
     }
 }
 
@@ -251,7 +251,8 @@ impl SourceContext {
     }
 
     /// Run a function to do drawing - if the source is a filter.
-    /// This function is wrapped by calls that automatically handle effect-based filter processing.
+    /// This function is wrapped by calls that automatically handle effect-based
+    /// filter processing.
     ///
     /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_process_filter_begin)
     ///
@@ -339,9 +340,9 @@ impl AsRef<obs_source_info> for SourceInfo {
 
 /// The SourceInfoBuilder that handles creating the [SourceInfo](https://obsproject.com/docs/reference-sources.html#c.obs_source_info) object.
 ///
-/// For each trait that is implemented for the Source, it needs to be enabled using this builder.
-/// If an struct called `FocusFilter` implements `CreateSource` and `GetNameSource` it would need
-/// to enable those features.
+/// For each trait that is implemented for the Source, it needs to be enabled
+/// using this builder. If an struct called `FocusFilter` implements
+/// `CreateSource` and `GetNameSource` it would need to enable those features.
 ///
 /// ```rs
 /// let source = load_context
@@ -350,7 +351,6 @@ impl AsRef<obs_source_info> for SourceInfo {
 ///  .enable_create()
 ///  .build();
 /// ```
-///
 pub struct SourceInfoBuilder<D: Sourceable> {
     __data: PhantomData<D>,
     info: obs_source_info,

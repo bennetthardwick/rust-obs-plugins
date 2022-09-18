@@ -1,9 +1,9 @@
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use crate::properties::Properties;
+use super::video::VideoDataContext;
 use super::{audio::AudioDataContext, media::MediaState};
-use super::{video::VideoDataContext};
-use super::{EnumActiveContext, EnumAllContext, SourceType, SourceContext};
+use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 use crate::data::DataObj;
+use crate::properties::Properties;
 use crate::string::ObsString;
 
 pub trait Sourceable: Sized {
@@ -36,11 +36,7 @@ pub trait UpdateSource: Sized {
 }
 
 pub trait VideoRenderSource: Sized {
-    fn video_render(
-        &mut self,
-        context: &mut GlobalContext,
-        render: &mut VideoRenderContext,
-    );
+    fn video_render(&mut self, context: &mut GlobalContext, render: &mut VideoRenderContext);
 }
 
 pub trait AudioRenderSource: Sized {

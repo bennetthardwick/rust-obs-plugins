@@ -136,7 +136,7 @@ pub mod source;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper
-mod wrapper;
+pub mod wrapper;
 
 mod native_enum;
 

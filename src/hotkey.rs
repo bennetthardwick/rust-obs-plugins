@@ -1,5 +1,9 @@
 use obs_sys::{obs_hotkey_get_id, obs_hotkey_id, obs_hotkey_t};
 
+use crate::string::ObsString;
+
+pub type HotkeyCallbacks<T> = Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut T)>)>;
+
 pub struct Hotkey {
     key: *mut obs_hotkey_t,
     pub pressed: bool,

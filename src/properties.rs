@@ -1,4 +1,5 @@
 #![allow(non_upper_case_globals)]
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 
 use crate::{native_enum, string::ObsString, wrapper::PtrWrapper};
 use num_traits::{one, Bounded, Float, Num, NumCast, PrimInt, ToPrimitive};
@@ -71,6 +72,12 @@ impl PtrWrapper for Properties {
 
     fn as_ptr(&self) -> *const Self::Pointer {
         self.pointer
+    }
+}
+
+impl Default for Properties {
+    fn default() -> Self {
+        Properties::new()
     }
 }
 
@@ -304,6 +311,10 @@ impl<T: Num + Bounded + Copy> NumberProp<T> {
 
 pub trait ObsProp {
     /// Callback to add this property to a [`obs_properties_t`].
+    ///
+    /// # Safety
+    ///
+    /// Must call with a valid pointer.
     unsafe fn add_to_props(self, p: *mut obs_properties_t, name: ObsString, description: ObsString);
 }
 

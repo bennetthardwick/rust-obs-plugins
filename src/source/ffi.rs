@@ -3,7 +3,11 @@ use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::video::VideoDataContext;
 use super::{traits::*, SourceContext};
 use super::{EnumActiveContext, EnumAllContext};
-use crate::{data::DataObj, hotkey::Hotkey, string::ObsString, wrapper::PtrWrapper};
+use crate::{
+    data::DataObj,
+    hotkey::{Hotkey, HotkeyCallbacks},
+    wrapper::PtrWrapper,
+};
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
@@ -18,13 +22,14 @@ use obs_sys::{
 
 struct DataWrapper<D> {
     data: D,
+    #[allow(clippy::type_complexity)]
     hotkey_callbacks: HashMap<obs_hotkey_id, Box<dyn FnMut(&mut Hotkey, &mut D)>>,
 }
 
 impl<D> DataWrapper<D> {
     pub(crate) unsafe fn register_callbacks(
         &mut self,
-        callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
+        callbacks: HotkeyCallbacks<D>,
         source: *mut obs_source_t,
         data: *mut c_void,
     ) {
@@ -55,7 +60,7 @@ macro_rules! impl_simple_fn {
     ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
         item! {
             pub unsafe extern "C" fn $name<D: $trait>(
-                data: *mut ::std::os::raw::c_void,
+                data: *mut std::os::raw::c_void,
             ) $(-> $ret)? {
                 let wrapper = &mut *(data as *mut DataWrapper<D>);
                 D::$name(&mut wrapper.data)
@@ -98,7 +103,7 @@ pub unsafe extern "C" fn create<D: Sourceable>(
         .unwrap()
         .register_callbacks(callbacks, source, pointer as *mut c_void);
 
-    return pointer as *mut c_void;
+    pointer as *mut c_void
 }
 
 pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
@@ -115,7 +120,7 @@ pub unsafe extern "C" fn update<D: UpdateSource>(data: *mut c_void, settings: *m
 }
 
 pub unsafe extern "C" fn video_render<D: VideoRenderSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     _effect: *mut gs_effect_t,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
@@ -125,7 +130,7 @@ pub unsafe extern "C" fn video_render<D: VideoRenderSource>(
 }
 
 pub unsafe extern "C" fn audio_render<D: AudioRenderSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     _ts_out: *mut u64,
     _audio_output: *mut obs_source_audio_mix,
     _mixers: u32,
@@ -140,7 +145,7 @@ pub unsafe extern "C" fn audio_render<D: AudioRenderSource>(
 }
 
 pub unsafe extern "C" fn get_properties<D: GetPropertiesSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
 ) -> *mut obs_properties {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let properties = D::get_properties(&mut wrapper.data);
@@ -148,9 +153,9 @@ pub unsafe extern "C" fn get_properties<D: GetPropertiesSource>(
 }
 
 pub unsafe extern "C" fn enum_active_sources<D: EnumActiveSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     _enum_callback: obs_source_enum_proc_t,
-    _param: *mut ::std::os::raw::c_void,
+    _param: *mut std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let context = EnumActiveContext {};
@@ -158,9 +163,9 @@ pub unsafe extern "C" fn enum_active_sources<D: EnumActiveSource>(
 }
 
 pub unsafe extern "C" fn enum_all_sources<D: EnumAllSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     _enum_callback: obs_source_enum_proc_t,
-    _param: *mut ::std::os::raw::c_void,
+    _param: *mut std::os::raw::c_void,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let context = EnumAllContext {};
@@ -173,7 +178,7 @@ impl_simple_fn!(
 );
 
 pub unsafe extern "C" fn video_tick<D: VideoTickSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     seconds: f32,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
@@ -181,7 +186,7 @@ pub unsafe extern "C" fn video_tick<D: VideoTickSource>(
 }
 
 pub unsafe extern "C" fn filter_audio<D: FilterAudioSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     audio: *mut obs_audio_data,
 ) -> *mut obs_audio_data {
     let mut context = AudioDataContext::from_raw(audio);
@@ -191,7 +196,7 @@ pub unsafe extern "C" fn filter_audio<D: FilterAudioSource>(
 }
 
 pub unsafe extern "C" fn filter_video<D: FilterVideoSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     video: *mut obs_source_frame,
 ) -> *mut obs_source_frame {
     let mut context = VideoDataContext::from_raw(video);
@@ -201,7 +206,7 @@ pub unsafe extern "C" fn filter_video<D: FilterVideoSource>(
 }
 
 pub unsafe extern "C" fn media_play_pause<D: MediaPlayPauseSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     pause: bool,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
@@ -209,14 +214,14 @@ pub unsafe extern "C" fn media_play_pause<D: MediaPlayPauseSource>(
 }
 
 pub unsafe extern "C" fn media_get_state<D: MediaGetStateSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
 ) -> obs_media_state {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
     D::get_state(&mut wrapper.data).to_native()
 }
 
 pub unsafe extern "C" fn media_set_time<D: MediaSetTimeSource>(
-    data: *mut ::std::os::raw::c_void,
+    data: *mut std::os::raw::c_void,
     milliseconds: i64,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
@@ -227,7 +232,7 @@ macro_rules! impl_media {
     ($($name:ident => $trait:ident $(-> $ret:ty)?)*) => ($(
         item! {
             pub unsafe extern "C" fn [<media_$name>]<D: $trait>(
-                data: *mut ::std::os::raw::c_void,
+                data: *mut std::os::raw::c_void,
             ) $(-> $ret)? {
                 let wrapper = &mut *(data as *mut DataWrapper<D>);
                 D::$name(&mut wrapper.data)

@@ -193,7 +193,7 @@ impl GraphicsEffectParam {
         let shader_type = ShaderParamType::from_raw(info.type_);
         let name = CString::from(CStr::from_ptr(info.name))
             .into_string()
-            .unwrap_or(String::from("{unknown-param-name}"));
+            .unwrap_or_else(|_| String::from("{unknown-param-name}"));
 
         Self {
             raw,
@@ -382,15 +382,12 @@ impl Drop for GraphicsSamplerState {
 pub struct GraphicsEffectContext {}
 
 impl GraphicsEffectContext {
-    /// # Safety
-    /// GraphicsEffectContext has methods that should only be used in certain
-    /// situations. Constructing it at the wrong time could cause UB.
-    pub unsafe fn new() -> Self {
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
         Self {}
     }
 }
 
-impl GraphicsEffectContext {}
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum GraphicsColorFormat {
     UNKNOWN,
@@ -604,7 +601,7 @@ macro_rules! vector_impls {
                 }
             )*
 
-            pub unsafe fn as_ptr(&mut self) -> *mut $name {
+            pub fn as_ptr(&mut self) -> *mut $name {
                 &mut self.raw
             }
         }
@@ -667,7 +664,7 @@ impl GraphicsTexture {
         MappedTexture::new(self)
     }
 
-    pub unsafe fn as_ptr(&self) -> *mut gs_texture_t {
+    pub fn as_ptr(&self) -> *mut gs_texture_t {
         self.raw
     }
 }

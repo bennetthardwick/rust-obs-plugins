@@ -53,6 +53,9 @@ impl DataType {
 
 pub trait FromDataItem {
     fn typ() -> DataType;
+    /// # Safety
+    ///
+    /// Pointer must be valid.
     unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self;
 }
 
@@ -146,6 +149,12 @@ impl PtrWrapper for DataObj<'_> {
 
     fn as_ptr(&self) -> *const Self::Pointer {
         self.raw
+    }
+}
+
+impl Default for DataObj<'_> {
+    fn default() -> Self {
+        DataObj::new()
     }
 }
 
@@ -270,6 +279,10 @@ impl PtrWrapper for DataArray<'_> {
 impl DataArray<'_> {
     pub fn len(&self) -> usize {
         unsafe { obs_data_array_count(self.raw) as usize }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn get(&self, index: usize) -> Option<DataObj> {

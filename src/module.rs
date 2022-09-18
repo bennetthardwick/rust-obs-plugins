@@ -34,10 +34,9 @@ impl LoadContext {
     }
 
     pub fn register_source(&mut self, source: SourceInfo) {
-        let pointer = unsafe {
-            let pointer = source.into_raw();
+        let pointer = source.into_raw();
+        unsafe {
             obs_register_source_s(pointer, std::mem::size_of::<obs_source_info>() as size_t);
-            pointer
         };
         self.sources.push(pointer);
     }

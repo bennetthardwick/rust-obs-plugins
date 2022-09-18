@@ -83,7 +83,10 @@ pub struct SourceContext {
 }
 
 impl SourceContext {
-    pub fn from_raw(source: *mut obs_source_t) -> Self {
+    /// # Safety
+    ///
+    /// Must call with a valid pointer.
+    pub unsafe fn from_raw(source: *mut obs_source_t) -> Self {
         Self {
             inner: unsafe { obs_source_get_ref(source) },
         }
@@ -92,7 +95,7 @@ impl SourceContext {
 
 impl Clone for SourceContext {
     fn clone(&self) -> Self {
-        Self::from_raw(self.inner)
+        unsafe { Self::from_raw(self.inner) }
     }
 }
 
@@ -279,6 +282,7 @@ impl SourceContext {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn process_filter_tech<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
         &mut self,
         _render: &mut VideoRenderContext,
@@ -325,9 +329,7 @@ pub struct SourceInfo {
 }
 
 impl SourceInfo {
-    /// # Safety
-    /// Creates a raw pointer from a box and could cause UB is misused.
-    pub unsafe fn into_raw(self) -> *mut obs_source_info {
+    pub fn into_raw(self) -> *mut obs_source_info {
         Box::into_raw(self.info)
     }
 }
@@ -335,6 +337,12 @@ impl SourceInfo {
 impl AsRef<obs_source_info> for SourceInfo {
     fn as_ref(&self) -> &obs_source_info {
         self.info.as_ref()
+    }
+}
+
+impl AsMut<obs_source_info> for SourceInfo {
+    fn as_mut(&mut self) -> &mut obs_source_info {
+        self.info.as_mut()
     }
 }
 

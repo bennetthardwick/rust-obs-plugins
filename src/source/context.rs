@@ -1,5 +1,5 @@
 use super::audio::AudioRef;
-use crate::hotkey::Hotkey;
+use crate::hotkey::{Hotkey, HotkeyCallbacks};
 use crate::prelude::DataObj;
 use crate::string::ObsString;
 use obs_sys::obs_get_audio;
@@ -27,7 +27,7 @@ impl Default for GlobalContext {
 }
 
 pub struct CreatableSourceContext<'a, D> {
-    pub(crate) hotkey_callbacks: Vec<(ObsString, ObsString, Box<dyn FnMut(&mut Hotkey, &mut D)>)>,
+    pub(crate) hotkey_callbacks: HotkeyCallbacks<D>,
     pub settings: DataObj<'a>,
     pub global: &'a mut GlobalContext,
 }
@@ -52,7 +52,6 @@ impl<'a, D> CreatableSourceContext<'a, D> {
     }
 
     // Inherited from child contexts
-
     pub fn with_audio<T, F: FnOnce(&AudioRef) -> T>(&self, func: F) -> T {
         self.global.with_audio(func)
     }

@@ -3,6 +3,10 @@ use std::mem::forget;
 pub trait PtrWrapper: Sized {
     type Pointer;
     /// Wraps the pointer into a **owned** wrapper.
+    ///
+    /// # Safety
+    ///
+    /// Pointer must be valid.
     unsafe fn from_raw(raw: *mut Self::Pointer) -> Self;
 
     /// Returns the inner pointer.

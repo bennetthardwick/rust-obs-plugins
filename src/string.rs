@@ -16,7 +16,7 @@ impl ObsString {
 
     pub fn as_str(&self) -> &str {
         match self {
-            Self::Static(s) => *s,
+            Self::Static(s) => s,
             Self::Dynamic(s) => s.as_c_str().to_str().unwrap(),
         }
     }

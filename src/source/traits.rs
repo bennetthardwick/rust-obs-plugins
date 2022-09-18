@@ -1,3 +1,5 @@
+use obs_sys::{obs_key_event, obs_mouse_event};
+
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
 use super::video::VideoDataContext;
 use super::{audio::AudioDataContext, media::MediaState};
@@ -33,6 +35,32 @@ simple_trait!(
 
 pub trait UpdateSource: Sized {
     fn update(&mut self, settings: &mut DataObj, context: &mut GlobalContext);
+}
+
+pub trait MouseWheelSource: Sized {
+    fn mouse_wheel(&mut self, event: obs_mouse_event, xdelta: i32, ydelta: i32);
+}
+
+pub trait MouseClickSource: Sized {
+    fn mouse_click(
+        &mut self,
+        event: obs_mouse_event,
+        button: super::MouseButton,
+        pressed: bool,
+        click_count: u8,
+    );
+}
+
+pub trait MouseMoveSource: Sized {
+    fn mouse_move(&mut self, event: obs_mouse_event, leave: bool);
+}
+
+pub trait KeyClickSource: Sized {
+    fn key_click(&mut self, event: obs_key_event, pressed: bool);
+}
+
+pub trait FocusSource: Sized {
+    fn focus(&mut self, focused: bool);
 }
 
 pub trait VideoRenderSource: Sized {

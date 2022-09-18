@@ -10,14 +10,15 @@ use crate::{
 };
 use paste::item;
 use std::collections::HashMap;
+use std::convert::TryFrom;
 use std::ffi::c_void;
 use std::mem::forget;
 use std::os::raw::c_char;
 
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
-    obs_hotkey_t, obs_media_state, obs_properties, obs_source_audio_mix, obs_source_enum_proc_t,
-    obs_source_frame, obs_source_t, size_t,
+    obs_hotkey_t, obs_key_event, obs_media_state, obs_mouse_event, obs_properties,
+    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_frame, obs_source_t, size_t,
 };
 
 struct DataWrapper<D> {
@@ -271,4 +272,54 @@ pub unsafe extern "C" fn hotkey_callback<D>(
     if let Some(callback) = hotkey_callbacks.get_mut(&id) {
         callback(&mut key, data);
     }
+}
+
+pub unsafe extern "C" fn mouse_click<D: MouseClickSource>(
+    data: *mut std::os::raw::c_void,
+    event: *const obs_mouse_event,
+    type_: i32,
+    mouse_up: bool,
+    click_count: u32,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    D::mouse_click(
+        &mut wrapper.data,
+        *event,
+        super::MouseButton::try_from(type_ as u32).unwrap(),
+        !mouse_up,
+        click_count as u8,
+    )
+}
+
+pub unsafe extern "C" fn mouse_move<D: MouseMoveSource>(
+    data: *mut std::os::raw::c_void,
+    event: *const obs_mouse_event,
+    mouse_leave: bool,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    D::mouse_move(&mut wrapper.data, *event, mouse_leave);
+}
+
+pub unsafe extern "C" fn mouse_wheel<D: MouseWheelSource>(
+    data: *mut std::os::raw::c_void,
+    event: *const obs_mouse_event,
+    xdelta: i32,
+    ydelta: i32,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    D::mouse_wheel(&mut wrapper.data, *event, xdelta, ydelta);
+}
+
+pub unsafe extern "C" fn key_click<D: KeyClickSource>(
+    data: *mut std::os::raw::c_void,
+    event: *const obs_key_event,
+    key_up: bool,
+) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    D::key_click(&mut wrapper.data, *event, !key_up);
+}
+
+pub unsafe extern "C" fn focus<D: FocusSource>(data: *mut std::os::raw::c_void, focus: bool) {
+    let wrapper = &mut *(data as *mut DataWrapper<D>);
+    D::focus(&mut wrapper.data, focus);
 }

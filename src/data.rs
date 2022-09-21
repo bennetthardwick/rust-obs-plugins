@@ -12,6 +12,8 @@ use obs_sys::{
     obs_data_release, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY,
     obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT,
     obs_data_type_OBS_DATA_STRING, size_t,
+    obs_data_set_default_string,
+    obs_data_set_default_double,
 };
 
 use crate::{string::ObsString, wrapper::PtrWrapper};
@@ -128,6 +130,28 @@ impl FromDataItem for DataArray<'_> {
     }
 }
 
+pub trait DefaultValue {
+    fn set_default<N: Into<ObsString>>(&self, settings: &DataObj, name: N);
+}
+
+impl DefaultValue for ObsString {
+    fn set_default<N: Into<ObsString>>(&self, settings: &DataObj, name: N) {
+        let name = name.into();
+        unsafe {
+            obs_data_set_default_string(settings.as_ptr() as *mut _, name.as_ptr(), self.as_ptr());
+        }
+    }
+}
+
+impl DefaultValue for f32 {
+    fn set_default<N: Into<ObsString>>(&self, settings: &DataObj, name: N) {
+        let name = name.into();
+        unsafe {
+            obs_data_set_default_double(settings.as_ptr() as *mut _, name.as_ptr(), (*self).into());
+        }
+    }
+}
+
 /// A smart pointer to `obs_data_t`
 pub struct DataObj<'parent> {
     raw: *mut obs_data_t,
@@ -235,6 +259,10 @@ impl DataObj<'_> {
         unsafe {
             obs_data_erase(self.raw, name.as_ptr());
         }
+    }
+
+    pub fn set_default<T: DefaultValue, N: Into<ObsString>>(&mut self, name: N, value: T) {
+        value.set_default(&self, name);
     }
 }
 

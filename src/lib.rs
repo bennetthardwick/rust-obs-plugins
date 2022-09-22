@@ -44,7 +44,8 @@
 //! struct TestSource;
 //!
 //! // Implement the Sourceable trait for TestSource, this is required for each
-//! source. // It allows you to specify the source ID and type.
+//! // source.
+//! // It allows you to specify the source ID and type.
 //! impl Sourceable for TestSource {
 //!     fn get_id() -> ObsString {
 //!         obs_string!("test_source")
@@ -54,8 +55,11 @@
 //!         SourceType::FILTER
 //!     }
 //!
-//!     fn create(create: &mut CreatableSourceContext<Self>, _source:
-//! SourceContext) -> Self {         Self
+//!     fn create(
+//!         create: &mut CreatableSourceContext<Self>,
+//!         _source: SourceContext
+//!     ) -> Self {
+//!         Self
 //!     }
 //! }
 //!
@@ -67,7 +71,7 @@
 //! }
 //!
 //! // Implement the Module trait for TestModule. This will handle the creation
-//! of the source and // has some methods for telling OBS a bit about itself.
+//! // of the source and has some methods for telling OBS a bit about itself.
 //! impl Module for TestModule {
 //!     fn new(context: ModuleContext) -> Self {
 //!         Self { context }
@@ -78,12 +82,13 @@
 //!     }
 //!    
 //!     // Load the module - create all sources, returning true if all went
-//! well.     fn load(&mut self, load_context: &mut LoadContext) -> bool {
+//!     // well.
+//!     fn load(&mut self, load_context: &mut LoadContext) -> bool {
 //!         // Create the source
 //!         let source = load_context
 //!             .create_source_builder::<TestSource>()
 //!             // Since GetNameSource is implemented, this method needs to be
-//! called to             // enable it.
+//!             // called to enable it.
 //!             .enable_get_name()
 //!             .build();
 //!    

@@ -349,7 +349,7 @@ impl VideoRenderSource for ScrollFocusFilter {
 impl UpdateSource for ScrollFocusFilter {
     fn update(&mut self, settings: &mut DataObj, _context: &mut GlobalContext) {
         let data = self;
-        if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
+        if let Some(zoom) = settings.get::<f64>(obs_string!("zoom")) {
             data.from_zoom = data.current_zoom;
             data.internal_zoom = 1. / zoom;
             data.target_zoom = 1. / zoom;

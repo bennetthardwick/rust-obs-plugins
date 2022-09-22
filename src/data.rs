@@ -237,7 +237,7 @@ impl DataObj<'_> {
     }
 
     /// Fetches a property from this object. Numbers are implicitly casted.
-    pub fn get<T: FromDataItem, N: Into<ObsString>>(&self, name: N) -> Option<T> {
+    pub fn get<T: FromDataItem>(&self, name: impl Into<ObsString>) -> Option<T> {
         let name = name.into();
         let mut item_ptr = unsafe { obs_data_item_byname(self.as_ptr() as *mut _, name.as_ptr()) };
         if item_ptr.is_null() {
@@ -263,10 +263,10 @@ impl DataObj<'_> {
     /// Notes
     /// -----
     /// Setting a default value for a [`DataArray`] is not supported and will panic.
-    pub fn set_default<N: Into<ObsString>, T: FromDataItem, V: Into<T>>(
+    pub fn set_default<T: FromDataItem>(
         &mut self,
-        name: N,
-        value: V,
+        name: impl Into<ObsString>,
+        value: impl Into<T>,
     ) {
         unsafe { T::set_default_unchecked(self.as_ptr_mut(), name.into(), value.into()) }
     }

@@ -36,9 +36,9 @@ pub fn find_windows_obs_lib() {
         return;
     }
     // MSVC doesn't link against normal libraries,
-    // and Windows doesn't have a standard mechanism for locating build-time dependencies.
-    // Try to locate an OBS installation using the registry and then generate a .lib file
-    // containing all symbols exported by libobs.
+    // and Windows doesn't have a standard mechanism for locating build-time
+    // dependencies. Try to locate an OBS installation using the registry and
+    // then generate a .lib file containing all symbols exported by libobs.
     let target = env::var("TARGET").unwrap();
     if let Some((dll_path, arch)) = RegKey::predef(HKEY_LOCAL_MACHINE)
         .open_subkey_with_flags("SOFTWARE\\OBS Studio", KEY_READ | KEY_WOW64_32KEY)

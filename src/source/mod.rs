@@ -14,18 +14,29 @@ pub use media::*;
 pub use traits::*;
 
 use obs_sys::{
-    obs_filter_get_target, obs_source_active, obs_source_enabled, obs_source_get_base_height,
-    obs_source_get_base_width, obs_source_get_height, obs_source_get_id, obs_source_get_name,
-    obs_source_get_type, obs_source_get_width, obs_source_info, obs_source_media_ended,
-    obs_source_media_get_duration, obs_source_media_get_state, obs_source_media_get_time,
-    obs_source_media_next, obs_source_media_play_pause, obs_source_media_previous,
-    obs_source_media_restart, obs_source_media_set_time, obs_source_media_started,
-    obs_source_media_stop, obs_source_process_filter_begin, obs_source_process_filter_end,
-    obs_source_process_filter_tech_end, obs_source_set_enabled, obs_source_set_name,
-    obs_source_showing, obs_source_skip_video_filter, obs_source_t, obs_source_type,
-    obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
+    obs_filter_get_target, obs_icon_type, obs_icon_type_OBS_ICON_TYPE_AUDIO_INPUT,
+    obs_icon_type_OBS_ICON_TYPE_AUDIO_OUTPUT, obs_icon_type_OBS_ICON_TYPE_BROWSER,
+    obs_icon_type_OBS_ICON_TYPE_CAMERA, obs_icon_type_OBS_ICON_TYPE_COLOR,
+    obs_icon_type_OBS_ICON_TYPE_CUSTOM, obs_icon_type_OBS_ICON_TYPE_DESKTOP_CAPTURE,
+    obs_icon_type_OBS_ICON_TYPE_GAME_CAPTURE, obs_icon_type_OBS_ICON_TYPE_IMAGE,
+    obs_icon_type_OBS_ICON_TYPE_MEDIA, obs_icon_type_OBS_ICON_TYPE_SLIDESHOW,
+    obs_icon_type_OBS_ICON_TYPE_TEXT, obs_icon_type_OBS_ICON_TYPE_UNKNOWN,
+    obs_icon_type_OBS_ICON_TYPE_WINDOW_CAPTURE, obs_mouse_button_type,
+    obs_mouse_button_type_MOUSE_LEFT, obs_mouse_button_type_MOUSE_MIDDLE,
+    obs_mouse_button_type_MOUSE_RIGHT, obs_source_active, obs_source_enabled,
+    obs_source_get_base_height, obs_source_get_base_width, obs_source_get_height,
+    obs_source_get_id, obs_source_get_name, obs_source_get_ref, obs_source_get_type,
+    obs_source_get_width, obs_source_info, obs_source_media_ended, obs_source_media_get_duration,
+    obs_source_media_get_state, obs_source_media_get_time, obs_source_media_next,
+    obs_source_media_play_pause, obs_source_media_previous, obs_source_media_restart,
+    obs_source_media_set_time, obs_source_media_started, obs_source_media_stop,
+    obs_source_process_filter_begin, obs_source_process_filter_end,
+    obs_source_process_filter_tech_end, obs_source_release, obs_source_set_enabled,
+    obs_source_set_name, obs_source_showing, obs_source_skip_video_filter, obs_source_t,
+    obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_VIDEO, obs_source_get_ref, obs_source_release,
+    obs_source_update, obs_text_type, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA,
+    OBS_SOURCE_INTERACTION, OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -34,12 +45,35 @@ use super::{
     },
     string::ObsString,
 };
-use crate::{data::DataObj, wrapper::PtrWrapper};
+use crate::{data::DataObj, native_enum, wrapper::PtrWrapper};
 
 use std::{
     ffi::{CStr, CString},
     marker::PhantomData,
 };
+
+native_enum!(MouseButton, obs_mouse_button_type {
+    Left => MOUSE_LEFT,
+    Middle => MOUSE_MIDDLE,
+    Right => MOUSE_RIGHT
+});
+
+native_enum!(Icon, obs_icon_type {
+    Unknown => OBS_ICON_TYPE_UNKNOWN,
+    Image => OBS_ICON_TYPE_IMAGE,
+    Color => OBS_ICON_TYPE_COLOR,
+    Slideshow => OBS_ICON_TYPE_SLIDESHOW,
+    AudioInput => OBS_ICON_TYPE_AUDIO_INPUT,
+    AudioOutput => OBS_ICON_TYPE_AUDIO_OUTPUT,
+    DesktopCapture => OBS_ICON_TYPE_DESKTOP_CAPTURE,
+    WindowCapture => OBS_ICON_TYPE_WINDOW_CAPTURE,
+    GameCapture => OBS_ICON_TYPE_GAME_CAPTURE,
+    Camera => OBS_ICON_TYPE_CAMERA,
+    Text => OBS_ICON_TYPE_TEXT,
+    Media => OBS_ICON_TYPE_MEDIA,
+    Browser => OBS_ICON_TYPE_BROWSER,
+    Custom => OBS_ICON_TYPE_CUSTOM
+});
 
 /// OBS source type
 ///
@@ -73,7 +107,8 @@ impl SourceType {
     }
 }
 
-/// Context wrapping an OBS source - video / audio elements which are displayed to the screen.
+/// Context wrapping an OBS source - video / audio elements which are displayed
+/// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
 pub struct SourceContext {
@@ -81,24 +116,25 @@ pub struct SourceContext {
 }
 
 impl SourceContext {
-    pub fn from_raw(source: *mut obs_source_t) -> Self {
+    /// # Safety
+    ///
+    /// Must call with a valid pointer.
+    pub unsafe fn from_raw(source: *mut obs_source_t) -> Self {
         Self {
-            inner: unsafe { obs_source_get_ref(source) }
+            inner: obs_source_get_ref(source),
         }
     }
 }
 
 impl Clone for SourceContext {
     fn clone(&self) -> Self {
-        Self::from_raw(self.inner)
+        unsafe { Self::from_raw(self.inner) }
     }
 }
 
 impl Drop for SourceContext {
     fn drop(&mut self) {
-        unsafe {
-            obs_source_release(self.inner)
-        }
+        unsafe { obs_source_release(self.inner) }
     }
 }
 
@@ -251,7 +287,8 @@ impl SourceContext {
     }
 
     /// Run a function to do drawing - if the source is a filter.
-    /// This function is wrapped by calls that automatically handle effect-based filter processing.
+    /// This function is wrapped by calls that automatically handle effect-based
+    /// filter processing.
     ///
     /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_process_filter_begin)
     ///
@@ -278,6 +315,7 @@ impl SourceContext {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn process_filter_tech<F: FnOnce(&mut GraphicsEffectContext, &mut GraphicsEffect)>(
         &mut self,
         _render: &mut VideoRenderContext,
@@ -324,10 +362,12 @@ pub struct SourceInfo {
 }
 
 impl SourceInfo {
-    /// # Safety
-    /// Creates a raw pointer from a box and could cause UB is misused.
-    pub unsafe fn into_raw(self) -> *mut obs_source_info {
+    pub fn into_raw(self) -> *mut obs_source_info {
         Box::into_raw(self.info)
+    }
+
+    pub fn set_icon(&mut self, icon: Icon) {
+        self.info.icon_type = icon.into();
     }
 }
 
@@ -337,11 +377,17 @@ impl AsRef<obs_source_info> for SourceInfo {
     }
 }
 
+impl AsMut<obs_source_info> for SourceInfo {
+    fn as_mut(&mut self) -> &mut obs_source_info {
+        self.info.as_mut()
+    }
+}
+
 /// The SourceInfoBuilder that handles creating the [SourceInfo](https://obsproject.com/docs/reference-sources.html#c.obs_source_info) object.
 ///
-/// For each trait that is implemented for the Source, it needs to be enabled using this builder.
-/// If an struct called `FocusFilter` implements `CreateSource` and `GetNameSource` it would need
-/// to enable those features.
+/// For each trait that is implemented for the Source, it needs to be enabled
+/// using this builder. If an struct called `FocusFilter` implements
+/// `CreateSource` and `GetNameSource` it would need to enable those features.
 ///
 /// ```rs
 /// let source = load_context
@@ -350,7 +396,6 @@ impl AsRef<obs_source_info> for SourceInfo {
 ///  .enable_create()
 ///  .build();
 /// ```
-///
 pub struct SourceInfoBuilder<D: Sourceable> {
     __data: PhantomData<D>,
     info: obs_source_info,
@@ -384,9 +429,23 @@ impl<D: Sourceable> SourceInfoBuilder<D> {
             self.info.output_flags |= OBS_SOURCE_CONTROLLABLE_MEDIA;
         }
 
+        if self.info.mouse_click.is_some()
+            || self.info.mouse_move.is_some()
+            || self.info.mouse_wheel.is_some()
+            || self.info.focus.is_some()
+            || self.info.key_click.is_some()
+        {
+            self.info.output_flags |= OBS_SOURCE_INTERACTION;
+        }
+
         SourceInfo {
             info: Box::new(self.info),
         }
+    }
+
+    pub fn with_icon(mut self, icon: Icon) -> Self {
+        self.info.icon_type = icon.into();
+        self
     }
 }
 
@@ -430,4 +489,9 @@ impl_source_builder! {
     media_get_time => MediaGetTimeSource
     media_set_time => MediaSetTimeSource
     media_get_state => MediaGetStateSource
+    mouse_wheel => MouseWheelSource
+    mouse_click => MouseClickSource
+    mouse_move => MouseMoveSource
+    key_click => KeyClickSource
+    focus => FocusSource
 }

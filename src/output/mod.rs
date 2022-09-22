@@ -1,16 +1,15 @@
-
 use paste::item;
 
 use std::marker::PhantomData;
 
-use obs_sys::{obs_output_info, OBS_OUTPUT_VIDEO, OBS_OUTPUT_AUDIO};
+use obs_sys::{obs_output_info, OBS_OUTPUT_AUDIO, OBS_OUTPUT_VIDEO};
 
-pub mod traits;
-mod ffi;
 pub mod context;
+mod ffi;
+pub mod traits;
 
-pub use traits::*;
 pub use context::*;
+pub use traits::*;
 
 pub struct OutputInfo {
     info: Box<obs_output_info>,
@@ -32,9 +31,9 @@ impl AsRef<obs_output_info> for OutputInfo {
 
 /// The OutputInfoBuilder that handles creating the [OutputInfo](https://obsproject.com/docs/reference-outputs.html#c.obs_output_info) object.
 ///
-/// For each trait that is implemented for the Output, it needs to be enabled using this builder.
-/// If an struct called `FocusFilter` implements `CreateOutput` and `GetNameOutput` it would need
-/// to enable those features.
+/// For each trait that is implemented for the Output, it needs to be enabled
+/// using this builder. If an struct called `FocusFilter` implements
+/// `CreateOutput` and `GetNameOutput` it would need to enable those features.
 ///
 /// ```rs
 /// let output = load_context
@@ -43,7 +42,6 @@ impl AsRef<obs_output_info> for OutputInfo {
 ///  .enable_create()
 ///  .build();
 /// ```
-///
 pub struct OutputInfoBuilder<D: Outputable> {
     __data: PhantomData<D>,
     info: obs_output_info,

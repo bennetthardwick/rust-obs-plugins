@@ -31,6 +31,7 @@ macro_rules! native_enum {
                 $($rust),*
             }
 
+            #[allow(clippy::from_over_into)]
             impl Into<$native_name> for $name {
                 fn into(self) -> obs_text_type {
                     match self {
@@ -40,11 +41,11 @@ macro_rules! native_enum {
             }
 
             impl std::convert::TryFrom<$native_name> for $name {
-                type Error = crate::native_enum::NativeParsingError;
+                type Error = $crate::native_enum::NativeParsingError;
                 fn try_from(value: $native_name) -> Result<Self, Self::Error> {
                     match value {
                         $([<$native_name _ $native>] => Ok(Self::$rust)),*,
-                        _ => Err(crate::native_enum::NativeParsingError::new(stringify!($name), value as i64))
+                        _ => Err($crate::native_enum::NativeParsingError::new(stringify!($name), value as i64))
                     }
                 }
             }

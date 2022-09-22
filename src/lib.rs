@@ -1,11 +1,12 @@
 //! # Rust OBS Wrapper
 //!
-//! A safe wrapper around the OBS API, useful for creating OBS sources, filters and effects.
+//! A safe wrapper around the OBS API, useful for creating OBS sources, filters
+//! and effects.
 //!
 //! ## Usage
 //!
-//! In your `Cargo.toml` file add the following section, substituting `<module-name>` for the name of
-//! the module:
+//! In your `Cargo.toml` file add the following section, substituting
+//! `<module-name>` for the name of the module:
 //!
 //! ```toml
 //! [dependencies]
@@ -42,7 +43,8 @@
 //! // The source that will be shown inside OBS.
 //! struct TestSource;
 //!
-//! // Implement the Sourceable trait for TestSource, this is required for each source.
+//! // Implement the Sourceable trait for TestSource, this is required for each
+//! // source.
 //! // It allows you to specify the source ID and type.
 //! impl Sourceable for TestSource {
 //!     fn get_id() -> ObsString {
@@ -53,7 +55,10 @@
 //!         SourceType::FILTER
 //!     }
 //!
-//!     fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
+//!     fn create(
+//!         create: &mut CreatableSourceContext<Self>,
+//!         _source: SourceContext
+//!     ) -> Self {
 //!         Self
 //!     }
 //! }
@@ -65,8 +70,8 @@
 //!     }
 //! }
 //!
-//! // Implement the Module trait for TestModule. This will handle the creation of the source and
-//! // has some methods for telling OBS a bit about itself.
+//! // Implement the Module trait for TestModule. This will handle the creation
+//! // of the source and has some methods for telling OBS a bit about itself.
 //! impl Module for TestModule {
 //!     fn new(context: ModuleContext) -> Self {
 //!         Self { context }
@@ -76,13 +81,14 @@
 //!         &self.context
 //!     }
 //!    
-//!     // Load the module - create all sources, returning true if all went well.
+//!     // Load the module - create all sources, returning true if all went
+//!     // well.
 //!     fn load(&mut self, load_context: &mut LoadContext) -> bool {
 //!         // Create the source
 //!         let source = load_context
 //!             .create_source_builder::<TestSource>()
-//!             // Since GetNameSource is implemented, this method needs to be called to
-//!             // enable it.
+//!             // Since GetNameSource is implemented, this method needs to be
+//!             // called to enable it.
 //!             .enable_get_name()
 //!             .build();
 //!    
@@ -110,8 +116,9 @@
 //! ### Installing
 //!
 //! 1. Run `cargo build --release`
-//! 2. Copy `/target/release/<module-name>.so` to your OBS plugins folder (`/usr/lib/obs-plugins/`)
-//! 3. The plugin should be available for use from inside OBS
+//! 2. Copy `/target/release/<module-name>.so` to your OBS plugins folder
+//! (`/usr/lib/obs-plugins/`) 3. The plugin should be available for use from
+//! inside OBS
 
 /// Raw bindings of OBS C API
 pub use obs_sys;
@@ -125,16 +132,16 @@ mod hotkey;
 pub mod log;
 /// Tools for creating modules
 pub mod module;
+/// Tools for creating outputs
+pub mod output;
 /// Tools for creating properties
 pub mod properties;
 /// Tools for creating sources
 pub mod source;
-/// Tools for creating outputs
-pub mod output;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper
-mod wrapper;
+pub mod wrapper;
 
 mod native_enum;
 

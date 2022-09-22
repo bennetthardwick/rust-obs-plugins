@@ -2,7 +2,9 @@ mod server;
 
 use server::{Server, WindowSnapshot};
 
-use obs_wrapper::{graphics::*, obs_register_module, obs_string, prelude::*, source::*, properties::*};
+use obs_wrapper::{
+    graphics::*, obs_register_module, obs_string, prelude::*, properties::*, source::*,
+};
 
 use crossbeam_channel::{unbounded, Receiver, Sender};
 
@@ -295,11 +297,7 @@ impl VideoTickSource for ScrollFocusFilter {
 }
 
 impl VideoRenderSource for ScrollFocusFilter {
-    fn video_render(
-        &mut self,
-        _context: &mut GlobalContext,
-        render: &mut VideoRenderContext,
-    ) {
+    fn video_render(&mut self, _context: &mut GlobalContext, render: &mut VideoRenderContext) {
         let data = self;
         let effect = &mut data.effect;
         let source = &mut data.source;
@@ -351,7 +349,7 @@ impl VideoRenderSource for ScrollFocusFilter {
 impl UpdateSource for ScrollFocusFilter {
     fn update(&mut self, settings: &mut DataObj, _context: &mut GlobalContext) {
         let data = self;
-        if let Some(zoom) = settings.get::<f64, _>(obs_string!("zoom")) {
+        if let Some(zoom) = settings.get::<f64>(obs_string!("zoom")) {
             data.from_zoom = data.current_zoom;
             data.internal_zoom = 1. / zoom;
             data.target_zoom = 1. / zoom;

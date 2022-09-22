@@ -44,7 +44,8 @@ use std::{os::raw::c_int, slice};
 use super::string::ObsString;
 
 /// Guard to guarantee that we exit graphics context properly.
-/// This does not prevent one from calling APIs that are not supposed to be called outside of the context.
+/// This does not prevent one from calling APIs that are not supposed to be
+/// called outside of the context.
 struct GraphicsGuard;
 
 impl GraphicsGuard {
@@ -183,8 +184,8 @@ pub struct GraphicsEffectParam {
 
 impl GraphicsEffectParam {
     /// # Safety
-    /// Creates a GraphicsEffectParam from a mutable reference. This data could be modified
-    /// somewhere else so this is UB.
+    /// Creates a GraphicsEffectParam from a mutable reference. This data could
+    /// be modified somewhere else so this is UB.
     pub unsafe fn from_raw(raw: *mut gs_eparam_t) -> Self {
         let mut info = gs_effect_param_info::default();
         gs_effect_get_param_info(raw, &mut info);
@@ -192,7 +193,7 @@ impl GraphicsEffectParam {
         let shader_type = ShaderParamType::from_raw(info.type_);
         let name = CString::from(CStr::from_ptr(info.name))
             .into_string()
-            .unwrap_or(String::from("{unknown-param-name}"));
+            .unwrap_or_else(|_| String::from("{unknown-param-name}"));
 
         Self {
             raw,
@@ -384,12 +385,11 @@ impl GraphicsEffectContext {
     /// # Safety
     /// GraphicsEffectContext has methods that should only be used in certain situations.
     /// Constructing it at the wrong time could cause UB.
-    pub unsafe fn new() -> Self {
+    pub(crate) unsafe fn new() -> Self {
         Self {}
     }
 }
 
-impl GraphicsEffectContext {}
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
 pub enum GraphicsColorFormat {
     UNKNOWN,
@@ -603,7 +603,7 @@ macro_rules! vector_impls {
                 }
             )*
 
-            pub unsafe fn as_ptr(&mut self) -> *mut $name {
+            pub fn as_ptr(&mut self) -> *mut $name {
                 &mut self.raw
             }
         }
@@ -666,7 +666,7 @@ impl GraphicsTexture {
         MappedTexture::new(self)
     }
 
-    pub unsafe fn as_ptr(&self) -> *mut gs_texture_t {
+    pub fn as_ptr(&self) -> *mut gs_texture_t {
         self.raw
     }
 }

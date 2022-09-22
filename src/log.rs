@@ -9,9 +9,9 @@ use obs_sys::{_bindgen_ty_1, blog, LOG_DEBUG, LOG_ERROR, LOG_INFO, LOG_WARNING};
 /// only enabled in debug builds of OBS, this logger provides a option
 /// to promote lower-level logs as `info`.
 ///
-/// You can also use any other logger implementation, but we recommend this since
-/// OBS also writes everything in its logging system to a file, which can be viewed
-/// if there is a problem and OBS is not started from a console.
+/// You can also use any other logger implementation, but we recommend this
+/// since OBS also writes everything in its logging system to a file, which can
+/// be viewed if there is a problem and OBS is not started from a console.
 ///
 /// # Examples
 ///
@@ -42,8 +42,8 @@ impl Logger {
         Self::default()
     }
 
-    /// Initializes this logger, setting this as the global logger. This MUST be called to be effective.
-    /// This may fail if there is already a logger.
+    /// Initializes this logger, setting this as the global logger. This MUST be
+    /// called to be effective. This may fail if there is already a logger.
     pub fn init(self) -> Result<(), SetLoggerError> {
         log::set_max_level(self.max_level);
         log::set_boxed_logger(Box::new(self))?;
@@ -109,7 +109,8 @@ fn to_native_level(level: Level, promote_debug: bool) -> _bindgen_ty_1 {
         Level::Info => LOG_INFO,
         _ => {
             if promote_debug {
-                // Debug logs are only enabled in debug builds of OBS, make them accessible as info if needed
+                // Debug logs are only enabled in debug builds of OBS, make them accessible as
+                // info if needed
                 LOG_INFO
             } else {
                 LOG_DEBUG

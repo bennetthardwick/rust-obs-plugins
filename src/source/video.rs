@@ -1,13 +1,11 @@
+use std::mem;
+
 use obs_sys::{
-    obs_source_frame,
-    video_output_get_width,
-    video_output_get_height,
-    video_output_get_frame_rate,
-    video_output_get_format,
-    video_t,
+    obs_source_frame, video_output_get_format, video_output_get_frame_rate,
+    video_output_get_height, video_output_get_width, video_t,
 };
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum VideoFormat {
     Unknown,
     None,
@@ -27,6 +25,16 @@ pub enum VideoFormat {
     I42A,
     YUVA,
     AYUV,
+}
+
+impl PartialEq for VideoFormat {
+    fn eq(&self, other: &Self) -> bool {
+        if matches!(self, VideoFormat::Unknown) || matches!(other, VideoFormat::Unknown) {
+            false
+        } else {
+            mem::discriminant(self) == mem::discriminant(other)
+        }
+    }
 }
 
 impl From<u32> for VideoFormat {
@@ -86,10 +94,12 @@ impl VideoDataContext {
     }
 }
 
+#[allow(unused)]
 pub struct VideoRef {
     pointer: *mut video_t,
 }
 
+#[allow(unused)]
 impl VideoRef {
     pub(crate) unsafe fn from_raw(pointer: *mut video_t) -> Self {
         Self { pointer }
@@ -97,12 +107,12 @@ impl VideoRef {
 
     pub(crate) fn get_width(&self) -> u32 {
         unsafe { video_output_get_width(self.pointer) }
-    } 
+    }
 
     pub(crate) fn get_height(&self) -> u32 {
         unsafe { video_output_get_height(self.pointer) }
     }
-    
+
     pub(crate) fn get_frame_rate(&self) -> f64 {
         unsafe { video_output_get_frame_rate(self.pointer) }
     }

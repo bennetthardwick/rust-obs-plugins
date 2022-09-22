@@ -1,6 +1,7 @@
 #![allow(non_upper_case_globals)]
+#![allow(clippy::not_unsafe_ptr_arg_deref)]
 
-use crate::{native_enum, wrapper::PtrWrapper, string::ObsString};
+use crate::{native_enum, string::ObsString, wrapper::PtrWrapper};
 use num_traits::{one, Bounded, Float, Num, NumCast, PrimInt, ToPrimitive};
 use obs_sys::{
     obs_combo_format, obs_combo_format_OBS_COMBO_FORMAT_FLOAT,
@@ -71,6 +72,12 @@ impl PtrWrapper for Properties {
 
     fn as_ptr(&self) -> *const Self::Pointer {
         self.pointer
+    }
+}
+
+impl Default for Properties {
+    fn default() -> Self {
+        Properties::new()
     }
 }
 
@@ -304,6 +311,10 @@ impl<T: Num + Bounded + Copy> NumberProp<T> {
 
 pub trait ObsProp {
     /// Callback to add this property to a [`obs_properties_t`].
+    ///
+    /// # Safety
+    ///
+    /// Must call with a valid pointer.
     unsafe fn add_to_props(self, p: *mut obs_properties_t, name: ObsString, description: ObsString);
 }
 
@@ -436,14 +447,13 @@ impl ObsProp for FontProp {
 /// "Example types 1 and 2 (*.ex1 *.ex2);;Example type 3 (*.ex3)"
 ///
 /// Arguments
-/// *  `props`: Properties object
-/// *  `name`: Settings name
-/// *  `description`: Description (display name) of the property
-/// *  `type`: Type of path (directory or file)
-/// *  `filter`: If type is a file path, then describes the file filter
-///              that the user can browse.  Items are separated via
-///              double semi-colens.  If multiple file types in a
-///              filter, separate with space.
+/// * `props`: Properties object
+/// * `name`: Settings name
+/// * `description`: Description (display name) of the property
+/// * `type`: Type of path (directory or file)
+/// * `filter`: If type is a file path, then describes the file filter that the
+///   user can browse.  Items are separated via double semi-colens.  If multiple
+///   file types in a filter, separate with space.
 pub struct PathProp {
     typ: PathType,
     filter: Option<ObsString>,

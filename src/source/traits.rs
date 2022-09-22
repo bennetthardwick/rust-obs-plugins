@@ -1,9 +1,11 @@
+use obs_sys::{obs_key_event, obs_mouse_event};
+
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use crate::properties::Properties;
+use super::video::VideoDataContext;
 use super::{audio::AudioDataContext, media::MediaState};
-use super::{video::VideoDataContext};
-use super::{EnumActiveContext, EnumAllContext, SourceType, SourceContext};
+use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 use crate::data::DataObj;
+use crate::properties::Properties;
 use crate::string::ObsString;
 
 pub trait Sourceable: Sized {
@@ -35,12 +37,34 @@ pub trait UpdateSource: Sized {
     fn update(&mut self, settings: &mut DataObj, context: &mut GlobalContext);
 }
 
-pub trait VideoRenderSource: Sized {
-    fn video_render(
+pub trait MouseWheelSource: Sized {
+    fn mouse_wheel(&mut self, event: obs_mouse_event, xdelta: i32, ydelta: i32);
+}
+
+pub trait MouseClickSource: Sized {
+    fn mouse_click(
         &mut self,
-        context: &mut GlobalContext,
-        render: &mut VideoRenderContext,
+        event: obs_mouse_event,
+        button: super::MouseButton,
+        pressed: bool,
+        click_count: u8,
     );
+}
+
+pub trait MouseMoveSource: Sized {
+    fn mouse_move(&mut self, event: obs_mouse_event, leave: bool);
+}
+
+pub trait KeyClickSource: Sized {
+    fn key_click(&mut self, event: obs_key_event, pressed: bool);
+}
+
+pub trait FocusSource: Sized {
+    fn focus(&mut self, focused: bool);
+}
+
+pub trait VideoRenderSource: Sized {
+    fn video_render(&mut self, context: &mut GlobalContext, render: &mut VideoRenderContext);
 }
 
 pub trait AudioRenderSource: Sized {

@@ -121,7 +121,7 @@ impl SourceContext {
     /// Must call with a valid pointer.
     pub unsafe fn from_raw(source: *mut obs_source_t) -> Self {
         Self {
-            inner: unsafe { obs_source_get_ref(source) },
+            inner: obs_source_get_ref(source),
         }
     }
 }

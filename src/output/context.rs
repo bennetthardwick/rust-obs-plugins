@@ -21,7 +21,7 @@ impl OutputContext {
     /// Pointer must be valid.
     pub unsafe fn from_raw(output: *mut obs_output_t) -> Self {
         Self {
-            inner: unsafe { obs_output_get_ref(output) },
+            inner: obs_output_get_ref(output),
         }
     }
 }
@@ -41,6 +41,7 @@ impl OutputContext {
         let output = unsafe {
             obs_output_create(id.as_ptr(), name.as_ptr(), settings, std::ptr::null_mut())
         };
+
         unsafe { Self::from_raw(output) }
     }
 }

@@ -382,8 +382,10 @@ impl Drop for GraphicsSamplerState {
 pub struct GraphicsEffectContext {}
 
 impl GraphicsEffectContext {
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Self {
+    /// # Safety
+    /// GraphicsEffectContext has methods that should only be used in certain situations.
+    /// Constructing it at the wrong time could cause UB.
+    pub(crate) unsafe fn new() -> Self {
         Self {}
     }
 }

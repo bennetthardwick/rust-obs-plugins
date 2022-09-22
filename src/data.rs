@@ -262,8 +262,7 @@ impl DataObj<'_> {
     ///
     /// Notes
     /// -----
-    /// Setting a default value for a [`DataArray`] is current a no-op because
-    /// of a API problem of OBS.
+    /// Setting a default value for a [`DataArray`] is not supported and will panic.
     pub fn set_default<N: Into<ObsString>, T: FromDataItem, V: Into<T>>(
         &mut self,
         name: N,

@@ -20,7 +20,7 @@ the module:
 
 ```toml
 [dependencies]
-obs-wrapper = "0.3"
+obs-wrapper = "0.4"
 
 [lib]
 name = "<module-name>"

@@ -84,6 +84,19 @@ impl FromDataItem for Cow<'_, str> {
     }
 }
 
+impl FromDataItem for ObsString {
+    fn typ() -> DataType {
+        DataType::String
+    }
+    unsafe fn from_item_unchecked(item: *mut obs_data_item_t) -> Self {
+        let ptr = obs_data_item_get_string(item);
+        ObsString::Dynamic(CStr::from_ptr(ptr).into())
+    }
+    unsafe fn set_default_unchecked(obj: *mut obs_data_t, name: ObsString, val: Self) {
+        obs_data_set_default_string(obj, name.as_ptr(), val.as_ptr());
+    }
+}
+
 macro_rules! impl_get_int {
     ($($t:ty)*) => {
         $(

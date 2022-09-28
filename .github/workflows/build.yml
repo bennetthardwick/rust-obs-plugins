@@ -54,6 +54,5 @@ jobs:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
       - run: |
-          brew cask install obs
           cargo build --verbose --workspace --exclude scroll-focus-filter
           cargo test --workspace --exclude scroll-focus-filter

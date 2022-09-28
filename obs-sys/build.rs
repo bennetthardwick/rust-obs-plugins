@@ -31,7 +31,9 @@ fn main() {
 
     if let Ok(bindings) = bindgen::Builder::default()
         .header("wrapper.h")
-        .blacklist_type("_bindgen_ty_2")
+        .blocklist_type("_bindgen_ty_2")
+        .blocklist_type("_bindgen_ty_3")
+        .blocklist_type("_bindgen_ty_4")
         .derive_default(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .generate()

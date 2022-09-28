@@ -75,7 +75,6 @@ jobs:
 
   build_windows:
     runs-on: windows-latest
-    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v2
         with:

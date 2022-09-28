@@ -18,7 +18,7 @@ use std::os::raw::c_char;
 use obs_sys::{
     gs_effect_t, obs_audio_data, obs_data_t, obs_hotkey_id, obs_hotkey_register_source,
     obs_hotkey_t, obs_key_event, obs_media_state, obs_mouse_event, obs_properties,
-    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_frame, obs_source_t, size_t,
+    obs_source_audio_mix, obs_source_enum_proc_t, obs_source_frame, obs_source_t, size_t, obs_button_type,
 };
 
 struct DataWrapper<D> {
@@ -285,7 +285,7 @@ pub unsafe extern "C" fn mouse_click<D: MouseClickSource>(
     D::mouse_click(
         &mut wrapper.data,
         *event,
-        super::MouseButton::try_from(type_ as u32).unwrap(),
+        super::MouseButton::try_from(type_ as obs_button_type).unwrap(),
         !mouse_up,
         click_count as u8,
     )

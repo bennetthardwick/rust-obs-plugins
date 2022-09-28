@@ -3,13 +3,13 @@ use crate::hotkey::{Hotkey, HotkeyCallbacks};
 use crate::{data::DataObj, wrapper::PtrWrapper};
 use obs_sys::{
     audio_data, encoder_packet, obs_hotkey_id, obs_hotkey_register_output, obs_hotkey_t,
-    obs_properties, video_data,
+    obs_properties, size_t, video_data,
 };
 use paste::item;
 use std::collections::HashMap;
 use std::ffi::c_void;
 use std::mem::forget;
-use std::os::raw::{c_char, c_int, c_ulong};
+use std::os::raw::{c_char, c_int};
 
 use obs_sys::{obs_data_t, obs_output_t};
 
@@ -112,7 +112,7 @@ pub unsafe extern "C" fn raw_audio<D: RawAudioOutput>(data: *mut c_void, frame: 
 
 pub unsafe extern "C" fn raw_audio2<D: RawAudio2Output>(
     data: *mut c_void,
-    idx: c_ulong,
+    idx: size_t,
     frame: *mut audio_data,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);

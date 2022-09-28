@@ -47,7 +47,7 @@ impl ActiveWindow {
     }
 
     fn get_active_window(connection: &Connection, screen: i32) -> Result<xcb::Window> {
-        let active = get_active_window(&connection, screen);
+        let active = get_active_window(connection, screen);
         Ok(active.get_reply()?)
     }
 

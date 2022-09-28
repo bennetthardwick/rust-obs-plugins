@@ -93,9 +93,9 @@ impl FilterAudioSource for RnnoiseDenoiserFilter {
                 }
             }
 
-            let mut audio_chunks = base.chunks_mut(FRAME_SIZE);
+            let audio_chunks = base.chunks_mut(FRAME_SIZE);
 
-            while let Some(buffer) = audio_chunks.next() {
+            for buffer in audio_chunks {
                 for sample in buffer.iter() {
                     input_ring_buffer.push_back(*sample);
                 }
@@ -137,7 +137,7 @@ impl FilterAudioSource for RnnoiseDenoiserFilter {
                     }
 
                     let converter = Converter::from_hz_to_hz(
-                        signal::from_iter(temp_out.iter().map(|sample| *sample)),
+                        signal::from_iter(temp_out.iter().copied()),
                         Linear::new(start_last_output.0, start_last_output.1),
                         RNNOISE_SAMPLE_RATE,
                         data.sample_rate,

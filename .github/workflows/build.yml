@@ -12,6 +12,38 @@ env:
   DONT_USE_GENERATED_BINDINGS: "true"
 
 jobs:
+  cargo_fmt:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: ubuntu-rust-target-directory
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - run: cargo fmt --all -- --check
+
+  cargo_clippy:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - uses: actions/cache@v1
+        with:
+          path: ${{ github.workspace }}/target
+          key: ubuntu-rust-target-directory
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - run: cargo clippy --all --no-deps -- -D warnings
+
   build_linux:
     runs-on: ubuntu-latest
     steps:

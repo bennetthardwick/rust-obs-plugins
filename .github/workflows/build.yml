@@ -18,16 +18,24 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+
       - uses: actions/cache@v1
         with:
           path: ${{ github.workspace }}/target
           key: ubuntu-rust-target-directory
+
+      - run: |
+          sudo add-apt-repository ppa:obsproject/obs-studio
+          sudo apt-get update
+          sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
+
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-      - run: |
-          cargo build --verbose --workspace
-          cargo test --workspace
+
+      - run: cargo build --verbose --workspace
+
+      - run: cargo test --workspace
 
   build_windows:
     runs-on: windows-latest
@@ -39,9 +47,12 @@ jobs:
         with:
           path: ${{ github.workspace }}/target
           key: windows-rust-target-directory
-      - run: |
-          cargo build --verbose --workspace --exclude scroll-focus-filter
-          cargo test --workspace --exclude scroll-focus-filter
+
+      - run: choco install obs-studio llvm
+
+      - run: cargo build --verbose --workspace --exclude scroll-focus-filter
+
+      - run: cargo test --workspace --exclude scroll-focus-filter
 
   build_macos:
     runs-on: macos-latest
@@ -49,10 +60,14 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+
       - uses: actions/cache@v1
         with:
           path: ${{ github.workspace }}/target
           key: macos-rust-target-directory
-      - run: |
-          cargo build --verbose --workspace --exclude scroll-focus-filter
-          cargo test --workspace --exclude scroll-focus-filter
+
+      - run: brew install --cask obs
+
+      - run: cargo build --verbose --workspace --exclude scroll-focus-filter
+
+      - run: cargo test --workspace --exclude scroll-focus-filter

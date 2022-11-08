@@ -145,13 +145,19 @@ impl OutputContext {
     pub fn is_paused(&self) -> bool {
         unsafe { obs_output_paused(self.inner) }
     }
-    pub fn set_video_encoder(&mut self, encoder: *mut obs_encoder_t) {
+    /// # Safety
+    /// make sure encoder is valid
+    pub unsafe fn set_video_encoder(&mut self, encoder: *mut obs_encoder_t) {
+        // TODO: later should change *mut obs_encoder_t to something like EncoderContext
         unsafe { obs_output_set_video_encoder(self.inner, encoder) }
     }
     pub fn video_encoder(&self) -> *mut obs_encoder_t {
         unsafe { obs_output_get_video_encoder(self.inner) }
     }
-    pub fn set_audio_encoder(&mut self, encoder: *mut obs_encoder_t, idx: usize) {
+    /// # Safety
+    /// make sure encoder is valid
+    pub unsafe fn set_audio_encoder(&mut self, encoder: *mut obs_encoder_t, idx: usize) {
+        // TODO: later should change *mut obs_encoder_t to something like EncoderContext
         unsafe { obs_output_set_audio_encoder(self.inner, encoder, idx as _) }
     }
     pub fn audio_encoder(&self, idx: usize) -> *mut obs_encoder_t {

@@ -2,13 +2,14 @@ use std::mem;
 
 use obs_sys::{
     obs_source_frame, video_data, video_format_VIDEO_FORMAT_AYUV, video_format_VIDEO_FORMAT_BGR3,
-    video_format_VIDEO_FORMAT_BGRA, video_format_VIDEO_FORMAT_BGRX, video_format_VIDEO_FORMAT_I40A,
+    video_format_VIDEO_FORMAT_BGRA, video_format_VIDEO_FORMAT_BGRX, video_format_VIDEO_FORMAT_I010,
+    video_format_VIDEO_FORMAT_I210, video_format_VIDEO_FORMAT_I40A, video_format_VIDEO_FORMAT_I412,
     video_format_VIDEO_FORMAT_I420, video_format_VIDEO_FORMAT_I422, video_format_VIDEO_FORMAT_I42A,
     video_format_VIDEO_FORMAT_I444, video_format_VIDEO_FORMAT_NONE, video_format_VIDEO_FORMAT_NV12,
-    video_format_VIDEO_FORMAT_RGBA, video_format_VIDEO_FORMAT_UYVY, video_format_VIDEO_FORMAT_Y800,
-    video_format_VIDEO_FORMAT_YUVA, video_format_VIDEO_FORMAT_YUY2, video_format_VIDEO_FORMAT_YVYU,
-    video_output_get_format, video_output_get_frame_rate, video_output_get_height,
-    video_output_get_width, video_t,
+    video_format_VIDEO_FORMAT_P010, video_format_VIDEO_FORMAT_RGBA, video_format_VIDEO_FORMAT_UYVY,
+    video_format_VIDEO_FORMAT_Y800, video_format_VIDEO_FORMAT_YA2L, video_format_VIDEO_FORMAT_YUVA,
+    video_format_VIDEO_FORMAT_YUY2, video_format_VIDEO_FORMAT_YVYU, video_output_get_format,
+    video_output_get_frame_rate, video_output_get_height, video_output_get_width, video_t,
 };
 
 #[derive(Debug, Clone, Copy, Eq)]
@@ -94,11 +95,11 @@ impl From<u32> for VideoFormat {
             video_format_VIDEO_FORMAT_I42A => VideoFormat::I42A,
             video_format_VIDEO_FORMAT_YUVA => VideoFormat::YUVA,
             video_format_VIDEO_FORMAT_AYUV => VideoFormat::AYUV,
-            17 => VideoFormat::I010,
-            18 => VideoFormat::P010,
-            19 => VideoFormat::I210,
-            20 => VideoFormat::I412,
-            21 => VideoFormat::YA2L,
+            video_format_VIDEO_FORMAT_I010 => VideoFormat::I010,
+            video_format_VIDEO_FORMAT_P010 => VideoFormat::P010,
+            video_format_VIDEO_FORMAT_I210 => VideoFormat::I210,
+            video_format_VIDEO_FORMAT_I412 => VideoFormat::I412,
+            video_format_VIDEO_FORMAT_YA2L => VideoFormat::YA2L,
             _ => VideoFormat::Unknown,
         }
     }

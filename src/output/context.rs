@@ -6,7 +6,7 @@ use obs_sys::{
     obs_encoder_t, obs_output_set_video_encoder, obs_output_get_video_encoder, obs_output_set_audio_encoder, obs_output_get_audio_encoder,
     obs_output_can_begin_data_capture, obs_output_begin_data_capture, obs_output_end_data_capture, obs_output_initialize_encoders,
     obs_output_video, obs_output_audio, obs_output_set_media, obs_output_active, obs_output_get_delay, obs_output_force_stop,
-    obs_output_get_total_bytes, obs_output_get_frames_dropped, obs_output_get_total_frames, obs_enum_outputs, obs_output_get_id, obs_output_get_name,
+    obs_output_get_total_bytes, obs_output_get_frames_dropped, obs_output_get_total_frames, obs_enum_outputs, obs_output_get_id, obs_output_get_name, obs_enum_output_types,
 };
 
 use crate::hotkey::HotkeyCallbacks;
@@ -71,6 +71,23 @@ impl OutputContext {
         }
         let outputs = unsafe { Box::from_raw(params) };
         outputs.into_iter().map(|i| unsafe { OutputContext::from_raw(i) }).collect()
+    }
+    pub fn all_types() -> Vec<String> {
+        let mut types = Vec::new();
+        let mut id = std::ptr::null();
+        for idx in 0.. {
+            unsafe {
+                if !obs_enum_output_types(idx, &mut id) {
+                    break
+                }
+            }
+            if id.is_null() {
+                types.push(String::new())
+            } else {
+                types.push(unsafe {CStr::from_ptr(id)}.to_str().unwrap().to_string())
+            }
+        }
+        types
     }
 
     pub fn output_id(&self) -> Option<&str> {

@@ -130,12 +130,12 @@ pub mod graphics;
 mod hotkey;
 /// Logger for logging to OBS console
 pub mod log;
+/// Tools for access media like video and audio
+pub mod media;
 /// Tools for creating modules
 pub mod module;
 /// Tools for creating outputs
 pub mod output;
-/// Tools for access media like video and audio
-pub mod media;
 /// Tools for creating properties
 pub mod properties;
 /// Tools for creating sources

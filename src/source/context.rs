@@ -1,5 +1,5 @@
-use crate::media::audio::AudioRef;
 use crate::hotkey::{Hotkey, HotkeyCallbacks};
+use crate::media::audio::AudioRef;
 use crate::prelude::DataObj;
 use crate::string::ObsString;
 use obs_sys::obs_get_audio;

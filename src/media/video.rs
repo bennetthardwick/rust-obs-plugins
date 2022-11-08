@@ -1,17 +1,14 @@
 use std::mem;
 
 use obs_sys::{
-    obs_source_frame,
-    video_output_get_width,
-    video_output_get_height,
-    video_output_get_frame_rate,
-    video_output_get_format,
-    video_t, video_data,
-    video_format_VIDEO_FORMAT_NONE, video_format_VIDEO_FORMAT_I420, video_format_VIDEO_FORMAT_NV12, video_format_VIDEO_FORMAT_YVYU,
-    video_format_VIDEO_FORMAT_YUY2, video_format_VIDEO_FORMAT_UYVY, video_format_VIDEO_FORMAT_RGBA, video_format_VIDEO_FORMAT_BGRA,
-    video_format_VIDEO_FORMAT_BGRX, video_format_VIDEO_FORMAT_Y800, video_format_VIDEO_FORMAT_I444, video_format_VIDEO_FORMAT_BGR3,
-    video_format_VIDEO_FORMAT_I422, video_format_VIDEO_FORMAT_I40A, video_format_VIDEO_FORMAT_I42A, video_format_VIDEO_FORMAT_YUVA,
-    video_format_VIDEO_FORMAT_AYUV,
+    obs_source_frame, video_data, video_format_VIDEO_FORMAT_AYUV, video_format_VIDEO_FORMAT_BGR3,
+    video_format_VIDEO_FORMAT_BGRA, video_format_VIDEO_FORMAT_BGRX, video_format_VIDEO_FORMAT_I40A,
+    video_format_VIDEO_FORMAT_I420, video_format_VIDEO_FORMAT_I422, video_format_VIDEO_FORMAT_I42A,
+    video_format_VIDEO_FORMAT_I444, video_format_VIDEO_FORMAT_NONE, video_format_VIDEO_FORMAT_NV12,
+    video_format_VIDEO_FORMAT_RGBA, video_format_VIDEO_FORMAT_UYVY, video_format_VIDEO_FORMAT_Y800,
+    video_format_VIDEO_FORMAT_YUVA, video_format_VIDEO_FORMAT_YUY2, video_format_VIDEO_FORMAT_YVYU,
+    video_output_get_format, video_output_get_frame_rate, video_output_get_height,
+    video_output_get_width, video_t,
 };
 
 #[derive(Debug, Clone, Copy, Eq)]
@@ -200,21 +197,33 @@ impl VideoInfo {
         match self.format {
             VideoFormat::None => FrameSize::Planes { size: 0, count: 0 },
             I420 => FrameSize::ThreePlane(full_size, quarter_size, quarter_size),
-            NV12 => FrameSize::TwoPlane(full_size, half_size*2),
+            NV12 => FrameSize::TwoPlane(full_size, half_size * 2),
             Y800 => FrameSize::OnePlane(full_size),
-            YVYU | UYVY | YUY2 => FrameSize::OnePlane(half_size*4),
-            BGRX | BGRA | RGBA | AYUV => FrameSize::OnePlane(full_size*4),
-            I444 => FrameSize::Planes { count: 3, size: full_size },
-            I412 => FrameSize::Planes { count: 3, size: full_size*2 },
-            BGR3 => FrameSize::OnePlane(full_size*3),
+            YVYU | UYVY | YUY2 => FrameSize::OnePlane(half_size * 4),
+            BGRX | BGRA | RGBA | AYUV => FrameSize::OnePlane(full_size * 4),
+            I444 => FrameSize::Planes {
+                count: 3,
+                size: full_size,
+            },
+            I412 => FrameSize::Planes {
+                count: 3,
+                size: full_size * 2,
+            },
+            BGR3 => FrameSize::OnePlane(full_size * 3),
             I422 => FrameSize::ThreePlane(full_size, half_size, half_size),
-            I210 => FrameSize::ThreePlane(full_size*2, half_size*2, half_size*2),
+            I210 => FrameSize::ThreePlane(full_size * 2, half_size * 2, half_size * 2),
             I40A => FrameSize::FourPlane(full_size, quarter_size, quarter_size, full_size),
             I42A => FrameSize::FourPlane(full_size, half_size, half_size, full_size),
-            YUVA => FrameSize::Planes { count: 4, size: full_size },
-            YA2L => FrameSize::Planes { count: 4, size: full_size*2 },
-            I010 => FrameSize::ThreePlane(full_size*2, quarter_size*2, quarter_size*2),
-            P010 => FrameSize::TwoPlane(full_size*2, quarter_size*4),
+            YUVA => FrameSize::Planes {
+                count: 4,
+                size: full_size,
+            },
+            YA2L => FrameSize::Planes {
+                count: 4,
+                size: full_size * 2,
+            },
+            I010 => FrameSize::ThreePlane(full_size * 2, quarter_size * 2, quarter_size * 2),
+            P010 => FrameSize::TwoPlane(full_size * 2, quarter_size * 4),
             Unknown => FrameSize::Unknown,
         }
     }
@@ -236,7 +245,7 @@ impl VideoRef {
             width: self.width(),
             height: self.height(),
             frame_rate: self.frame_rate(),
-            format: self.format()
+            format: self.format(),
         }
     }
 

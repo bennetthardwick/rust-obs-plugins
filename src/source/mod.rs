@@ -1,16 +1,12 @@
-#![allow(non_upper_case_globals)]
-
 use paste::item;
 
-pub mod audio;
 pub mod context;
 mod ffi;
-pub mod media;
 pub mod traits;
-pub mod video;
+
+use crate::media::state::MediaState;
 
 pub use context::*;
-pub use media::*;
 pub use traits::*;
 
 use obs_sys::{
@@ -87,6 +83,7 @@ pub enum SourceType {
 }
 
 impl SourceType {
+    #[allow(non_upper_case_globals)]
     pub(crate) fn from_native(source_type: obs_source_type) -> Option<SourceType> {
         match source_type {
             obs_source_type_OBS_SOURCE_TYPE_INPUT => Some(SourceType::INPUT),

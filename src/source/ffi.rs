@@ -1,8 +1,7 @@
-use super::audio::AudioDataContext;
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::video::VideoDataContext;
 use super::{traits::*, SourceContext};
 use super::{EnumActiveContext, EnumAllContext};
+use crate::media::{audio::AudioDataContext, video::VideoDataSourceContext};
 use crate::{
     data::DataObj,
     hotkey::{Hotkey, HotkeyCallbacks},
@@ -201,7 +200,7 @@ pub unsafe extern "C" fn filter_video<D: FilterVideoSource>(
     data: *mut std::os::raw::c_void,
     video: *mut obs_source_frame,
 ) -> *mut obs_source_frame {
-    let mut context = VideoDataContext::from_raw(video);
+    let mut context = VideoDataSourceContext::from_raw(video);
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     D::filter_video(&mut wrapper.data, &mut context);
     video

@@ -1,5 +1,5 @@
 use nnnoiseless::DenoiseState;
-use obs_wrapper::{obs_register_module, obs_string, prelude::*, source::*};
+use obs_wrapper::{media::audio, obs_register_module, obs_string, prelude::*, source::*};
 
 use std::collections::VecDeque;
 
@@ -41,7 +41,7 @@ impl Sourceable for RnnoiseDenoiserFilter {
     }
     fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
         let (sample_rate, channels) =
-            create.with_audio(|audio| (audio.output_sample_rate(), audio.output_channels()));
+            create.with_audio(|audio| (audio.sample_rate(), audio.channels()));
 
         Self {
             input: VecDeque::with_capacity(FRAME_SIZE * 3),
@@ -67,7 +67,7 @@ impl GetNameSource for RnnoiseDenoiserFilter {
 
 impl UpdateSource for RnnoiseDenoiserFilter {
     fn update(&mut self, _settings: &mut DataObj, context: &mut GlobalContext) {
-        let sample_rate = context.with_audio(|audio| audio.output_sample_rate());
+        let sample_rate = context.with_audio(|audio| audio.sample_rate());
         self.sample_rate = sample_rate as f64;
     }
 }

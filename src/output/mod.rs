@@ -2,7 +2,9 @@ use paste::item;
 
 use std::marker::PhantomData;
 
-use obs_sys::{obs_output_info, OBS_OUTPUT_AUDIO, OBS_OUTPUT_VIDEO};
+use obs_sys::{
+    obs_output_info, OBS_OUTPUT_AUDIO, OBS_OUTPUT_ENCODED, OBS_OUTPUT_MULTI_TRACK, OBS_OUTPUT_VIDEO,
+};
 
 pub mod context;
 mod ffi;
@@ -64,12 +66,19 @@ impl<D: Outputable> OutputInfoBuilder<D> {
     }
 
     pub fn build(mut self) -> OutputInfo {
+        // see libobs/obs-module.c:obs_register_output_s
+        if self.info.encoded_packet.is_some() {
+            self.info.flags |= OBS_OUTPUT_ENCODED;
+        }
+
         if self.info.raw_video.is_some() {
             self.info.flags |= OBS_OUTPUT_VIDEO;
         }
-
         if self.info.raw_audio.is_some() || self.info.raw_audio2.is_some() {
             self.info.flags |= OBS_OUTPUT_AUDIO;
+        }
+        if self.info.raw_audio2.is_some() {
+            self.info.flags |= OBS_OUTPUT_MULTI_TRACK;
         }
 
         OutputInfo {

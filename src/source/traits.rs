@@ -1,10 +1,10 @@
 use obs_sys::{obs_key_event, obs_mouse_event};
 
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::video::VideoDataContext;
-use super::{audio::AudioDataContext, media::MediaState};
 use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
 use crate::data::DataObj;
+use crate::media::state::MediaState;
+use crate::media::{audio::AudioDataContext, video::VideoDataSourceContext};
 use crate::properties::Properties;
 use crate::string::ObsString;
 
@@ -97,7 +97,7 @@ pub trait FilterAudioSource: Sized {
 }
 
 pub trait FilterVideoSource: Sized {
-    fn filter_video(&mut self, audio: &mut VideoDataContext);
+    fn filter_video(&mut self, video: &mut VideoDataSourceContext);
 }
 
 pub trait MediaPlayPauseSource: Sized {

@@ -5,7 +5,7 @@ pub struct AudioDataContext {
 }
 
 impl AudioDataContext {
-    pub(crate) unsafe fn from_raw(pointer: *mut obs_audio_data) -> Self {
+    pub fn from_raw(pointer: *mut obs_audio_data) -> Self {
         Self { pointer }
     }
 
@@ -46,20 +46,33 @@ impl AudioDataContext {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AudioInfo {
+    pub sample_rate: usize,
+    pub channels: usize,
+}
+
 pub struct AudioRef {
-    pointer: *mut audio_t,
+    pub pointer: *mut audio_t,
 }
 
 impl AudioRef {
-    pub(crate) unsafe fn from_raw(pointer: *mut audio_t) -> Self {
+    pub fn from_raw(pointer: *mut audio_t) -> Self {
         Self { pointer }
     }
 
-    pub fn output_sample_rate(&self) -> usize {
+    pub fn info(&self) -> AudioInfo {
+        AudioInfo {
+            sample_rate: self.sample_rate(),
+            channels: self.channels(),
+        }
+    }
+
+    pub fn sample_rate(&self) -> usize {
         unsafe { audio_output_get_sample_rate(self.pointer) as usize }
     }
 
-    pub fn output_channels(&self) -> usize {
+    pub fn channels(&self) -> usize {
         unsafe { audio_output_get_channels(self.pointer) as usize }
     }
 }

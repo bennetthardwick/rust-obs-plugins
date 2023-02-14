@@ -1,7 +1,7 @@
 [package]
 name = "obs-sys"
 version = "0.3.0"
-authors = ["Bennett Hardwick <me@bennetthardwick.com>"]
+authors = ["Bennett Hardwick <me@bennetthardwick.com>", "Shugo Kawamura <shugo_k@flowing.tokyo>"]
 edition = "2018"
 links = "obs"
 description = "Bindgen of <obs/obs.h>"

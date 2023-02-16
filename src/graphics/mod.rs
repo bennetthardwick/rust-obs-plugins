@@ -32,7 +32,7 @@ use obs_sys::{
     gs_texture_map, gs_texture_set_image, gs_texture_t, gs_texture_unmap, obs_allow_direct_render,
     obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
     obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
-    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC,
+    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC, gs_effect_set_texture,
 };
 use paste::item;
 use std::{
@@ -251,6 +251,16 @@ impl GraphicsEffectTextureParam {
     ) {
         unsafe {
             gs_effect_set_next_sampler(self.effect.raw, value.raw);
+        }
+    }
+
+    pub fn set_texture(
+        &mut self,
+        _context: &GraphicsEffectContext,
+        value: &GraphicsTexture,
+    ) {
+        unsafe {
+            gs_effect_set_texture(self.effect.raw, value.raw);
         }
     }
 }

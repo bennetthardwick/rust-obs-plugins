@@ -12,9 +12,9 @@ use obs_sys::{
     gs_color_format_GS_RG32F, gs_color_format_GS_RGBA, gs_color_format_GS_RGBA16,
     gs_color_format_GS_RGBA16F, gs_color_format_GS_RGBA32F, gs_color_format_GS_UNKNOWN,
     gs_effect_create, gs_effect_destroy, gs_effect_get_param_by_name, gs_effect_get_param_info,
-    gs_effect_param_info, gs_effect_set_next_sampler, gs_effect_set_vec2, gs_effect_t, gs_eparam_t,
-    gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC, gs_sample_filter_GS_FILTER_LINEAR,
-    gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    gs_effect_param_info, gs_effect_set_next_sampler, gs_effect_set_texture, gs_effect_set_vec2,
+    gs_effect_t, gs_eparam_t, gs_sample_filter, gs_sample_filter_GS_FILTER_ANISOTROPIC,
+    gs_sample_filter_GS_FILTER_LINEAR, gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
     gs_sample_filter_GS_FILTER_MIN_MAG_LINEAR_MIP_POINT,
     gs_sample_filter_GS_FILTER_MIN_MAG_POINT_MIP_LINEAR,
@@ -32,7 +32,7 @@ use obs_sys::{
     gs_texture_map, gs_texture_set_image, gs_texture_t, gs_texture_unmap, obs_allow_direct_render,
     obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING,
     obs_allow_direct_render_OBS_NO_DIRECT_RENDERING, obs_enter_graphics, obs_leave_graphics,
-    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC, gs_effect_set_texture,
+    obs_source_draw, vec2, vec3, vec4, GS_DYNAMIC,
 };
 use paste::item;
 use std::{
@@ -254,11 +254,7 @@ impl GraphicsEffectTextureParam {
         }
     }
 
-    pub fn set_texture(
-        &mut self,
-        _context: &GraphicsEffectContext,
-        value: &GraphicsTexture,
-    ) {
+    pub fn set_texture(&mut self, _context: &GraphicsEffectContext, value: &GraphicsTexture) {
         unsafe {
             gs_effect_set_texture(self.effect.raw, value.raw);
         }

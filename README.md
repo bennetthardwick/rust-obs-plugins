@@ -64,6 +64,10 @@ impl Sourceable for TestSource {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
+
+    fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self {
+        Self
+    }
 }
 
 // Allow OBS to show a name for the source

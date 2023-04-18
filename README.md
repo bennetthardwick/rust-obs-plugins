@@ -117,6 +117,8 @@ impl Module for TestModule {
         obs_string!("Bennett")
     }
 }
+
+obs_register_module!(TestModule);
 ```
 
 ### Installation

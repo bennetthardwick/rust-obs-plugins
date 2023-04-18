@@ -49,7 +49,7 @@ use obs_wrapper::{
 // The module that will handle creating the source.
 struct TestModule {
     context: ModuleContext
-};
+}
 
 // The source that will be shown inside OBS.
 struct TestSource;

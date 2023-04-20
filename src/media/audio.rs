@@ -73,6 +73,6 @@ impl AudioRef {
     }
 
     pub fn channels(&self) -> usize {
-        unsafe { audio_output_get_channels(self.pointer) as usize }
+        unsafe { audio_output_get_channels(self.pointer) }
     }
 }

@@ -45,12 +45,8 @@ pub fn find_windows_obs_lib() {
         .ok()
         .and_then(|key| key.get_value("").ok())
         .and_then(|base_path: String| match target.as_str() {
-            "i686-pc-windows-msvc" => {
-                Some((PathBuf::from(base_path).join("bin\\32bit"), "X86"))
-            }
-            "x86_64-pc-windows-msvc" => {
-                Some((PathBuf::from(base_path).join("bin\\64bit"), "X64"))
-            }
+            "i686-pc-windows-msvc" => Some((PathBuf::from(base_path).join("bin\\32bit"), "X86")),
+            "x86_64-pc-windows-msvc" => Some((PathBuf::from(base_path).join("bin\\64bit"), "X64")),
             _ => None,
         })
     {
@@ -75,7 +71,9 @@ pub fn find_windows_obs_lib() {
 
                 let def_path = out_path.join("obs-frontend-api.def");
                 let lib_path = out_path.join("obs-frontend-api.lib");
-                if let Ok(()) = generate_def(dumpbin2, &dll_path.join("obs-frontend-api.dll"), &def_path) {
+                if let Ok(()) =
+                    generate_def(dumpbin2, &dll_path.join("obs-frontend-api.dll"), &def_path)
+                {
                     assert!(lib2
                         .arg(format!("/DEF:{}", def_path.to_str().unwrap()))
                         .arg(format!("/OUT:{}", lib_path.to_str().unwrap()))

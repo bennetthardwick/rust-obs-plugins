@@ -342,7 +342,7 @@ impl PtrWrapper for DataArray<'_> {
 
 impl DataArray<'_> {
     pub fn len(&self) -> usize {
-        unsafe { obs_data_array_count(self.raw) as usize }
+        unsafe { obs_data_array_count(self.raw) }
     }
 
     pub fn is_empty(&self) -> bool {

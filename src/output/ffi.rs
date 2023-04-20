@@ -116,7 +116,7 @@ pub unsafe extern "C" fn raw_audio2<D: RawAudio2Output>(
     frame: *mut audio_data,
 ) {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    D::raw_audio2(&mut wrapper.data, idx as usize, &mut *frame)
+    D::raw_audio2(&mut wrapper.data, idx, &mut *frame)
 }
 
 pub unsafe extern "C" fn encoded_packet<D: EncodedPacketOutput>(

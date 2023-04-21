@@ -4,3 +4,5 @@
 #![allow(improper_ctypes)]
 #![allow(clippy::all)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+pub type size_t = usize; // Why isn't this in the bindings???

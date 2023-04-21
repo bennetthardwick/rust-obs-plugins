@@ -45,24 +45,36 @@ pub fn find_windows_obs_lib() {
         .ok()
         .and_then(|key| key.get_value("").ok())
         .and_then(|base_path: String| match target.as_str() {
-            "i686-pc-windows-msvc" => {
-                Some((PathBuf::from(base_path).join("bin\\32bit\\obs.dll"), "X86"))
-            }
-            "x86_64-pc-windows-msvc" => {
-                Some((PathBuf::from(base_path).join("bin\\64bit\\obs.dll"), "X64"))
-            }
+            "i686-pc-windows-msvc" => Some((PathBuf::from(base_path).join("bin\\32bit"), "X86")),
+            "x86_64-pc-windows-msvc" => Some((PathBuf::from(base_path).join("bin\\64bit"), "X64")),
             _ => None,
         })
     {
         let dumpbin = cc::windows_registry::find(&target, "dumpbin.exe");
+        let dumpbin2 = cc::windows_registry::find(&target, "dumpbin.exe").unwrap();
         let lib = cc::windows_registry::find(&target, "lib.exe");
+        let mut lib2 = cc::windows_registry::find(&target, "lib.exe").unwrap();
         match (dumpbin, lib) {
-            (Some(mut dumpbin), Some(mut lib)) => {
+            (Some(dumpbin), Some(mut lib)) => {
                 let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
                 let def_path = out_path.join("obs.def");
                 let lib_path = out_path.join("obs.lib");
-                if let Ok(()) = generate_def(dumpbin, &dll_path, &def_path) {
+                if let Ok(()) = generate_def(dumpbin, &dll_path.join("obs.dll"), &def_path) {
                     assert!(lib
+                        .arg(format!("/DEF:{}", def_path.to_str().unwrap()))
+                        .arg(format!("/OUT:{}", lib_path.to_str().unwrap()))
+                        .arg(format!("/MACHINE:{}", arch))
+                        .status()
+                        .unwrap()
+                        .success());
+                }
+
+                let def_path = out_path.join("obs-frontend-api.def");
+                let lib_path = out_path.join("obs-frontend-api.lib");
+                if let Ok(()) =
+                    generate_def(dumpbin2, &dll_path.join("obs-frontend-api.dll"), &def_path)
+                {
+                    assert!(lib2
                         .arg(format!("/DEF:{}", def_path.to_str().unwrap()))
                         .arg(format!("/OUT:{}", lib_path.to_str().unwrap()))
                         .arg(format!("/MACHINE:{}", arch))

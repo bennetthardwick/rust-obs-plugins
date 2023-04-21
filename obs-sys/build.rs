@@ -15,7 +15,10 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
 
     #[cfg(not(target_os = "macos"))]
-    println!("cargo:rustc-link-lib=dylib=obs");
+    {
+        println!("cargo:rustc-link-lib=dylib=obs");
+        println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
+    }
 
     // mac OBS only ships with libobs.0.dylib for some reason
     #[cfg(target_os = "macos")]
@@ -31,6 +34,7 @@ fn main() {
 
     if let Ok(bindings) = bindgen::Builder::default()
         .header("wrapper.h")
+        .clang_arg("-I./obs/libobs/")
         .blocklist_type("_bindgen_ty_2")
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")

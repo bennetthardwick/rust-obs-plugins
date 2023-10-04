@@ -11,6 +11,7 @@ repository = "https://github.com/bennetthardwick/rust-obs-plugins"
 
 [workspace]
 
+
 members = [
   "obs-sys",
   "plugins/*",

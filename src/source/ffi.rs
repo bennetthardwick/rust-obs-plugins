@@ -86,7 +86,7 @@ pub unsafe extern "C" fn create<D: Sourceable>(
     settings: *mut obs_data_t,
     source: *mut obs_source_t,
 ) -> *mut c_void {
-    let mut global = GlobalContext::default();
+    let mut global = GlobalContext;
     let settings = DataObj::from_raw(settings);
     let mut context = CreatableSourceContext::from_raw(settings, &mut global);
     let source_context = SourceContext::from_raw(source);
@@ -113,7 +113,7 @@ pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
 }
 
 pub unsafe extern "C" fn update<D: UpdateSource>(data: *mut c_void, settings: *mut obs_data_t) {
-    let mut global = GlobalContext::default();
+    let mut global = GlobalContext;
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
     let mut settings = DataObj::from_raw(settings);
     D::update(&mut data.data, &mut settings, &mut global);
@@ -125,8 +125,8 @@ pub unsafe extern "C" fn video_render<D: VideoRenderSource>(
     _effect: *mut gs_effect_t,
 ) {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut global = GlobalContext::default();
-    let mut render = VideoRenderContext::default();
+    let mut global = GlobalContext;
+    let mut render = VideoRenderContext;
     D::video_render(&mut wrapper.data, &mut global, &mut render);
 }
 
@@ -139,7 +139,7 @@ pub unsafe extern "C" fn audio_render<D: AudioRenderSource>(
     _sample_rate: size_t,
 ) -> bool {
     let wrapper: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut global = GlobalContext::default();
+    let mut global = GlobalContext;
     D::audio_render(&mut wrapper.data, &mut global);
     // TODO: understand what this bool is
     true

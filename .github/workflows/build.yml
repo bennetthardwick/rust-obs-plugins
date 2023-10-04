@@ -46,7 +46,9 @@ jobs:
         with:
           toolchain: stable
 
-      - run: cargo clippy --all --no-deps -- -D warnings
+      - run: |
+          sudo apt remove libclang1-15
+          cargo clippy --all --no-deps -- -D warnings
 
   build_linux:
     runs-on: ubuntu-latest
@@ -64,6 +66,7 @@ jobs:
           sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt-get update
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
+          sudo apt remove libclang1-15
 
       - uses: actions-rs/toolchain@v1
         with:

@@ -63,6 +63,7 @@ jobs:
       - run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt-get update
+          sudo apt-get install llvm
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
 
       - uses: actions-rs/toolchain@v1

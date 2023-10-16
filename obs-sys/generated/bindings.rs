@@ -272,120 +272,6 @@ pub const EXIT_FAILURE: u32 = 1;
 pub const EXIT_SUCCESS: u32 = 0;
 pub const _ALLOCA_H: u32 = 1;
 pub const _ASSERT_H: u32 = 1;
-pub const KBC_ESCAPE: u32 = 0;
-pub const KBC_1: u32 = 1;
-pub const KBC_2: u32 = 2;
-pub const KBC_3: u32 = 3;
-pub const KBC_4: u32 = 4;
-pub const KBC_5: u32 = 5;
-pub const KBC_6: u32 = 6;
-pub const KBC_7: u32 = 7;
-pub const KBC_8: u32 = 8;
-pub const KBC_9: u32 = 9;
-pub const KBC_0: u32 = 10;
-pub const KBC_MINUS: u32 = 11;
-pub const KBC_EQUALS: u32 = 12;
-pub const KBC_BACK: u32 = 13;
-pub const KBC_TAB: u32 = 14;
-pub const KBC_Q: u32 = 15;
-pub const KBC_W: u32 = 16;
-pub const KBC_E: u32 = 17;
-pub const KBC_R: u32 = 18;
-pub const KBC_T: u32 = 19;
-pub const KBC_Y: u32 = 20;
-pub const KBC_U: u32 = 21;
-pub const KBC_I: u32 = 22;
-pub const KBC_O: u32 = 23;
-pub const KBC_P: u32 = 24;
-pub const KBC_LBRACKET: u32 = 25;
-pub const KBC_RBRACKET: u32 = 26;
-pub const KBC_RETURN: u32 = 27;
-pub const KBC_LCONTROL: u32 = 28;
-pub const KBC_A: u32 = 29;
-pub const KBC_S: u32 = 30;
-pub const KBC_D: u32 = 31;
-pub const KBC_F: u32 = 32;
-pub const KBC_G: u32 = 33;
-pub const KBC_H: u32 = 34;
-pub const KBC_J: u32 = 35;
-pub const KBC_K: u32 = 36;
-pub const KBC_L: u32 = 37;
-pub const KBC_SEMICOLON: u32 = 38;
-pub const KBC_APOSTROPHE: u32 = 39;
-pub const KBC_TILDE: u32 = 40;
-pub const KBC_LSHIFT: u32 = 41;
-pub const KBC_BACKSLASH: u32 = 42;
-pub const KBC_Z: u32 = 43;
-pub const KBC_X: u32 = 44;
-pub const KBC_C: u32 = 45;
-pub const KBC_V: u32 = 46;
-pub const KBC_B: u32 = 47;
-pub const KBC_N: u32 = 48;
-pub const KBC_M: u32 = 49;
-pub const KBC_COMMA: u32 = 50;
-pub const KBC_PERIOD: u32 = 51;
-pub const KBC_SLASH: u32 = 52;
-pub const KBC_RSHIFT: u32 = 53;
-pub const KBC_MULTIPLY: u32 = 54;
-pub const KBC_LALT: u32 = 55;
-pub const KBC_SPACE: u32 = 56;
-pub const KBC_CAPSLOCK: u32 = 57;
-pub const KBC_F1: u32 = 58;
-pub const KBC_F2: u32 = 59;
-pub const KBC_F3: u32 = 60;
-pub const KBC_F4: u32 = 61;
-pub const KBC_F5: u32 = 62;
-pub const KBC_F6: u32 = 63;
-pub const KBC_F7: u32 = 64;
-pub const KBC_F8: u32 = 65;
-pub const KBC_F9: u32 = 66;
-pub const KBC_F10: u32 = 67;
-pub const KBC_NUMLOCK: u32 = 68;
-pub const KBC_SCROLLLOCK: u32 = 69;
-pub const KBC_NUMPAD7: u32 = 70;
-pub const KBC_NUMPAD8: u32 = 71;
-pub const KBC_NUMPAD9: u32 = 72;
-pub const KBC_SUBTRACT: u32 = 73;
-pub const KBC_NUMPAD4: u32 = 74;
-pub const KBC_NUMPAD5: u32 = 75;
-pub const KBC_NUMPAD6: u32 = 76;
-pub const KBC_ADD: u32 = 77;
-pub const KBC_NUMPAD1: u32 = 78;
-pub const KBC_NUMPAD2: u32 = 79;
-pub const KBC_NUMPAD3: u32 = 80;
-pub const KBC_NUMPAD0: u32 = 81;
-pub const KBC_DECIMAL: u32 = 82;
-pub const KBC_F11: u32 = 83;
-pub const KBC_F12: u32 = 84;
-pub const KBC_NUMPADENTER: u32 = 85;
-pub const KBC_RCONTROL: u32 = 86;
-pub const KBC_DIVIDE: u32 = 87;
-pub const KBC_SYSRQ: u32 = 88;
-pub const KBC_RALT: u32 = 89;
-pub const KBC_PAUSE: u32 = 90;
-pub const KBC_HOME: u32 = 91;
-pub const KBC_UP: u32 = 92;
-pub const KBC_PAGEDOWN: u32 = 93;
-pub const KBC_LEFT: u32 = 94;
-pub const KBC_RIGHT: u32 = 95;
-pub const KBC_END: u32 = 96;
-pub const KBC_DOWN: u32 = 97;
-pub const KBC_PAGEUP: u32 = 98;
-pub const KBC_INSERT: u32 = 99;
-pub const KBC_DELETE: u32 = 100;
-pub const MOUSE_LEFTBUTTON: u32 = 101;
-pub const MOUSE_MIDDLEBUTTON: u32 = 102;
-pub const MOUSE_RIGHTBUTTON: u32 = 103;
-pub const MOUSE_WHEEL: u32 = 104;
-pub const MOUSE_MOVE: u32 = 105;
-pub const KBC_CONTROL: u32 = 4294967294;
-pub const KBC_ALT: u32 = 4294967293;
-pub const KBC_SHIFT: u32 = 4294967292;
-pub const STATE_LBUTTONDOWN: u32 = 1;
-pub const STATE_RBUTTONDOWN: u32 = 2;
-pub const STATE_MBUTTONDOWN: u32 = 4;
-pub const STATE_X4BUTTONDOWN: u32 = 8;
-pub const STATE_X5BUTTONDOWN: u32 = 16;
 pub const GS_MAX_TEXTURES: u32 = 8;
 pub const GS_BUILD_MIPMAPS: u32 = 1;
 pub const GS_DYNAMIC: u32 = 2;
@@ -672,9 +558,9 @@ pub const VIDEO_OUTPUT_INVALIDPARAM: i32 = -1;
 pub const VIDEO_OUTPUT_FAIL: i32 = -2;
 pub const CALL_PARAM_IN: u32 = 1;
 pub const CALL_PARAM_OUT: u32 = 2;
-pub const LIBOBS_API_MAJOR_VER: u32 = 28;
-pub const LIBOBS_API_MINOR_VER: u32 = 0;
-pub const LIBOBS_API_PATCH_VER: u32 = 2;
+pub const LIBOBS_API_MAJOR_VER: u32 = 29;
+pub const LIBOBS_API_MINOR_VER: u32 = 1;
+pub const LIBOBS_API_PATCH_VER: u32 = 3;
 pub const OBS_VERSION: &[u8; 8] = b"unknown\0";
 pub const OBS_DATA_PATH: &[u8; 11] = b"../../data\0";
 pub const OBS_INSTALL_PREFIX: &[u8; 1] = b"\0";
@@ -712,6 +598,7 @@ pub const OBS_OUTPUT_DISCONNECTED: i32 = -5;
 pub const OBS_OUTPUT_UNSUPPORTED: i32 = -6;
 pub const OBS_OUTPUT_NO_SPACE: i32 = -7;
 pub const OBS_OUTPUT_ENCODE_ERROR: i32 = -8;
+pub const OBS_OUTPUT_HDR_DISABLED: i32 = -9;
 pub const OBS_VIDEO_SUCCESS: u32 = 0;
 pub const OBS_VIDEO_FAIL: i32 = -1;
 pub const OBS_VIDEO_NOT_SUPPORTED: i32 = -2;
@@ -755,6 +642,7 @@ pub const OBS_OUTPUT_ENCODED: u32 = 4;
 pub const OBS_OUTPUT_SERVICE: u32 = 8;
 pub const OBS_OUTPUT_MULTI_TRACK: u32 = 16;
 pub const OBS_OUTPUT_CAN_PAUSE: u32 = 32;
+pub const MAX_OUTPUT_AUDIO_ENCODERS: u32 = 6;
 pub const XINPUT_MOUSE_LEN: u32 = 33;
 pub const OBS_MOUSE_BUTTON_DEFAULT: u32 = 1;
 pub const OBS_SOURCE_FRAME_LINEAR_ALPHA: u32 = 1;
@@ -10683,6 +10571,7 @@ pub struct audio_convert_info {
     pub samples_per_sec: u32,
     pub format: audio_format,
     pub speakers: speaker_layout,
+    pub allow_clipping: bool,
 }
 #[test]
 fn bindgen_test_layout_audio_convert_info() {
@@ -10690,7 +10579,7 @@ fn bindgen_test_layout_audio_convert_info() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<audio_convert_info>(),
-        12usize,
+        16usize,
         concat!("Size of: ", stringify!(audio_convert_info))
     );
     assert_eq!(
@@ -10726,6 +10615,16 @@ fn bindgen_test_layout_audio_convert_info() {
             stringify!(audio_convert_info),
             "::",
             stringify!(speakers)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).allow_clipping) as usize - ptr as usize },
+        12usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(audio_convert_info),
+            "::",
+            stringify!(allow_clipping)
         )
     );
 }
@@ -10818,6 +10717,9 @@ pub const video_format_VIDEO_FORMAT_P010: video_format = 18;
 pub const video_format_VIDEO_FORMAT_I210: video_format = 19;
 pub const video_format_VIDEO_FORMAT_I412: video_format = 20;
 pub const video_format_VIDEO_FORMAT_YA2L: video_format = 21;
+pub const video_format_VIDEO_FORMAT_P216: video_format = 22;
+pub const video_format_VIDEO_FORMAT_P416: video_format = 23;
+pub const video_format_VIDEO_FORMAT_V210: video_format = 24;
 pub type video_format = ::std::os::raw::c_uint;
 pub const video_trc_VIDEO_TRC_DEFAULT: video_trc = 0;
 pub const video_trc_VIDEO_TRC_SRGB: video_trc = 1;
@@ -11527,6 +11429,9 @@ extern "C" {
     pub fn obs_data_get_json(data: *mut obs_data_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    pub fn obs_data_get_json_pretty(data: *mut obs_data_t) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
     pub fn obs_data_get_last_json(data: *mut obs_data_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
@@ -11534,6 +11439,14 @@ extern "C" {
 }
 extern "C" {
     pub fn obs_data_save_json_safe(
+        data: *mut obs_data_t,
+        file: *const ::std::os::raw::c_char,
+        temp_ext: *const ::std::os::raw::c_char,
+        backup_ext: *const ::std::os::raw::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn obs_data_save_json_pretty_safe(
         data: *mut obs_data_t,
         file: *const ::std::os::raw::c_char,
         temp_ext: *const ::std::os::raw::c_char,
@@ -12692,7 +12605,7 @@ extern "C" {
     ) -> *mut obs_property_t;
 }
 extern "C" {
-    #[doc = " Adds a 'path' property.  Can be a directory or a file.\n\n If target is a file path, the filters should be this format, separated by\n double semi-colens, and extensions separated by space:\n   \"Example types 1 and 2 (*.ex1 *.ex2);;Example type 3 (*.ex3)\"\n\n @param  props        Properties object\n @param  name         Settings name\n @param  description  Description (display name) of the property\n @param  type         Type of path (directory or file)\n @param  filter       If type is a file path, then describes the file filter\n                      that the user can browse.  Items are separated via\n                      double semi-colens.  If multiple file types in a\n                      filter, separate with space."]
+    #[doc = " Adds a 'path' property.  Can be a directory or a file.\n\n If target is a file path, the filters should be this format, separated by\n double semicolons, and extensions separated by space:\n   \"Example types 1 and 2 (*.ex1 *.ex2);;Example type 3 (*.ex3)\"\n\n @param  props        Properties object\n @param  name         Settings name\n @param  description  Description (display name) of the property\n @param  type         Type of path (directory or file)\n @param  filter       If type is a file path, then describes the file filter\n                      that the user can browse.  Items are separated via\n                      double semicolons.  If multiple file types in a\n                      filter, separate with space."]
     pub fn obs_properties_add_path(
         props: *mut obs_properties_t,
         name: *const ::std::os::raw::c_char,
@@ -14961,6 +14874,7 @@ pub struct obs_output_info {
             frames: *mut audio_data,
         ),
     >,
+    pub protocols: *const ::std::os::raw::c_char,
 }
 #[test]
 fn bindgen_test_layout_obs_output_info() {
@@ -14968,7 +14882,7 @@ fn bindgen_test_layout_obs_output_info() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<obs_output_info>(),
-        184usize,
+        192usize,
         concat!("Size of: ", stringify!(obs_output_info))
     );
     assert_eq!(
@@ -15206,6 +15120,16 @@ fn bindgen_test_layout_obs_output_info() {
             stringify!(raw_audio2)
         )
     );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).protocols) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_output_info),
+            "::",
+            stringify!(protocols)
+        )
+    );
 }
 impl Default for obs_output_info {
     fn default() -> Self {
@@ -15261,6 +15185,16 @@ fn bindgen_test_layout_obs_service_resolution() {
         )
     );
 }
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_SERVER_URL: obs_service_connect_info =
+    0;
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_STREAM_ID: obs_service_connect_info = 2;
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_STREAM_KEY: obs_service_connect_info =
+    2;
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_USERNAME: obs_service_connect_info = 4;
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_PASSWORD: obs_service_connect_info = 6;
+pub const obs_service_connect_info_OBS_SERVICE_CONNECT_INFO_ENCRYPT_PASSPHRASE:
+    obs_service_connect_info = 8;
+pub type obs_service_connect_info = ::std::os::raw::c_uint;
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct obs_service_info {
@@ -15340,6 +15274,22 @@ pub struct obs_service_info {
             data: *mut ::std::os::raw::c_void,
         ) -> *mut *const ::std::os::raw::c_char,
     >,
+    pub get_protocol: ::std::option::Option<
+        unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> *const ::std::os::raw::c_char,
+    >,
+    pub get_supported_audio_codecs: ::std::option::Option<
+        unsafe extern "C" fn(
+            data: *mut ::std::os::raw::c_void,
+        ) -> *mut *const ::std::os::raw::c_char,
+    >,
+    pub get_connect_info: ::std::option::Option<
+        unsafe extern "C" fn(
+            data: *mut ::std::os::raw::c_void,
+            type_: u32,
+        ) -> *const ::std::os::raw::c_char,
+    >,
+    pub can_try_to_connect:
+        ::std::option::Option<unsafe extern "C" fn(data: *mut ::std::os::raw::c_void) -> bool>,
 }
 #[test]
 fn bindgen_test_layout_obs_service_info() {
@@ -15347,7 +15297,7 @@ fn bindgen_test_layout_obs_service_info() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<obs_service_info>(),
-        184usize,
+        216usize,
         concat!("Size of: ", stringify!(obs_service_info))
     );
     assert_eq!(
@@ -15583,6 +15533,46 @@ fn bindgen_test_layout_obs_service_info() {
             stringify!(obs_service_info),
             "::",
             stringify!(get_supported_video_codecs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).get_protocol) as usize - ptr as usize },
+        184usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_service_info),
+            "::",
+            stringify!(get_protocol)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).get_supported_audio_codecs) as usize - ptr as usize },
+        192usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_service_info),
+            "::",
+            stringify!(get_supported_audio_codecs)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).get_connect_info) as usize - ptr as usize },
+        200usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_service_info),
+            "::",
+            stringify!(get_connect_info)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).can_try_to_connect) as usize - ptr as usize },
+        208usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(obs_service_info),
+            "::",
+            stringify!(can_try_to_connect)
         )
     );
 }
@@ -18856,8 +18846,16 @@ extern "C" {
     pub fn obs_get_source_by_name(name: *const ::std::os::raw::c_char) -> *mut obs_source_t;
 }
 extern "C" {
+    #[doc = " Gets a source by its UUID.\n\n   Increments the source reference counter, use obs_source_release to\n release it when complete."]
+    pub fn obs_get_source_by_uuid(uuid: *const ::std::os::raw::c_char) -> *mut obs_source_t;
+}
+extern "C" {
     #[doc = " Get a transition source by its name."]
     pub fn obs_get_transition_by_name(name: *const ::std::os::raw::c_char) -> *mut obs_source_t;
+}
+extern "C" {
+    #[doc = " Get a transition source by its UUID."]
+    pub fn obs_get_transition_by_uuid(uuid: *const ::std::os::raw::c_char) -> *mut obs_source_t;
 }
 extern "C" {
     #[doc = " Gets an output by its name."]
@@ -18979,6 +18977,10 @@ extern "C" {
         data: *mut ::std::os::raw::c_void,
     ) -> *mut obs_data_array_t;
 }
+extern "C" {
+    #[doc = " Reset source UUIDs. NOTE: this function is only to be used by the UI and\n  will be removed in a future version!"]
+    pub fn obs_reset_source_uuids();
+}
 pub const obs_obj_type_OBS_OBJ_TYPE_INVALID: obs_obj_type = 0;
 pub const obs_obj_type_OBS_OBJ_TYPE_SOURCE: obs_obj_type = 1;
 pub const obs_obj_type_OBS_OBJ_TYPE_OUTPUT: obs_obj_type = 2;
@@ -19057,6 +19059,18 @@ extern "C" {
         draw: ::std::option::Option<
             unsafe extern "C" fn(param: *mut ::std::os::raw::c_void, cx: u32, cy: u32),
         >,
+        param: *mut ::std::os::raw::c_void,
+    );
+}
+extern "C" {
+    pub fn obs_add_main_rendered_callback(
+        rendered: ::std::option::Option<unsafe extern "C" fn(param: *mut ::std::os::raw::c_void)>,
+        param: *mut ::std::os::raw::c_void,
+    );
+}
+extern "C" {
+    pub fn obs_remove_main_rendered_callback(
+        rendered: ::std::option::Option<unsafe extern "C" fn(param: *mut ::std::os::raw::c_void)>,
         param: *mut ::std::os::raw::c_void,
     );
 }
@@ -19200,12 +19214,20 @@ extern "C" {
     pub fn obs_view_render(view: *mut obs_view_t);
 }
 extern "C" {
-    #[doc = " Adds a view to the main render loop"]
+    #[doc = " Adds a view to the main render loop, with current obs_get_video_info state"]
     pub fn obs_view_add(view: *mut obs_view_t) -> *mut video_t;
+}
+extern "C" {
+    #[doc = " Adds a view to the main render loop, with custom video settings"]
+    pub fn obs_view_add2(view: *mut obs_view_t, ovi: *mut obs_video_info) -> *mut video_t;
 }
 extern "C" {
     #[doc = " Removes a view from the main render loop"]
     pub fn obs_view_remove(view: *mut obs_view_t);
+}
+extern "C" {
+    #[doc = " Gets the video settings currently in use for this view context, returns false if no video"]
+    pub fn obs_view_get_video_info(view: *mut obs_view_t, ovi: *mut obs_video_info) -> bool;
 }
 extern "C" {
     #[doc = " Adds a new window display linked to the main render pipeline.  This creates\n a new swap chain which updates every frame.\n\n @param  graphics_data  The swap chain initialization data.\n @return                The new display context, or NULL if failed."]
@@ -19442,6 +19464,10 @@ extern "C" {
 extern "C" {
     #[doc = " Sets the name of a source"]
     pub fn obs_source_set_name(source: *mut obs_source_t, name: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    #[doc = " Gets the UUID of a source"]
+    pub fn obs_source_get_uuid(source: *const obs_source_t) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
     #[doc = " Gets the source type"]
@@ -20896,7 +20922,45 @@ extern "C" {
     ) -> *const ::std::os::raw::c_char;
 }
 extern "C" {
+    pub fn obs_output_get_protocols(output: *const obs_output_t) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_is_output_protocol_registered(protocol: *const ::std::os::raw::c_char) -> bool;
+}
+extern "C" {
+    pub fn obs_enum_output_protocols(
+        idx: usize,
+        protocol: *mut *mut ::std::os::raw::c_char,
+    ) -> bool;
+}
+extern "C" {
+    pub fn obs_enum_output_types_with_protocol(
+        protocol: *const ::std::os::raw::c_char,
+        data: *mut ::std::os::raw::c_void,
+        enum_cb: ::std::option::Option<
+            unsafe extern "C" fn(
+                data: *mut ::std::os::raw::c_void,
+                id: *const ::std::os::raw::c_char,
+            ) -> bool,
+        >,
+    );
+}
+extern "C" {
+    pub fn obs_get_output_supported_video_codecs(
+        id: *const ::std::os::raw::c_char,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_get_output_supported_audio_codecs(
+        id: *const ::std::os::raw::c_char,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
     pub fn obs_output_get_type_data(output: *mut obs_output_t) -> *mut ::std::os::raw::c_void;
+}
+extern "C" {
+    #[doc = " Gets the video conversion info.  Used only for raw output"]
+    pub fn obs_output_get_video_conversion(output: *mut obs_output_t) -> *const video_scale_info;
 }
 extern "C" {
     #[doc = " Optionally sets the video conversion info.  Used only for raw output"]
@@ -21142,6 +21206,9 @@ extern "C" {
     );
 }
 extern "C" {
+    pub fn obs_encoder_get_pause_offset(encoder: *const obs_encoder_t) -> u64;
+}
+extern "C" {
     pub fn obs_service_get_display_name(
         id: *const ::std::os::raw::c_char,
     ) -> *const ::std::os::raw::c_char;
@@ -21271,9 +21338,33 @@ extern "C" {
     ) -> *mut *const ::std::os::raw::c_char;
 }
 extern "C" {
+    pub fn obs_service_get_supported_audio_codecs(
+        service: *const obs_service_t,
+    ) -> *mut *const ::std::os::raw::c_char;
+}
+extern "C" {
     pub fn obs_service_get_output_type(
         service: *const obs_service_t,
     ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Returns the protocol for this service context"]
+    pub fn obs_service_get_protocol(service: *const obs_service_t)
+        -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_service_get_preferred_output_type(
+        service: *const obs_service_t,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_service_get_connect_info(
+        service: *const obs_service_t,
+        type_: u32,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_service_can_try_to_connect(service: *const obs_service_t) -> bool;
 }
 extern "C" {
     pub fn obs_source_frame_init(
@@ -21336,6 +21427,8 @@ pub const obs_frontend_event_OBS_FRONTEND_EVENT_PROFILE_CHANGING: obs_frontend_e
 pub const obs_frontend_event_OBS_FRONTEND_EVENT_SCRIPTING_SHUTDOWN: obs_frontend_event = 36;
 pub const obs_frontend_event_OBS_FRONTEND_EVENT_PROFILE_RENAMED: obs_frontend_event = 37;
 pub const obs_frontend_event_OBS_FRONTEND_EVENT_SCENE_COLLECTION_RENAMED: obs_frontend_event = 38;
+pub const obs_frontend_event_OBS_FRONTEND_EVENT_THEME_CHANGED: obs_frontend_event = 39;
+pub const obs_frontend_event_OBS_FRONTEND_EVENT_SCREENSHOT_TAKEN: obs_frontend_event = 40;
 pub type obs_frontend_event = ::std::os::raw::c_uint;
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -21778,12 +21871,39 @@ extern "C" {
     pub fn obs_frontend_open_source_interaction(source: *mut obs_source_t);
 }
 extern "C" {
+    pub fn obs_frontend_open_sceneitem_edit_transform(item: *mut obs_sceneitem_t);
+}
+extern "C" {
     pub fn obs_frontend_get_current_record_output_path() -> *mut ::std::os::raw::c_char;
 }
 extern "C" {
     pub fn obs_frontend_get_locale_string(
         string: *const ::std::os::raw::c_char,
     ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_frontend_is_theme_dark() -> bool;
+}
+extern "C" {
+    pub fn obs_frontend_get_last_recording() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_frontend_get_last_screenshot() -> *mut ::std::os::raw::c_char;
+}
+extern "C" {
+    pub fn obs_frontend_get_last_replay() -> *mut ::std::os::raw::c_char;
+}
+pub type undo_redo_cb =
+    ::std::option::Option<unsafe extern "C" fn(data: *const ::std::os::raw::c_char)>;
+extern "C" {
+    pub fn obs_frontend_add_undo_redo_action(
+        name: *const ::std::os::raw::c_char,
+        undo: undo_redo_cb,
+        redo: undo_redo_cb,
+        undo_data: *const ::std::os::raw::c_char,
+        redo_data: *const ::std::os::raw::c_char,
+        repeatable: bool,
+    );
 }
 pub type __builtin_va_list = [__va_list_tag; 1usize];
 #[repr(C)]

@@ -39,7 +39,7 @@ fn main() {
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")
         .derive_default(true)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
     {
         bindings

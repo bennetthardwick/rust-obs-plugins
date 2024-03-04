@@ -15,59 +15,44 @@ jobs:
   cargo_fmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}/target
-          key: ubuntu-rust-target-directory
+      - uses: dtolnay/rust-toolchain@1.74.0
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
 
       - run: cargo fmt --all -- --check
 
   cargo_clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}/target
-          key: ubuntu-rust-target-directory
+      - uses: dtolnay/rust-toolchain@1.74.0
 
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
+      - uses: Swatinem/rust-cache@v2
 
       - run: cargo clippy --all --no-deps -- -D warnings
 
   build_linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}/target
-          key: ubuntu-rust-target-directory
+      - uses: dtolnay/rust-toolchain@1.74.0
+
+      - uses: Swatinem/rust-cache@v2
 
       - run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt-get update
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
-
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
 
       - run: cargo build --verbose --workspace
 
@@ -76,13 +61,13 @@ jobs:
   build_windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}/target
-          key: windows-rust-target-directory
+
+      - uses: dtolnay/rust-toolchain@1.74.0
+
+      - uses: Swatinem/rust-cache@v2
 
       - run: choco install obs-studio llvm
 
@@ -94,14 +79,13 @@ jobs:
     runs-on: macos-latest
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - uses: actions/cache@v1
-        with:
-          path: ${{ github.workspace }}/target
-          key: macos-rust-target-directory
+      - uses: dtolnay/rust-toolchain@1.74.0
+
+      - uses: Swatinem/rust-cache@v2
 
       - run: brew install --cask obs
 

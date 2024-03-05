@@ -7928,6 +7928,7 @@ extern "C" {
     pub fn _mm_setcsr(__i: ::std::os::raw::c_uint);
 }
 pub type __m128d = [f64; 2usize];
+pub type __m128i = [::std::os::raw::c_longlong; 2usize];
 pub type __m128d_u = [f64; 2usize];
 pub type __m128i_u = [::std::os::raw::c_longlong; 2usize];
 pub type __v2df = [f64; 2usize];
@@ -9593,6 +9594,222 @@ pub type _bindgen_ty_5 = ::std::os::raw::c_uint;
 #[repr(C)]
 #[repr(align(16))]
 #[derive(Copy, Clone)]
+pub union simde__m128i_private {
+    pub i8_: [i8; 16usize],
+    pub i16_: [i16; 8usize],
+    pub i32_: [i32; 4usize],
+    pub i64_: [i64; 2usize],
+    pub u8_: [u8; 16usize],
+    pub u16_: [u16; 8usize],
+    pub u32_: [u32; 4usize],
+    pub u64_: [u64; 2usize],
+    pub i128_: [simde_int128; 1usize],
+    pub u128_: [simde_uint128; 1usize],
+    pub f32_: [simde_float32; 4usize],
+    pub f64_: [simde_float64; 2usize],
+    pub i32f: [int_fast32_t; 2usize],
+    pub u32f: [uint_fast32_t; 2usize],
+    pub m64_private: [simde__m64_private; 2usize],
+    pub m64: [simde__m64; 2usize],
+    pub n: __m128i,
+}
+#[test]
+fn bindgen_test_layout_simde__m128i_private() {
+    const UNINIT: ::std::mem::MaybeUninit<simde__m128i_private> = ::std::mem::MaybeUninit::uninit();
+    let ptr = UNINIT.as_ptr();
+    assert_eq!(
+        ::std::mem::size_of::<simde__m128i_private>(),
+        16usize,
+        concat!("Size of: ", stringify!(simde__m128i_private))
+    );
+    assert_eq!(
+        ::std::mem::align_of::<simde__m128i_private>(),
+        16usize,
+        concat!("Alignment of ", stringify!(simde__m128i_private))
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i8_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i8_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i16_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i16_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i32_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i32_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i64_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i64_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u8_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u8_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u16_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u16_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u32_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u32_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u64_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u64_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i128_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i128_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u128_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u128_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).f32_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(f32_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).f64_) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(f64_)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).i32f) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(i32f)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).u32f) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(u32f)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).m64_private) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(m64_private)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).m64) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(m64)
+        )
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).n) as usize - ptr as usize },
+        0usize,
+        concat!(
+            "Offset of field: ",
+            stringify!(simde__m128i_private),
+            "::",
+            stringify!(n)
+        )
+    );
+}
+impl Default for simde__m128i_private {
+    fn default() -> Self {
+        let mut s = ::std::mem::MaybeUninit::<Self>::uninit();
+        unsafe {
+            ::std::ptr::write_bytes(s.as_mut_ptr(), 0, 1);
+            s.assume_init()
+        }
+    }
+}
+#[repr(C)]
+#[repr(align(16))]
+#[derive(Copy, Clone)]
 pub union simde__m128d_private {
     pub i8_: [i8; 16usize],
     pub i16_: [i16; 8usize],
@@ -9784,6 +10001,7 @@ impl Default for simde__m128d_private {
         }
     }
 }
+pub type simde__m128i = __m128i;
 pub type simde__m128d = __m128d;
 #[repr(C)]
 #[repr(align(16))]

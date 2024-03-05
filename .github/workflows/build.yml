@@ -56,7 +56,7 @@ jobs:
       - run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
           sudo apt-get update
-          sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev llvm
+          sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev clang-16
 
       - run: cargo build --verbose --workspace
 

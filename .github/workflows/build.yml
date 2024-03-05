@@ -84,7 +84,7 @@ jobs:
 
       - run: choco install obs-studio
 
-      - run: choco install llvm --version=16.0.2
+      - run: choco install llvm --version=16.0.6
 
       - run: cargo build --verbose --workspace --exclude scroll-focus-filter
 

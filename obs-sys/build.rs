@@ -35,7 +35,8 @@ fn main() {
 
     match bindgen::Builder::default()
         .header("wrapper.h")
-        .clang_arg("-I/usr/include/obs")
+        .clang_arg("-I./obs/libobs/")
+        .clang_arg("-I./obs/UI/obs-frontend-api/")
         .blocklist_type("_bindgen_ty_2")
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")

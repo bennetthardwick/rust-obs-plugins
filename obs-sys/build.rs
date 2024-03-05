@@ -13,6 +13,7 @@ mod build_mac;
 fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
+    println!("cargo:rerun-if-env-changed=DONT_USE_GENERATED_BINDINGS");
 
     #[cfg(not(target_os = "macos"))]
     {
@@ -34,7 +35,7 @@ fn main() {
 
     if let Ok(bindings) = bindgen::Builder::default()
         .header("wrapper.h")
-        .clang_arg("-I./obs/libobs/")
+        .clang_arg("-I/usr/include/obs")
         .blocklist_type("_bindgen_ty_2")
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")

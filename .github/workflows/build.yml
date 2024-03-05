@@ -20,6 +20,8 @@ jobs:
           submodules: true
 
       - uses: dtolnay/rust-toolchain@1.74.0
+        with:
+          components: rustfmt
 
       - uses: Swatinem/rust-cache@v2
 
@@ -33,6 +35,8 @@ jobs:
           submodules: true
 
       - uses: dtolnay/rust-toolchain@1.74.0
+        with:
+          components: clippy
 
       - uses: Swatinem/rust-cache@v2
 

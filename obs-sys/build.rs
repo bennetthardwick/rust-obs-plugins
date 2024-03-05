@@ -39,6 +39,9 @@ fn main() {
         .blocklist_type("_bindgen_ty_2")
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")
+        .blocklist_type("__m128i")
+        .blocklist_type("simde__m128i")
+        .blocklist_type("simde__m128i_private")
         .derive_default(true)
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .generate()
@@ -52,7 +55,7 @@ fn main() {
 
         Err(e) => {
             if env::var("DONT_USE_GENERATED_BINDINGS").is_ok() {
-                panic!("Failed to generate bindings: {}", e);
+                panic!("Failed to generate headers with bindgen: {}", e);
             }
 
             println!("cargo:warning=Could not find obs headers - using pre-compiled.");

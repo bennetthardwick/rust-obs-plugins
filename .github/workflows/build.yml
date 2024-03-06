@@ -104,3 +104,4 @@ jobs:
           DYLD_PRINT_LIBRARIES: 1
           X: 1
           DYLD_LIBRARY_PATH: "/Applications/OBS.app/Contents/Frameworks"
+          DYLD_FALLBACK_FRAMEWORK_PATH: "/Applications/OBS.app/Contents/Frameworks"

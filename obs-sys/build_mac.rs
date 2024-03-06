@@ -36,7 +36,7 @@ pub fn find_mac_obs_lib() {
                 if meta.is_dir() {
                     println!("cargo:rustc-link-search=framework={}", c.display());
                     println!(
-                        "cargo:rustc-link-lib=framework:+verbatim=:{}",
+                        "cargo:rustc-link-lib=:framework={}",
                         c.join("libobs.framework").display()
                     );
                     found_obs = true;

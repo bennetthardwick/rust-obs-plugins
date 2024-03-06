@@ -43,14 +43,14 @@ pub fn find_mac_obs_lib() {
             if let Ok(meta) = fs::metadata(c.join("obs-frontend-api.dylib")) {
                 if meta.is_file() {
                     println!("cargo:rustc-link-search=native={}", c.display());
-                    found_obs = true;
+                    found_obs_frontend = true;
                 }
             }
 
             if let Ok(meta) = fs::metadata(c.join("libobs-frontend-api.framework")) {
                 if meta.is_file() {
                     println!("cargo:rustc-link-search=framework={}", c.display());
-                    found_obs = true;
+                    found_obs_frontend = true;
                 }
             }
         }

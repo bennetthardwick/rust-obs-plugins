@@ -20,7 +20,7 @@ pub fn find_mac_obs_lib() {
     ];
 
     let mut found_obs = false;
-    let mut found_obs_frontend = true;
+    let mut found_obs_frontend = false;
 
     for c in candidates.iter() {
         if !found_obs {

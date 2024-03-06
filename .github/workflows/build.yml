@@ -101,7 +101,7 @@ jobs:
 
       - run: cargo test --workspace --exclude scroll-focus-filter
         env:
-          DYLD_PRINT_LIBRARIES: 1
-          X: 1
-          DYLD_LIBRARY_PATH: "/Applications/OBS.app/Contents/Frameworks"
+          # Set this so that the test pass!
+          # Maybe you don't need to do this when running the plugin from OBS? I don't know.
+          # If you own a Mac please do something better.
           DYLD_FALLBACK_FRAMEWORK_PATH: "/Applications/OBS.app/Contents/Frameworks"

@@ -100,3 +100,5 @@ jobs:
       - run: cargo build --verbose --workspace --exclude scroll-focus-filter
 
       - run: cargo test --workspace --exclude scroll-focus-filter
+        env:
+          DYLD_LIBRARY_PATH: "/Applicatons/OBS.app/Contents/Frameworks"

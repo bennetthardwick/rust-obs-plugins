@@ -15,8 +15,11 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-env-changed=DONT_USE_GENERATED_BINDINGS");
 
-    println!("cargo:rustc-link-lib=dylib=obs");
-    println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
+    #[cfg(not(target_os = "macos"))]
+    {
+        println!("cargo:rustc-link-lib=dylib=obs");
+        println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
+    }
 
     #[cfg(target_os = "macos")]
     build_mac::find_mac_obs_lib();

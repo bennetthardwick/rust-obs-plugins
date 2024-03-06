@@ -71,8 +71,6 @@ jobs:
 
   build_windows:
     runs-on: windows-latest
-    env:
-      DONT_USE_GENERATED_BINDINGS: "true"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -93,8 +91,6 @@ jobs:
   build_macos:
     runs-on: macos-latest
     if: github.ref == 'refs/heads/master'
-    env:
-      DONT_USE_GENERATED_BINDINGS: "true"
     steps:
       - uses: actions/checkout@v4
         with:

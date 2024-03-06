@@ -35,7 +35,10 @@ pub fn find_mac_obs_lib() {
             if let Ok(meta) = fs::metadata(c.join("libobs.framework")) {
                 if meta.is_dir() {
                     println!("cargo:rustc-link-search=framework={}", c.display());
-                    println!("cargo:rustc-link-lib=framework=libobs");
+                    println!(
+                        "cargo:rustc-link-lib=framework={}",
+                        c.join("libobs.framework").display()
+                    );
                     found_obs = true;
                 }
             }
@@ -46,14 +49,6 @@ pub fn find_mac_obs_lib() {
                 if meta.is_file() {
                     println!("cargo:rustc-link-search=native={}", c.display());
                     println!("cargo:rustc-link-lib=dylib=obs-frontend-api.1");
-                    found_obs_frontend = true;
-                }
-            }
-
-            if let Ok(meta) = fs::metadata(c.join("libobs-frontend-api.framework")) {
-                if meta.is_dir() {
-                    println!("cargo:rustc-link-search=framework={}", c.display());
-                    println!("cargo:rustc-link-lib=framework=libobs-frontend-api");
                     found_obs_frontend = true;
                 }
             }

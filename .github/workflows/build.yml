@@ -83,7 +83,9 @@ jobs:
 
   build_macos:
     runs-on: macos-latest
-    if: github.ref == 'refs/heads/master'
+    env:
+      DONT_USE_GENERATED_BINDINGS: "true"
+    # if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
         with:

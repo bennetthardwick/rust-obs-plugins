@@ -15,21 +15,14 @@ fn main() {
     println!("cargo:rerun-if-changed=wrapper.h");
     println!("cargo:rerun-if-env-changed=DONT_USE_GENERATED_BINDINGS");
 
-    #[cfg(not(target_os = "macos"))]
-    {
-        println!("cargo:rustc-link-lib=dylib=obs");
-        println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
-    }
-
-    // mac OBS only ships with libobs.0.dylib for some reason
-    #[cfg(target_os = "macos")]
-    println!("cargo:rustc-link-lib=dylib=obs.0");
-
-    #[cfg(windows)]
-    build_win::find_windows_obs_lib();
+    println!("cargo:rustc-link-lib=dylib=obs");
+    println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
 
     #[cfg(target_os = "macos")]
     build_mac::find_mac_obs_lib();
+
+    #[cfg(windows)]
+    build_win::find_windows_obs_lib();
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 

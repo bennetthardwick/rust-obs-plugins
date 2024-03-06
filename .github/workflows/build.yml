@@ -54,16 +54,9 @@ jobs:
 
       - run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
-          sudo apt-get remove llvm clang
+          sudo apt-get remove libclang1-15
           sudo apt-get update
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
-
-          # ugh
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          sudo ./llvm.sh 16
-          sudo rm /usr/bin/clang -rf
-          sudo ln -s /usr/bin/clang-16 /usr/bin/clang
 
       - run: cargo build --verbose --workspace
 

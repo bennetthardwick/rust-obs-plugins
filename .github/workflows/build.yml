@@ -8,9 +8,6 @@ on:
     branches:
       - master
 
-env:
-  DONT_USE_GENERATED_BINDINGS: "true"
-
 jobs:
   cargo_fmt:
     runs-on: ubuntu-latest
@@ -20,6 +17,8 @@ jobs:
           submodules: true
 
       - uses: dtolnay/rust-toolchain@1.74.0
+        with:
+          components: rustfmt
 
       - uses: Swatinem/rust-cache@v2
 
@@ -33,6 +32,8 @@ jobs:
           submodules: true
 
       - uses: dtolnay/rust-toolchain@1.74.0
+        with:
+          components: clippy
 
       - uses: Swatinem/rust-cache@v2
 
@@ -40,6 +41,8 @@ jobs:
 
   build_linux:
     runs-on: ubuntu-latest
+    env:
+      DONT_USE_GENERATED_BINDINGS: "true"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,6 +54,7 @@ jobs:
 
       - run: |
           sudo add-apt-repository ppa:obsproject/obs-studio
+          sudo apt-get remove libclang1-15
           sudo apt-get update
           sudo apt-get install obs-studio libxcb-randr0-dev libxcb-ewmh-dev
 
@@ -60,6 +64,8 @@ jobs:
 
   build_windows:
     runs-on: windows-latest
+    env:
+      DONT_USE_GENERATED_BINDINGS: "true"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,7 +83,9 @@ jobs:
 
   build_macos:
     runs-on: macos-latest
-    if: github.ref == 'refs/heads/master'
+    env:
+      DONT_USE_GENERATED_BINDINGS: "true"
+    # if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,3 +100,9 @@ jobs:
       - run: cargo build --verbose --workspace --exclude scroll-focus-filter
 
       - run: cargo test --workspace --exclude scroll-focus-filter
+        env:
+          # Set this so that the test pass!
+          # Maybe you don't need to do this when running the plugin from OBS? I don't know.
+          # If you own a Mac please do something better.
+          DYLD_FALLBACK_FRAMEWORK_PATH: "/Applications/OBS.app/Contents/Frameworks"
+          DYLD_FALLBACK_LIBRARY_PATH: "/Applications/OBS.app/Contents/Frameworks"

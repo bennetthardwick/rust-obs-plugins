@@ -21535,6 +21535,51 @@ extern "C" {
 extern "C" {
     pub fn obs_source_get_icon_type(id: *const ::std::os::raw::c_char) -> obs_icon_type;
 }
+extern "C" {
+    #[doc = " Required: Called when the module is loaded.  Use this function to load all\n the sources/encoders/outputs/services for your module, or anything else that\n may need loading.\n\n @return           Return true to continue loading the module, otherwise\n                   false to indicate failure and unload the module"]
+    pub fn obs_module_load() -> bool;
+}
+extern "C" {
+    #[doc = " Optional: Called when the module is unloaded."]
+    pub fn obs_module_unload();
+}
+extern "C" {
+    #[doc = " Optional: Called when all modules have finished loading"]
+    pub fn obs_module_post_load();
+}
+extern "C" {
+    #[doc = " Called to set the current locale data for the module."]
+    pub fn obs_module_set_locale(locale: *const ::std::os::raw::c_char);
+}
+extern "C" {
+    #[doc = " Called to free the current locale data for the module."]
+    pub fn obs_module_free_locale();
+}
+extern "C" {
+    #[doc = " Helper function for looking up locale if default locale handler was used"]
+    pub fn obs_module_text(
+        lookup_string: *const ::std::os::raw::c_char,
+    ) -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Helper function for looking up locale if default locale handler was used,\n returns true if text found, otherwise false"]
+    pub fn obs_module_get_string(
+        lookup_string: *const ::std::os::raw::c_char,
+        translated_string: *mut *const ::std::os::raw::c_char,
+    ) -> bool;
+}
+extern "C" {
+    #[doc = " Helper function that returns the current module"]
+    pub fn obs_current_module() -> *mut obs_module_t;
+}
+extern "C" {
+    #[doc = " Optional: Returns the full name of the module"]
+    pub fn obs_module_name() -> *const ::std::os::raw::c_char;
+}
+extern "C" {
+    #[doc = " Optional: Returns a description of the module"]
+    pub fn obs_module_description() -> *const ::std::os::raw::c_char;
+}
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct config_data {

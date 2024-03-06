@@ -22,9 +22,6 @@ pub fn find_mac_obs_lib() {
     let mut found_obs = false;
     let mut found_obs_frontend = false;
 
-    println!("cargo:rustc-link-lib=dylib=obs");
-    println!("cargo:rustc-link-lib=dylib=obs-frontend-api");
-
     for c in candidates.iter() {
         if !found_obs {
             if let Ok(meta) = fs::metadata(c.join("obs.dylib")) {

@@ -64,6 +64,8 @@ jobs:
 
   build_windows:
     runs-on: windows-latest
+    env:
+      DONT_USE_GENERATED_BINDINGS: "true"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -73,9 +75,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: choco install obs-studio
-
-      - run: choco install llvm --version=16.0.6
+      - run: choco install obs-studio llvm
 
       - run: cargo build --verbose --workspace --exclude scroll-focus-filter
 

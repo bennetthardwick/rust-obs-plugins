@@ -33,16 +33,23 @@ fn main() {
 
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
 
-    match bindgen::Builder::default()
+    let builder = bindgen::Builder::default()
         .header("wrapper.h")
-        .clang_arg("-I/usr/include/obs/")
+        .clang_args([
+            // Windows has an issue with the _udiv128 function not being declared
+            // So just ignore for now!
+            #[cfg(windows)]
+            "-Wno-error=implicit-function-declaration",
+            "-I./obs/libobs/",
+            "-I./obs/UI/obs-frontend-api/",
+        ])
         .blocklist_type("_bindgen_ty_2")
         .blocklist_type("_bindgen_ty_3")
         .blocklist_type("_bindgen_ty_4")
         .derive_default(true)
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        .generate()
-    {
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
+
+    match builder.generate() {
         Ok(bindings) => {
             bindings
                 .write_to_file(&out_path)

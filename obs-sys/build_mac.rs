@@ -34,8 +34,8 @@ pub fn find_mac_obs_lib() {
 
             if let Ok(meta) = fs::metadata(c.join("libobs.framework")) {
                 if meta.is_dir() {
-                    println!("cargo:rustc-link-search=all={}", c.display());
-                    println!("cargo:rustc-link-lib=framework=libobs",);
+                    println!("cargo:rustc-link-search=framework={}", c.display());
+                    println!("cargo:rustc-link-lib=framework=libobs");
                     found_obs = true;
                 }
             }

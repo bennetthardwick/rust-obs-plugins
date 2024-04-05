@@ -138,10 +138,10 @@ pub mod module;
 pub mod output;
 /// Tools for creating properties
 pub mod properties;
-/// Tools for creating sources
-pub mod source;
 /// Error handling
 pub mod result;
+/// Tools for creating sources
+pub mod source;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper

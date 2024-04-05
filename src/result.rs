@@ -1,4 +1,3 @@
-
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, thiserror::Error)]
@@ -9,6 +8,9 @@ pub enum Error {
     /// Null Pointer
     #[error("Null Pointer Error: {0}")]
     NulPointer(&'static str),
+    /// Null Error
+    #[error("Null String Error: {0}")]
+    NulError(#[from] std::ffi::NulError),
     /// Error converting string
     #[error("Utf8 Error: {0}")]
     Utf8Error(#[from] std::str::Utf8Error),

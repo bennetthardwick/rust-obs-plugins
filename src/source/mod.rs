@@ -4,7 +4,11 @@ pub mod context;
 mod ffi;
 pub mod traits;
 
-use crate::media::state::MediaState;
+use crate::{
+    media::state::MediaState,
+    string::{DisplayExt as _, TryIntoObsString},
+    Result,
+};
 
 pub use context::*;
 pub use traits::*;
@@ -43,10 +47,7 @@ use super::{
 };
 use crate::{data::DataObj, native_enum, wrapper::PtrWrapper};
 
-use std::{
-    ffi::{CStr, CString},
-    marker::PhantomData,
-};
+use std::{ffi::CString, marker::PhantomData};
 
 native_enum!(MouseButton, obs_mouse_button_type {
     Left => MOUSE_LEFT,
@@ -115,14 +116,27 @@ pub struct SourceRef {
     inner: *mut obs_source_t,
 }
 
+impl std::fmt::Debug for SourceRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceRef")
+            .field("id", &self.id())
+            .field("name", &self.name().display())
+            .field("source_id", &self.source_id().display())
+            .field("width", &self.width())
+            .field("height", &self.height())
+            .field("showing", &self.showing())
+            .field("active", &self.active())
+            .field("enabled", &self.enabled())
+            .finish()
+    }
+}
+
 impl SourceRef {
     /// # Safety
     ///
     /// Must call with a valid pointer.
     pub fn from_raw(source: *mut obs_source_t) -> Option<Self> {
-        unsafe {
-            Self::from_raw_unchecked(obs_source_get_ref(source))
-        }
+        unsafe { Self::from_raw_unchecked(obs_source_get_ref(source)) }
     }
 
     pub unsafe fn from_raw_unchecked(source: *mut obs_source_t) -> Option<Self> {
@@ -192,26 +206,12 @@ impl SourceRef {
         unsafe { obs_source_set_enabled(self.inner, enabled) }
     }
 
-    pub fn source_id(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_source_get_id(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn source_id(&self) -> Result<ObsString> {
+        unsafe { obs_source_get_id(self.inner) }.try_into_obs_string()
     }
 
-    pub fn name(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_source_get_name(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn name(&self) -> Result<ObsString> {
+        unsafe { obs_source_get_name(self.inner) }.try_into_obs_string()
     }
 
     pub fn set_name(&mut self, name: &str) {

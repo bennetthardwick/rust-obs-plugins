@@ -1,7 +1,7 @@
 use obs_sys::{obs_key_event, obs_mouse_event};
 
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::{EnumActiveContext, EnumAllContext, SourceContext, SourceType};
+use super::{EnumActiveContext, EnumAllContext, SourceRef, SourceType};
 use crate::data::DataObj;
 use crate::media::state::MediaState;
 use crate::media::{audio::AudioDataContext, video::VideoDataSourceContext};
@@ -11,7 +11,7 @@ use crate::string::ObsString;
 pub trait Sourceable: Sized {
     fn get_id() -> ObsString;
     fn get_type() -> SourceType;
-    fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self;
+    fn create(create: &mut CreatableSourceContext<Self>, source: SourceRef) -> Self;
 }
 
 macro_rules! simple_trait {

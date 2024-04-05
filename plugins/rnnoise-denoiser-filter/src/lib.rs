@@ -39,7 +39,7 @@ impl Sourceable for RnnoiseDenoiserFilter {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
-    fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
+    fn create(create: &mut CreatableSourceContext<Self>, _source: SourceRef) -> Self {
         let (sample_rate, channels) =
             create.with_audio(|audio| (audio.sample_rate(), audio.channels()));
 

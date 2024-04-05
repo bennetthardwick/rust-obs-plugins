@@ -140,6 +140,8 @@ pub mod output;
 pub mod properties;
 /// Tools for creating sources
 pub mod source;
+/// Error handling
+pub mod result;
 /// String macros
 pub mod string;
 /// FFI pointer wrapper
@@ -155,15 +157,4 @@ pub mod prelude {
     pub use crate::string::*;
 }
 
-#[derive(Debug)]
-pub struct Error;
-
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "OBS Error")
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+pub use result::{Error, Result};

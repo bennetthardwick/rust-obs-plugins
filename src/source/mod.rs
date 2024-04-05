@@ -104,49 +104,61 @@ impl SourceType {
     }
 }
 
+#[deprecated = "use `SourceRef` instead"]
+pub type SourceContext = SourceRef;
+
 /// Context wrapping an OBS source - video / audio elements which are displayed
 /// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
-pub struct SourceContext {
+pub struct SourceRef {
     inner: *mut obs_source_t,
 }
 
-impl SourceContext {
+impl SourceRef {
     /// # Safety
     ///
     /// Must call with a valid pointer.
-    pub unsafe fn from_raw(source: *mut obs_source_t) -> Self {
-        Self {
-            inner: obs_source_get_ref(source),
+    pub fn from_raw(source: *mut obs_source_t) -> Option<Self> {
+        unsafe {
+            Self::from_raw_unchecked(obs_source_get_ref(source))
+        }
+    }
+
+    pub unsafe fn from_raw_unchecked(source: *mut obs_source_t) -> Option<Self> {
+        if source.is_null() {
+            None
+        } else {
+            Some(Self { inner: source })
         }
     }
 }
 
-impl Clone for SourceContext {
+impl Clone for SourceRef {
     fn clone(&self) -> Self {
-        unsafe { Self::from_raw(self.inner) }
+        Self::from_raw(self.inner).expect("clone")
     }
 }
 
-impl Drop for SourceContext {
+impl Drop for SourceRef {
     fn drop(&mut self) {
         unsafe { obs_source_release(self.inner) }
     }
 }
 
-impl SourceContext {
+impl SourceRef {
     /// Run a function on the next source in the filter chain.
     ///
     /// Note: only works with sources that are filters.
-    pub fn do_with_target<F: FnOnce(&mut SourceContext)>(&mut self, func: F) {
+    pub fn do_with_target<F: FnOnce(&mut SourceRef)>(&mut self, func: F) {
         unsafe {
             if let Some(SourceType::FILTER) =
                 SourceType::from_native(obs_source_get_type(self.inner))
             {
                 let target = obs_filter_get_target(self.inner);
-                let mut context = SourceContext::from_raw(target);
-                func(&mut context);
+                if let Some(mut context) = SourceRef::from_raw(target) {
+                    func(&mut context);
+                }
             }
         }
     }

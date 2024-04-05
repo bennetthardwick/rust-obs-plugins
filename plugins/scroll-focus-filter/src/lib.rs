@@ -17,7 +17,7 @@ enum ServerMessage {
 }
 
 struct ScrollFocusFilter {
-    source: SourceContext,
+    source: SourceRef,
     effect: GraphicsEffect,
 
     base_dimension: GraphicsEffectVec2Param,
@@ -70,7 +70,7 @@ impl Sourceable for ScrollFocusFilter {
     fn get_type() -> SourceType {
         SourceType::FILTER
     }
-    fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceContext) -> Self {
+    fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceRef) -> Self {
         let mut effect = GraphicsEffect::from_effect_string(
             obs_string!(include_str!("./crop_filter.effect")),
             obs_string!("crop_filter.effect"),

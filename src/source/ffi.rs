@@ -1,5 +1,5 @@
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::{traits::*, SourceContext};
+use super::{traits::*, SourceRef};
 use super::{EnumActiveContext, EnumAllContext};
 use crate::media::{audio::AudioDataContext, video::VideoDataSourceContext};
 use crate::{
@@ -89,7 +89,7 @@ pub unsafe extern "C" fn create<D: Sourceable>(
     let mut global = GlobalContext;
     let settings = DataObj::from_raw(settings);
     let mut context = CreatableSourceContext::from_raw(settings, &mut global);
-    let source_context = SourceContext::from_raw(source);
+    let source_context = SourceRef::from_raw(source).expect("create");
 
     let data = D::create(&mut context, source_context);
 

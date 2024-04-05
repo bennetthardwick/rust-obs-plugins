@@ -221,7 +221,7 @@ macro_rules! impl_graphics_effects {
                     fn try_from(effect: GraphicsEffectParam) -> Result<Self> {
                         match effect.shader_type {
                             ShaderParamType::[<$t>] => Ok([<GraphicsEffect $t Param>] { effect }),
-                            _ => Err(Error),
+                            _ => Err(Error::EnumOutOfRange("ShaderParamType", effect.shader_type as _)),
                         }
                     }
                 }
@@ -700,7 +700,7 @@ impl<'tex> MappedTexture<'tex> {
             gs_texture_map(tex.as_ptr(), &mut ptr, &mut linesize)
         });
         if !map_result {
-            return Err(Error);
+            return Err(Error::ObsError(-1));
         }
         let len = (linesize * tex.height()) as usize;
         Ok(Self { tex, ptr, len })

@@ -131,6 +131,19 @@ impl std::fmt::Debug for SourceRef {
     }
 }
 
+// impl PtrWrapper for SourceRef {
+//     type Pointer = obs_source_t;
+
+//     fn as_ptr(&self) -> *const Self::Pointer {
+//         self.inner
+//     }
+
+
+//     unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
+//         todo!()
+//     }
+// }
+
 impl SourceRef {
     /// # Safety
     ///
@@ -145,6 +158,10 @@ impl SourceRef {
         } else {
             Some(Self { inner: source })
         }
+    }
+
+    pub unsafe fn as_raw(&self) -> *mut obs_source_t {
+        self.inner
     }
 }
 

@@ -85,7 +85,7 @@ pub trait DisplayExt: Sized {
 impl DisplayExt for ObsString {}
 impl DisplayExt for Option<ObsString> {}
 impl<'a> DisplayExt for Option<&'a ObsString> {}
-impl DisplayExt for Result<ObsString> {}
+impl<E> DisplayExt for Result<ObsString, E> {}
 impl std::fmt::Display for DisplayStr<'_, ObsString> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -122,7 +122,7 @@ where
         }
     }
 }
-impl<'a, T: DisplayExt> std::fmt::Debug for DisplayStr<'a, Result<T>>
+impl<'a, T: DisplayExt, E> std::fmt::Debug for DisplayStr<'a, Result<T, E>>
 where
     DisplayStr<'a, T>: std::fmt::Debug,
 {

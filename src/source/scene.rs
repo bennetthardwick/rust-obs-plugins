@@ -41,11 +41,9 @@ impl SceneRef {
 
     pub fn add_source(&self, source: SourceRef) -> SceneItemRef {
         let ptr = unsafe {
-            let ptr = obs_scene_add(self.inner, source.as_ptr_mut());
             // add ref for source, Docs said "A new scene item for a source within a scene.  Does not
             // increment the reference"
-            obs_sceneitem_addref(ptr);
-            ptr
+            obs_scene_add(self.inner, source.as_ptr_mut())
         };
         SceneItemRef::from_raw(ptr).expect("obs_scene_add")
     }

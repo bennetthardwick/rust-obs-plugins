@@ -18,13 +18,17 @@ impl DisplayRef {
         unsafe { obs_display_resize(self.inner, cx, cy) }
     }
 
-    pub fn add_draw_callback<'a, S: DrawCallback>(&'a self, callback: S) -> DrawCallbackId<'a, S> {
+    pub fn add_draw_callback<S: DrawCallback>(&self, callback: S) -> DrawCallbackId<'_, S> {
         let data = Box::into_raw(Box::new(callback));
-        let callback = draw_callback::<S>;
+        // force the pointer to be a function pointer, since it is not garantueed to be the same pointer
+        // for different instance of generic functions
+        // see https://users.rust-lang.org/t/generic-functions-and-their-pointer-uniquness/36989
+        // clippy: #[deny(clippy::fn_address_comparisons)]
+        let callback: unsafe extern "C" fn(*mut std::ffi::c_void, u32, u32) = draw_callback::<S>;
         unsafe {
             obs_display_add_draw_callback(self.inner, Some(callback), data as *mut std::ffi::c_void)
         }
-        DrawCallbackId::new(data, callback as *const _, self.inner)
+        DrawCallbackId::new(data, callback as *const _, self)
     }
 
     pub fn remove_draw_callback<S: DrawCallback>(&self, data: DrawCallbackId<S>) -> S {
@@ -44,6 +48,8 @@ pub trait DrawCallback {
     fn draw(&self, cx: u32, cy: u32);
 }
 
+/// # Safety
+/// This function is called by OBS, and it is guaranteed that the pointer is valid.
 pub unsafe extern "C" fn draw_callback<S: DrawCallback>(
     data: *mut std::ffi::c_void,
     cx: u32,
@@ -61,15 +67,11 @@ pub struct DrawCallbackId<'a, S> {
 }
 
 impl<'a, S> DrawCallbackId<'a, S> {
-    pub fn new(
-        data: *mut S,
-        callback: *const std::ffi::c_void,
-        display: *mut obs_display_t,
-    ) -> Self {
+    pub fn new(data: *mut S, callback: *const std::ffi::c_void, display: &'a DisplayRef) -> Self {
         DrawCallbackId {
             data,
             callback,
-            display,
+            display: display.inner,
             _marker: std::marker::PhantomData,
         }
     }

@@ -218,7 +218,7 @@ pub unsafe extern "C" fn media_get_state<D: MediaGetStateSource>(
     data: *mut std::os::raw::c_void,
 ) -> obs_media_state {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    D::get_state(&mut wrapper.data).to_native()
+    D::get_state(&mut wrapper.data).as_raw()
 }
 
 pub unsafe extern "C" fn media_set_time<D: MediaSetTimeSource>(

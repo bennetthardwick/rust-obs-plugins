@@ -24,30 +24,44 @@ impl std::error::Error for NativeParsingError {}
 
 #[macro_export]
 macro_rules! native_enum {
-    ($name:ident,$native_name:ident { $($rust:ident => $native:ident),* }) => {
+    ($(#[$($attrs_enum:tt)*])* $name:ident,$native_name:ident { $($(#[$($attrss:tt)*])* $rust:ident => $native:ident,)* }) => {
         paste::item! {
-        #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+            $(#[$($attrs_enum)*])*
+            #[derive(Debug, Clone, Copy, Eq, PartialEq)]
             pub enum $name {
-                $($rust),*
+                $(
+                    $(#[$($attrss)*])*
+                    $rust,
+                )*
+            }
+
+            impl $name {
+                pub fn as_raw(&self) -> $native_name {
+                    match self {
+                        $(Self::$rust => [<$native_name _ $native>],)*
+                    }
+                }
+
+                #[allow(non_upper_case_globals)]
+                pub fn from_raw(value: $native_name) -> Result<Self, $crate::native_enum::NativeParsingError> {
+                    match value {
+                        $([<$native_name _ $native>] => Ok(Self::$rust)),*,
+                        _ => Err($crate::native_enum::NativeParsingError::new(stringify!($name), value as i64))
+                    }
+                }
             }
 
             #[allow(clippy::from_over_into)]
             impl Into<$native_name> for $name {
-                fn into(self) -> obs_text_type {
-                    match self {
-                        $(Self::$rust => [<$native_name _ $native>]),*
-                    }
+                fn into(self) -> $native_name {
+                    self.as_raw()
                 }
             }
 
             impl std::convert::TryFrom<$native_name> for $name {
                 type Error = $crate::native_enum::NativeParsingError;
-                #[allow(non_upper_case_globals)]
-                fn try_from(value: $native_name) -> Result<Self, Self::Error> {
-                    match value {
-                        $([<$native_name _ $native>] => Ok(Self::$rust)),*,
-                        _ => Err($crate::native_enum::NativeParsingError::new(stringify!($name), value as i64))
-                    }
+                fn try_from(value: $native_name) -> Result<Self, $crate::native_enum::NativeParsingError> {
+                    Self::from_raw(value)
                 }
             }
         }

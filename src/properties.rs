@@ -29,32 +29,32 @@ use std::{marker::PhantomData, ops::RangeBounds, os::raw::c_int};
 native_enum!(TextType, obs_text_type {
     Default => OBS_TEXT_DEFAULT,
     Password => OBS_TEXT_PASSWORD,
-    Multiline => OBS_TEXT_MULTILINE
+    Multiline => OBS_TEXT_MULTILINE,
 });
 
 native_enum!(PathType, obs_path_type {
     File => OBS_PATH_FILE,
     FileSave => OBS_PATH_FILE_SAVE,
-    Directory => OBS_PATH_DIRECTORY
+    Directory => OBS_PATH_DIRECTORY,
 });
 
 native_enum!(ComboFormat, obs_combo_format {
     Invalid => OBS_COMBO_FORMAT_INVALID,
     Int => OBS_COMBO_FORMAT_INT,
     Float => OBS_COMBO_FORMAT_FLOAT,
-    String => OBS_COMBO_FORMAT_STRING
+    String => OBS_COMBO_FORMAT_STRING,
 });
 
 native_enum!(ComboType, obs_combo_type {
     Invalid => OBS_COMBO_TYPE_INVALID,
     Editable => OBS_COMBO_TYPE_EDITABLE,
-    List => OBS_COMBO_TYPE_LIST
+    List => OBS_COMBO_TYPE_LIST,
 });
 
 native_enum!(EditableListType, obs_editable_list_type {
     Strings => OBS_EDITABLE_LIST_TYPE_STRINGS,
     Files => OBS_EDITABLE_LIST_TYPE_FILES,
-    FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS
+    FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS,
 });
 
 /// Wrapper around [`obs_properties_t`], which is used by

@@ -36,8 +36,8 @@ use obs_sys::{
     obs_source_set_name, obs_source_showing, obs_source_skip_video_filter, obs_source_t,
     obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, obs_text_type, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA,
-    OBS_SOURCE_INTERACTION, OBS_SOURCE_VIDEO,
+    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_INTERACTION,
+    OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -53,7 +53,7 @@ use std::{ffi::CString, marker::PhantomData};
 native_enum!(MouseButton, obs_mouse_button_type {
     Left => MOUSE_LEFT,
     Middle => MOUSE_MIDDLE,
-    Right => MOUSE_RIGHT
+    Right => MOUSE_RIGHT,
 });
 
 native_enum!(Icon, obs_icon_type {
@@ -70,7 +70,7 @@ native_enum!(Icon, obs_icon_type {
     Text => OBS_ICON_TYPE_TEXT,
     Media => OBS_ICON_TYPE_MEDIA,
     Browser => OBS_ICON_TYPE_BROWSER,
-    Custom => OBS_ICON_TYPE_CUSTOM
+    Custom => OBS_ICON_TYPE_CUSTOM,
 });
 
 /// OBS source type
@@ -253,7 +253,7 @@ impl SourceRef {
 
     pub fn media_state(&self) -> MediaState {
         let ret = unsafe { obs_source_media_get_state(self.inner) };
-        MediaState::from_native(ret).expect("Invalid media state value")
+        MediaState::from_raw(ret).expect("Invalid media state value")
     }
 
     pub fn media_started(&mut self) {

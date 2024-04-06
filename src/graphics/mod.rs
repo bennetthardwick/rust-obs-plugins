@@ -1,6 +1,6 @@
 pub mod display;
 
-use crate::{Error, Result};
+use crate::{native_enum, Error, Result};
 use core::convert::TryFrom;
 use core::ptr::null_mut;
 use obs_sys::{
@@ -72,62 +72,21 @@ impl Drop for GraphicsGuard {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum ShaderParamType {
-    Unknown,
-    Bool,
-    Float,
-    Int,
-    String,
-    Vec2,
-    Vec3,
-    Vec4,
-    Int2,
-    Int3,
-    Int4,
-    Mat4,
-    Texture,
-}
-
-impl ShaderParamType {
-    pub fn as_raw(&self) -> gs_shader_param_type {
-        match self {
-            ShaderParamType::Unknown => gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN,
-            ShaderParamType::Bool => gs_shader_param_type_GS_SHADER_PARAM_BOOL,
-            ShaderParamType::Float => gs_shader_param_type_GS_SHADER_PARAM_FLOAT,
-            ShaderParamType::Int => gs_shader_param_type_GS_SHADER_PARAM_INT,
-            ShaderParamType::String => gs_shader_param_type_GS_SHADER_PARAM_STRING,
-            ShaderParamType::Vec2 => gs_shader_param_type_GS_SHADER_PARAM_VEC2,
-            ShaderParamType::Vec3 => gs_shader_param_type_GS_SHADER_PARAM_VEC3,
-            ShaderParamType::Vec4 => gs_shader_param_type_GS_SHADER_PARAM_VEC4,
-            ShaderParamType::Int2 => gs_shader_param_type_GS_SHADER_PARAM_INT2,
-            ShaderParamType::Int3 => gs_shader_param_type_GS_SHADER_PARAM_INT3,
-            ShaderParamType::Int4 => gs_shader_param_type_GS_SHADER_PARAM_INT4,
-            ShaderParamType::Mat4 => gs_shader_param_type_GS_SHADER_PARAM_MATRIX4X4,
-            ShaderParamType::Texture => gs_shader_param_type_GS_SHADER_PARAM_TEXTURE,
-        }
-    }
-
-    #[allow(non_upper_case_globals)]
-    pub fn from_raw(param_type: gs_shader_param_type) -> Self {
-        match param_type {
-            gs_shader_param_type_GS_SHADER_PARAM_UNKNOWN => ShaderParamType::Unknown,
-            gs_shader_param_type_GS_SHADER_PARAM_BOOL => ShaderParamType::Bool,
-            gs_shader_param_type_GS_SHADER_PARAM_FLOAT => ShaderParamType::Float,
-            gs_shader_param_type_GS_SHADER_PARAM_INT => ShaderParamType::Int,
-            gs_shader_param_type_GS_SHADER_PARAM_STRING => ShaderParamType::String,
-            gs_shader_param_type_GS_SHADER_PARAM_VEC2 => ShaderParamType::Vec2,
-            gs_shader_param_type_GS_SHADER_PARAM_VEC3 => ShaderParamType::Vec3,
-            gs_shader_param_type_GS_SHADER_PARAM_VEC4 => ShaderParamType::Vec4,
-            gs_shader_param_type_GS_SHADER_PARAM_INT2 => ShaderParamType::Int2,
-            gs_shader_param_type_GS_SHADER_PARAM_INT3 => ShaderParamType::Int3,
-            gs_shader_param_type_GS_SHADER_PARAM_INT4 => ShaderParamType::Int4,
-            gs_shader_param_type_GS_SHADER_PARAM_MATRIX4X4 => ShaderParamType::Mat4,
-            gs_shader_param_type_GS_SHADER_PARAM_TEXTURE => ShaderParamType::Texture,
-            _ => panic!("Invalid param_type!"),
-        }
-    }
-}
+native_enum!(ShaderParamType, gs_shader_param_type {
+    Unknown => GS_SHADER_PARAM_UNKNOWN,
+    Bool => GS_SHADER_PARAM_BOOL,
+    Float => GS_SHADER_PARAM_FLOAT,
+    Int => GS_SHADER_PARAM_INT,
+    String => GS_SHADER_PARAM_STRING,
+    Vec2 => GS_SHADER_PARAM_VEC2,
+    Vec3 => GS_SHADER_PARAM_VEC3,
+    Vec4 => GS_SHADER_PARAM_VEC4,
+    Int2 => GS_SHADER_PARAM_INT2,
+    Int3 => GS_SHADER_PARAM_INT3,
+    Int4 => GS_SHADER_PARAM_INT4,
+    Mat4 => GS_SHADER_PARAM_MATRIX4X4,
+    Texture => GS_SHADER_PARAM_TEXTURE,
+});
 
 pub struct GraphicsEffect {
     raw: *mut gs_effect_t,
@@ -192,7 +151,7 @@ impl GraphicsEffectParam {
         let mut info = gs_effect_param_info::default();
         gs_effect_get_param_info(raw, &mut info);
 
-        let shader_type = ShaderParamType::from_raw(info.type_);
+        let shader_type = ShaderParamType::from_raw(info.type_).unwrap();
         let name = CString::from(CStr::from_ptr(info.name))
             .into_string()
             .unwrap_or_else(|_| String::from("{unknown-param-name}"));
@@ -263,65 +222,25 @@ impl GraphicsEffectTextureParam {
     }
 }
 
-pub enum GraphicsAddressMode {
-    Clamp,
-    Wrap,
-    Mirror,
-    Border,
-    MirrorOnce,
-}
+native_enum!(GraphicsAddressMode, gs_address_mode {
+    Clamp => GS_ADDRESS_CLAMP,
+    Wrap => GS_ADDRESS_WRAP,
+    Mirror => GS_ADDRESS_MIRROR,
+    Border => GS_ADDRESS_BORDER,
+    MirrorOnce => GS_ADDRESS_MIRRORONCE,
+});
 
-impl GraphicsAddressMode {
-    pub fn as_raw(&self) -> gs_address_mode {
-        match self {
-            GraphicsAddressMode::Clamp => gs_address_mode_GS_ADDRESS_CLAMP,
-            GraphicsAddressMode::Wrap => gs_address_mode_GS_ADDRESS_WRAP,
-            GraphicsAddressMode::Mirror => gs_address_mode_GS_ADDRESS_MIRROR,
-            GraphicsAddressMode::Border => gs_address_mode_GS_ADDRESS_BORDER,
-            GraphicsAddressMode::MirrorOnce => gs_address_mode_GS_ADDRESS_MIRRORONCE,
-        }
-    }
-}
-
-pub enum GraphicsSampleFilter {
-    Point,
-    Linear,
-    Anisotropic,
-    MinMagPointMipLinear,
-    MinPointMagLinearMipPoint,
-    MinPointMagMipLinear,
-    MinLinearMapMipPoint,
-    MinLinearMagPointMipLinear,
-    MinMagLinearMipPoint,
-}
-
-impl GraphicsSampleFilter {
-    fn as_raw(&self) -> gs_sample_filter {
-        match self {
-            GraphicsSampleFilter::Point => gs_sample_filter_GS_FILTER_POINT,
-            GraphicsSampleFilter::Linear => gs_sample_filter_GS_FILTER_LINEAR,
-            GraphicsSampleFilter::Anisotropic => gs_sample_filter_GS_FILTER_ANISOTROPIC,
-            GraphicsSampleFilter::MinMagPointMipLinear => {
-                gs_sample_filter_GS_FILTER_MIN_MAG_POINT_MIP_LINEAR
-            }
-            GraphicsSampleFilter::MinPointMagLinearMipPoint => {
-                gs_sample_filter_GS_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT
-            }
-            GraphicsSampleFilter::MinPointMagMipLinear => {
-                gs_sample_filter_GS_FILTER_MIN_POINT_MAG_MIP_LINEAR
-            }
-            GraphicsSampleFilter::MinLinearMapMipPoint => {
-                gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_MIP_POINT
-            }
-            GraphicsSampleFilter::MinLinearMagPointMipLinear => {
-                gs_sample_filter_GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR
-            }
-            GraphicsSampleFilter::MinMagLinearMipPoint => {
-                gs_sample_filter_GS_FILTER_MIN_MAG_LINEAR_MIP_POINT
-            }
-        }
-    }
-}
+native_enum!(GraphicsSampleFilter, gs_sample_filter {
+    Point => GS_FILTER_POINT,
+    Linear => GS_FILTER_LINEAR,
+    Anisotropic => GS_FILTER_ANISOTROPIC,
+    MinMagPointMipLinear => GS_FILTER_MIN_MAG_POINT_MIP_LINEAR,
+    MinPointMagLinearMipPoint => GS_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
+    MinPointMagMipLinear => GS_FILTER_MIN_POINT_MAG_MIP_LINEAR,
+    MinLinearMapMipPoint => GS_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+    MinLinearMagPointMipLinear => GS_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+    MinMagLinearMipPoint => GS_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+});
 
 pub struct GraphicsSamplerInfo {
     info: gs_sampler_info,
@@ -398,72 +317,32 @@ impl GraphicsEffectContext {
     }
 }
 
-#[derive(Debug, Eq, PartialEq, Clone, Copy)]
-pub enum GraphicsColorFormat {
-    UNKNOWN,
-    A8,
-    R8,
-    RGBA,
-    BGRX,
-    BGRA,
-    R10G10B10A2,
-    RGBA16,
-    R16,
-    RGBA16F,
-    RGBA32F,
-    RG16F,
-    RG32F,
-    R16F,
-    R32F,
-    DXT1,
-    DXT3,
-    DXT5,
-    R8G8,
-}
+native_enum!(GraphicsColorFormat, gs_color_format {
+    UNKNOWN => GS_UNKNOWN,
+    A8 => GS_A8,
+    R8 => GS_R8,
+    RGBA => GS_RGBA,
+    BGRX => GS_BGRX,
+    BGRA => GS_BGRA,
+    R10G10B10A2 => GS_R10G10B10A2,
+    RGBA16 => GS_RGBA16,
+    R16 => GS_R16,
+    RGBA16F => GS_RGBA16F,
+    RGBA32F => GS_RGBA32F,
+    RG16F => GS_RG16F,
+    RG32F => GS_RG32F,
+    R16F => GS_R16F,
+    R32F => GS_R32F,
+    DXT1 => GS_DXT1,
+    DXT3 => GS_DXT3,
+    DXT5 => GS_DXT5,
+    R8G8 => GS_R8G8,
+});
 
-impl GraphicsColorFormat {
-    pub fn as_raw(&self) -> gs_color_format {
-        match self {
-            GraphicsColorFormat::UNKNOWN => gs_color_format_GS_UNKNOWN,
-            GraphicsColorFormat::A8 => gs_color_format_GS_A8,
-            GraphicsColorFormat::R8 => gs_color_format_GS_R8,
-            GraphicsColorFormat::RGBA => gs_color_format_GS_RGBA,
-            GraphicsColorFormat::BGRX => gs_color_format_GS_BGRX,
-            GraphicsColorFormat::BGRA => gs_color_format_GS_BGRA,
-            GraphicsColorFormat::R10G10B10A2 => gs_color_format_GS_R10G10B10A2,
-            GraphicsColorFormat::RGBA16 => gs_color_format_GS_RGBA16,
-            GraphicsColorFormat::R16 => gs_color_format_GS_R16,
-            GraphicsColorFormat::RGBA16F => gs_color_format_GS_RGBA16F,
-            GraphicsColorFormat::RGBA32F => gs_color_format_GS_RGBA32F,
-            GraphicsColorFormat::RG16F => gs_color_format_GS_RG16F,
-            GraphicsColorFormat::RG32F => gs_color_format_GS_RG32F,
-            GraphicsColorFormat::R16F => gs_color_format_GS_R16F,
-            GraphicsColorFormat::R32F => gs_color_format_GS_R32F,
-            GraphicsColorFormat::DXT1 => gs_color_format_GS_DXT1,
-            GraphicsColorFormat::DXT3 => gs_color_format_GS_DXT3,
-            GraphicsColorFormat::DXT5 => gs_color_format_GS_DXT5,
-            GraphicsColorFormat::R8G8 => gs_color_format_GS_R8G8,
-        }
-    }
-}
-
-pub enum GraphicsAllowDirectRendering {
-    NoDirectRendering,
-    AllowDirectRendering,
-}
-
-impl GraphicsAllowDirectRendering {
-    pub fn as_raw(&self) -> obs_allow_direct_render {
-        match self {
-            GraphicsAllowDirectRendering::NoDirectRendering => {
-                obs_allow_direct_render_OBS_NO_DIRECT_RENDERING
-            }
-            GraphicsAllowDirectRendering::AllowDirectRendering => {
-                obs_allow_direct_render_OBS_ALLOW_DIRECT_RENDERING
-            }
-        }
-    }
-}
+native_enum!(GraphicsAllowDirectRendering, obs_allow_direct_render {
+    NoDirectRendering => OBS_NO_DIRECT_RENDERING,
+    AllowDirectRendering => OBS_ALLOW_DIRECT_RENDERING,
+});
 
 macro_rules! vector_impls {
     ($($rust_name: ident, $name:ident => $($component:ident)*,)*) => (

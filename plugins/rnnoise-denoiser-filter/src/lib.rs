@@ -29,7 +29,7 @@ struct RnnoiseDenoiserFilter {
 }
 
 struct TheModule {
-    context: ModuleContext,
+    context: ModuleRef,
 }
 
 impl Sourceable for RnnoiseDenoiserFilter {
@@ -172,10 +172,10 @@ impl FilterAudioSource for RnnoiseDenoiserFilter {
 }
 
 impl Module for TheModule {
-    fn new(context: ModuleContext) -> Self {
+    fn new(context: ModuleRef) -> Self {
         Self { context }
     }
-    fn get_ctx(&self) -> &ModuleContext {
+    fn get_ctx(&self) -> &ModuleRef {
         &self.context
     }
 

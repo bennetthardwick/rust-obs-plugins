@@ -60,7 +60,7 @@ impl Drop for ScrollFocusFilter {
 }
 
 struct TheModule {
-    context: ModuleContext,
+    context: ModuleRef,
 }
 
 impl Sourceable for ScrollFocusFilter {
@@ -382,10 +382,10 @@ impl UpdateSource for ScrollFocusFilter {
 }
 
 impl Module for TheModule {
-    fn new(context: ModuleContext) -> Self {
+    fn new(context: ModuleRef) -> Self {
         Self { context }
     }
-    fn get_ctx(&self) -> &ModuleContext {
+    fn get_ctx(&self) -> &ModuleRef {
         &self.context
     }
 

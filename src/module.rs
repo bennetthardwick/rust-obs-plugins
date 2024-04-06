@@ -1,9 +1,11 @@
 use crate::output::{traits::Outputable, OutputInfo, OutputInfoBuilder};
 use crate::source::{traits::Sourceable, SourceInfo, SourceInfoBuilder};
-use crate::string::ObsString;
+use crate::string::{DisplayExt as _, ObsString, TryIntoObsString as _};
+use crate::{Error, Result};
 use obs_sys::{
-    obs_module_t, obs_output_info, obs_register_output_s, obs_register_source_s, obs_source_info,
-    size_t,
+    obs_get_module_author, obs_get_module_description, obs_get_module_file_name,
+    obs_get_module_name, obs_module_t, obs_output_info, obs_register_output_s,
+    obs_register_source_s, obs_source_info, size_t,
 };
 use std::marker::PhantomData;
 
@@ -65,8 +67,8 @@ impl Drop for LoadContext {
 }
 
 pub trait Module {
-    fn new(ctx: ModuleContext) -> Self;
-    fn get_ctx(&self) -> &ModuleContext;
+    fn new(ctx: ModuleRef) -> Self;
+    fn get_ctx(&self) -> &ModuleRef;
     fn load(&mut self, _load_context: &mut LoadContext) -> bool {
         true
     }
@@ -86,7 +88,7 @@ macro_rules! obs_register_module {
         #[allow(missing_safety_doc)]
         #[no_mangle]
         pub unsafe extern "C" fn obs_module_set_pointer(raw: *mut $crate::obs_sys::obs_module_t) {
-            OBS_MODULE = Some(<$t>::new(ModuleContext::new(raw)));
+            OBS_MODULE = ModuleRef::from_raw(raw).ok().map(<$t>::new);
         }
 
         #[allow(missing_safety_doc)]
@@ -150,16 +152,31 @@ macro_rules! obs_register_module {
     };
 }
 
-pub struct ModuleContext {
+pub struct ModuleRef {
     raw: *mut obs_module_t,
 }
 
-impl ModuleContext {
+impl std::fmt::Debug for ModuleRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ModuleRef")
+            .field("name", &self.name().display())
+            .field("description", &self.description().display())
+            .field("author", &self.author().display())
+            .field("file_name", &self.file_name().display())
+            .finish()
+    }
+}
+
+impl ModuleRef {
     /// # Safety
     /// Creates a ModuleContext from a pointer to the raw obs_module data which
     /// if modified could cause UB.
-    pub unsafe fn new(raw: *mut obs_module_t) -> Self {
-        Self { raw }
+    pub fn from_raw(raw: *mut obs_module_t) -> Result<Self> {
+        if raw.is_null() {
+            Err(Error::NulPointer("obs_module_t"))
+        } else {
+            Ok(Self { raw })
+        }
     }
 
     /// # Safety
@@ -167,5 +184,23 @@ impl ModuleContext {
     /// cause UB.
     pub unsafe fn get_raw(&self) -> *mut obs_module_t {
         self.raw
+    }
+}
+
+impl ModuleRef {
+    pub fn name(&self) -> Result<ObsString> {
+        unsafe { obs_get_module_name(self.raw) }.try_into_obs_string()
+    }
+
+    pub fn description(&self) -> Result<ObsString> {
+        unsafe { obs_get_module_description(self.raw) }.try_into_obs_string()
+    }
+
+    pub fn author(&self) -> Result<ObsString> {
+        unsafe { obs_get_module_author(self.raw) }.try_into_obs_string()
+    }
+
+    pub fn file_name(&self) -> Result<ObsString> {
+        unsafe { obs_get_module_file_name(self.raw) }.try_into_obs_string()
     }
 }

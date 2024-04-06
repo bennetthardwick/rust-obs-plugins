@@ -2,6 +2,7 @@ use paste::item;
 
 pub mod context;
 mod ffi;
+pub mod scene;
 pub mod traits;
 
 use crate::{

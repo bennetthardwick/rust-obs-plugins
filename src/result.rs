@@ -17,6 +17,9 @@ pub enum Error {
     /// Error converting enum
     #[error("Enum Out of Range: {0} {1}")]
     EnumOutOfRange(&'static str, i64),
+    /// Error converting path to str
+    #[error("Path Error: utf8")]
+    PathUtf8,
 }
 
 pub trait OptionExt {

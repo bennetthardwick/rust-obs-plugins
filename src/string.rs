@@ -1,9 +1,10 @@
 use std::{
     ffi::{CStr, CString},
+    path::Path,
     ptr::null,
 };
 
-use crate::Result;
+use crate::{Error, Result};
 
 #[derive(Debug, Eq, PartialEq, Hash, Clone)]
 pub enum ObsString {
@@ -63,6 +64,13 @@ impl TryIntoObsString for &str {
 impl TryIntoObsString for String {
     fn try_into_obs_string(self) -> Result<ObsString> {
         Ok(ObsString::Dynamic(CString::new(self)?))
+    }
+}
+impl TryIntoObsString for &Path {
+    fn try_into_obs_string(self) -> Result<ObsString> {
+        Ok(ObsString::Dynamic(CString::new(
+            self.to_str().ok_or(Error::PathUtf8)?,
+        )?))
     }
 }
 impl TryIntoObsString for *const std::os::raw::c_char {

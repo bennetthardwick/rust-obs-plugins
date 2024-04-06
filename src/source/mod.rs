@@ -131,51 +131,12 @@ impl std::fmt::Debug for SourceRef {
     }
 }
 
-// impl PtrWrapper for SourceRef {
-//     type Pointer = obs_source_t;
-
-//     fn as_ptr(&self) -> *const Self::Pointer {
-//         self.inner
-//     }
-
-
-//     unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
-//         todo!()
-//     }
-// }
-
-impl SourceRef {
-    /// # Safety
-    ///
-    /// Must call with a valid pointer.
-    pub fn from_raw(source: *mut obs_source_t) -> Option<Self> {
-        unsafe { Self::from_raw_unchecked(obs_source_get_ref(source)) }
-    }
-
-    pub unsafe fn from_raw_unchecked(source: *mut obs_source_t) -> Option<Self> {
-        if source.is_null() {
-            None
-        } else {
-            Some(Self { inner: source })
-        }
-    }
-
-    pub unsafe fn as_raw(&self) -> *mut obs_source_t {
-        self.inner
-    }
-}
-
-impl Clone for SourceRef {
-    fn clone(&self) -> Self {
-        Self::from_raw(self.inner).expect("clone")
-    }
-}
-
-impl Drop for SourceRef {
-    fn drop(&mut self) {
-        unsafe { obs_source_release(self.inner) }
-    }
-}
+impl_ptr_wrapper!(
+    SourceRef,
+    obs_source_t,
+    obs_source_get_ref,
+    obs_source_release
+);
 
 impl SourceRef {
     /// Run a function on the next source in the filter chain.

@@ -57,7 +57,7 @@ extern "C" fn enum_proc(params: *mut std::ffi::c_void, output: *mut obs_output_t
 impl OutputContext {
     pub fn new(id: ObsString, name: ObsString, settings: Option<DataObj<'_>>) -> Self {
         let settings = match settings {
-            Some(mut data) => data.as_ptr_mut(),
+            Some(data) => unsafe { data.as_ptr_mut() },
             None => std::ptr::null_mut(),
         };
         let output = unsafe {

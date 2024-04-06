@@ -53,7 +53,7 @@ pub unsafe extern "C" fn create<D: Outputable>(
     settings: *mut obs_data_t,
     output: *mut obs_output_t,
 ) -> *mut c_void {
-    let settings = DataObj::from_raw(settings);
+    let settings = DataObj::from_raw(settings).unwrap();
     let mut context = CreatableOutputContext::from_raw(settings);
     let output_context = OutputContext::from_raw(output);
 
@@ -129,13 +129,13 @@ pub unsafe extern "C" fn encoded_packet<D: EncodedPacketOutput>(
 
 pub unsafe extern "C" fn update<D: UpdateOutput>(data: *mut c_void, settings: *mut obs_data_t) {
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = DataObj::from_raw(settings);
+    let mut settings = DataObj::from_raw(settings).unwrap();
     D::update(&mut data.data, &mut settings);
     forget(settings);
 }
 
 pub unsafe extern "C" fn get_defaults<D: GetDefaultsOutput>(settings: *mut obs_data_t) {
-    let mut settings = DataObj::from_raw(settings);
+    let mut settings = DataObj::from_raw(settings).unwrap();
     D::get_defaults(&mut settings);
     forget(settings);
 }

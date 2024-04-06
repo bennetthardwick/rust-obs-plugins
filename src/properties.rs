@@ -66,13 +66,23 @@ pub struct Properties {
 impl PtrWrapper for Properties {
     type Pointer = obs_properties_t;
 
-    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
-        Self { pointer: raw }
+    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
+        if raw.is_null() {
+            None
+        } else {
+            Some(Self { pointer: raw })
+        }
     }
 
-    fn as_ptr(&self) -> *const Self::Pointer {
+    unsafe fn as_ptr(&self) -> *const Self::Pointer {
         self.pointer
     }
+
+    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
+        ptr
+    }
+
+    unsafe fn release(_ptr: *mut Self::Pointer) {}
 }
 
 impl Default for Properties {
@@ -85,7 +95,7 @@ impl Properties {
     pub fn new() -> Self {
         unsafe {
             let ptr = obs_properties_create();
-            Self::from_raw(ptr)
+            Self::from_raw_unchecked(ptr).expect("obs_properties_create")
         }
     }
 
@@ -120,7 +130,7 @@ impl Properties {
                 .into(),
                 T::format().into(),
             );
-            ListProp::from_raw(raw)
+            ListProp::from_raw(raw).expect("obs_properties_add_list")
         }
     }
 }
@@ -142,17 +152,27 @@ pub struct ListProp<'props, T> {
 impl<T> PtrWrapper for ListProp<'_, T> {
     type Pointer = obs_property_t;
 
-    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
-        Self {
-            raw,
-            _props: PhantomData,
-            _type: PhantomData,
+    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
+        if raw.is_null() {
+            None
+        } else {
+            Some(Self {
+                raw,
+                _props: PhantomData,
+                _type: PhantomData,
+            })
         }
     }
 
-    fn as_ptr(&self) -> *const Self::Pointer {
+    unsafe fn as_ptr(&self) -> *const Self::Pointer {
         self.raw
     }
+
+    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
+        ptr
+    }
+
+    unsafe fn release(_ptr: *mut Self::Pointer) {}
 }
 
 impl<T: ListType> ListProp<'_, T> {

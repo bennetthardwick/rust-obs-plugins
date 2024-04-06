@@ -123,6 +123,9 @@
 /// Raw bindings of OBS C API
 pub use obs_sys;
 
+/// FFI pointer wrapper
+#[macro_use]
+pub mod wrapper;
 /// `obs_data_t` handling
 pub mod data;
 /// Tools required for manipulating graphics in OBS
@@ -144,8 +147,6 @@ pub mod result;
 pub mod source;
 /// String macros
 pub mod string;
-/// FFI pointer wrapper
-pub mod wrapper;
 
 mod native_enum;
 

@@ -37,7 +37,7 @@ impl Sourceable for RnnoiseDenoiserFilter {
         obs_string!("rnnoise_noise_suppression_filter")
     }
     fn get_type() -> SourceType {
-        SourceType::FILTER
+        SourceType::Filter
     }
     fn create(create: &mut CreatableSourceContext<Self>, _source: SourceRef) -> Self {
         let (sample_rate, channels) =

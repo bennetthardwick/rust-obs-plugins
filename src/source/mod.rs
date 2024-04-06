@@ -73,38 +73,16 @@ native_enum!(Icon, obs_icon_type {
     Custom => OBS_ICON_TYPE_CUSTOM,
 });
 
+native_enum!(
 /// OBS source type
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_get_type)
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum SourceType {
-    INPUT,
-    SCENE,
-    FILTER,
-    TRANSITION,
-}
-
-impl SourceType {
-    #[allow(non_upper_case_globals)]
-    pub(crate) fn from_native(source_type: obs_source_type) -> Option<SourceType> {
-        match source_type {
-            obs_source_type_OBS_SOURCE_TYPE_INPUT => Some(SourceType::INPUT),
-            obs_source_type_OBS_SOURCE_TYPE_SCENE => Some(SourceType::SCENE),
-            obs_source_type_OBS_SOURCE_TYPE_FILTER => Some(SourceType::FILTER),
-            obs_source_type_OBS_SOURCE_TYPE_TRANSITION => Some(SourceType::TRANSITION),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn to_native(self) -> obs_source_type {
-        match self {
-            SourceType::INPUT => obs_source_type_OBS_SOURCE_TYPE_INPUT,
-            SourceType::SCENE => obs_source_type_OBS_SOURCE_TYPE_SCENE,
-            SourceType::FILTER => obs_source_type_OBS_SOURCE_TYPE_FILTER,
-            SourceType::TRANSITION => obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-        }
-    }
-}
+SourceType, obs_source_type {
+    Input => OBS_SOURCE_TYPE_INPUT,
+    Scene => OBS_SOURCE_TYPE_SCENE,
+    Filter => OBS_SOURCE_TYPE_FILTER,
+    Transition => OBS_SOURCE_TYPE_TRANSITION,
+});
 
 #[deprecated = "use `SourceRef` instead"]
 pub type SourceContext = SourceRef;
@@ -146,9 +124,7 @@ impl SourceRef {
     /// Note: only works with sources that are filters.
     pub fn do_with_target<F: FnOnce(&mut SourceRef)>(&mut self, func: F) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
                 let target = obs_filter_get_target(self.inner);
                 if let Some(mut context) = SourceRef::from_raw(target) {
                     func(&mut context);
@@ -292,9 +268,7 @@ impl SourceRef {
         func: F,
     ) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
                 if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
@@ -316,9 +290,7 @@ impl SourceRef {
         func: F,
     ) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
                 if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
@@ -396,7 +368,7 @@ impl<D: Sourceable> SourceInfoBuilder<D> {
             __data: PhantomData,
             info: obs_source_info {
                 id: D::get_id().as_ptr(),
-                type_: D::get_type().to_native(),
+                type_: D::get_type().as_raw(),
                 create: Some(ffi::create::<D>),
                 destroy: Some(ffi::destroy::<D>),
                 type_data: std::ptr::null_mut(),

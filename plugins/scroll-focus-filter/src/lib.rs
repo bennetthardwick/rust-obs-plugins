@@ -68,7 +68,7 @@ impl Sourceable for ScrollFocusFilter {
         obs_string!("scroll_focus_filter")
     }
     fn get_type() -> SourceType {
-        SourceType::FILTER
+        SourceType::Filter
     }
     fn create(create: &mut CreatableSourceContext<Self>, mut source: SourceRef) -> Self {
         let mut effect = GraphicsEffect::from_effect_string(

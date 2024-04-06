@@ -23,7 +23,7 @@ impl std::fmt::Debug for SceneRef {
     }
 }
 
-impl_ptr_wrapper!(SceneRef, obs_scene_t, obs_scene_get_ref, obs_scene_release);
+impl_ptr_wrapper!(@ptr: inner, SceneRef, obs_scene_t, obs_scene_get_ref, obs_scene_release);
 
 impl SceneRef {
     pub fn name(&self) -> Result<ObsString> {
@@ -53,15 +53,11 @@ pub struct SceneItemRef {
     inner: *mut obs_sceneitem_t,
 }
 
-unsafe fn scene_item_get_ref(ptr: *mut obs_sceneitem_t) -> *mut obs_sceneitem_t {
-    obs_sceneitem_addref(ptr);
-    ptr
-}
-
 impl_ptr_wrapper!(
+    @ptr: inner,
     SceneItemRef,
     obs_sceneitem_t,
-    scene_item_get_ref,
+    @addref: obs_sceneitem_addref,
     obs_sceneitem_release
 );
 

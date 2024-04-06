@@ -133,6 +133,7 @@ impl std::fmt::Debug for SourceRef {
 }
 
 impl_ptr_wrapper!(
+    @ptr: inner,
     SourceRef,
     obs_source_t,
     obs_source_get_ref,

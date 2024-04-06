@@ -6,18 +6,18 @@ use std::{
 };
 
 use obs_sys::{
-    obs_data_addref, obs_data_array_addref, obs_data_array_count, obs_data_array_item,
-    obs_data_array_release, obs_data_array_t, obs_data_clear, obs_data_create,
-    obs_data_create_from_json, obs_data_create_from_json_file, obs_data_create_from_json_file_safe,
-    obs_data_erase, obs_data_get_json, obs_data_item_byname, obs_data_item_get_array,
-    obs_data_item_get_bool, obs_data_item_get_double, obs_data_item_get_int, obs_data_item_get_obj,
-    obs_data_item_get_string, obs_data_item_gettype, obs_data_item_numtype, obs_data_item_release,
-    obs_data_item_t, obs_data_number_type, obs_data_number_type_OBS_DATA_NUM_DOUBLE,
-    obs_data_number_type_OBS_DATA_NUM_INT, obs_data_release, obs_data_set_default_bool,
-    obs_data_set_default_double, obs_data_set_default_int, obs_data_set_default_obj,
-    obs_data_set_default_string, obs_data_t, obs_data_type, obs_data_type_OBS_DATA_ARRAY,
-    obs_data_type_OBS_DATA_BOOLEAN, obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT,
-    obs_data_type_OBS_DATA_STRING, size_t,
+    obs_data_array_count, obs_data_array_item, obs_data_array_release, obs_data_array_t,
+    obs_data_clear, obs_data_create, obs_data_create_from_json, obs_data_create_from_json_file,
+    obs_data_create_from_json_file_safe, obs_data_erase, obs_data_get_json, obs_data_item_byname,
+    obs_data_item_get_array, obs_data_item_get_bool, obs_data_item_get_double,
+    obs_data_item_get_int, obs_data_item_get_obj, obs_data_item_get_string, obs_data_item_gettype,
+    obs_data_item_numtype, obs_data_item_release, obs_data_item_t, obs_data_number_type,
+    obs_data_number_type_OBS_DATA_NUM_DOUBLE, obs_data_number_type_OBS_DATA_NUM_INT,
+    obs_data_release, obs_data_set_default_bool, obs_data_set_default_double,
+    obs_data_set_default_int, obs_data_set_default_obj, obs_data_set_default_string, obs_data_t,
+    obs_data_type, obs_data_type_OBS_DATA_ARRAY, obs_data_type_OBS_DATA_BOOLEAN,
+    obs_data_type_OBS_DATA_NUMBER, obs_data_type_OBS_DATA_OBJECT, obs_data_type_OBS_DATA_STRING,
+    size_t,
 };
 
 use crate::{
@@ -193,33 +193,21 @@ pub struct DataObj<'parent> {
     _parent: PhantomData<&'parent DataObj<'parent>>,
 }
 
-impl PtrWrapper for DataObj<'_> {
-    type Pointer = obs_data_t;
-
-    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
-        if raw.is_null() {
-            None
-        } else {
-            Some(Self {
-                raw,
-                _parent: PhantomData,
-            })
+impl crate::wrapper::PtrWrapperInternal for DataObj<'_> {
+    unsafe fn new_internal(ptr: *mut Self::Pointer) -> Self {
+        Self {
+            raw: ptr,
+            _parent: PhantomData,
         }
     }
 
-    unsafe fn as_ptr(&self) -> *const Self::Pointer {
+    unsafe fn get_internal(&self) -> *mut Self::Pointer {
         self.raw
     }
-
-    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
-        obs_data_addref(ptr);
-        ptr
-    }
-
-    unsafe fn release(ptr: *mut Self::Pointer) {
-        obs_data_release(ptr);
-    }
 }
+
+// impl_ptr_wrapper!(DataObj, obs_data_t, @addref: obs_data_addref, obs_data_release);
+impl_ptr_wrapper!(DataObj<'_>, obs_data_t, @identity, obs_data_release);
 
 impl Default for DataObj<'_> {
     fn default() -> Self {
@@ -322,46 +310,25 @@ impl DataObj<'_> {
     }
 }
 
-impl Drop for DataObj<'_> {
-    fn drop(&mut self) {
-        unsafe {
-            obs_data_release(self.raw);
-        }
-    }
-}
-
 pub struct DataArray<'parent> {
     raw: *mut obs_data_array_t,
     _parent: PhantomData<&'parent DataArray<'parent>>,
 }
 
-impl PtrWrapper for DataArray<'_> {
-    type Pointer = obs_data_array_t;
-
-    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
-        if raw.is_null() {
-            None
-        } else {
-            Some(Self {
-                raw,
-                _parent: PhantomData,
-            })
+impl crate::wrapper::PtrWrapperInternal for DataArray<'_> {
+    unsafe fn new_internal(raw: *mut Self::Pointer) -> Self {
+        Self {
+            raw,
+            _parent: PhantomData,
         }
     }
 
-    unsafe fn as_ptr(&self) -> *const Self::Pointer {
+    unsafe fn get_internal(&self) -> *mut Self::Pointer {
         self.raw
     }
-
-    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
-        obs_data_array_addref(ptr);
-        ptr
-    }
-
-    unsafe fn release(ptr: *mut Self::Pointer) {
-        obs_data_array_release(ptr)
-    }
 }
+
+impl_ptr_wrapper!(DataArray<'_>, obs_data_array_t, @identity, obs_data_array_release);
 
 impl DataArray<'_> {
     pub fn len(&self) -> usize {
@@ -377,13 +344,5 @@ impl DataArray<'_> {
         // os_atomic_inc_long(&data->ref);
         let ptr = unsafe { obs_data_array_item(self.raw, index as size_t) };
         unsafe { DataObj::from_raw_unchecked(ptr) }
-    }
-}
-
-impl Drop for DataArray<'_> {
-    fn drop(&mut self) {
-        unsafe {
-            obs_data_array_release(self.raw);
-        }
     }
 }

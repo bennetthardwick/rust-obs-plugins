@@ -63,26 +63,12 @@ pub struct Properties {
     pointer: *mut obs_properties_t,
 }
 
-impl PtrWrapper for Properties {
-    type Pointer = obs_properties_t;
-
-    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
-        if raw.is_null() {
-            None
-        } else {
-            Some(Self { pointer: raw })
-        }
-    }
-
-    unsafe fn as_ptr(&self) -> *const Self::Pointer {
-        self.pointer
-    }
-
-    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
-        ptr
-    }
-
-    unsafe fn release(_ptr: *mut Self::Pointer) {}
+impl_ptr_wrapper! {
+    @ptr: pointer,
+    Properties,
+    obs_properties_t,
+    @identity,
+    obs_properties_destroy
 }
 
 impl Default for Properties {
@@ -132,12 +118,6 @@ impl Properties {
             );
             ListProp::from_raw(raw).expect("obs_properties_add_list")
         }
-    }
-}
-
-impl Drop for Properties {
-    fn drop(&mut self) {
-        unsafe { obs_properties_destroy(self.pointer) }
     }
 }
 

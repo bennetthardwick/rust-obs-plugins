@@ -3,14 +3,18 @@ use std::mem::forget;
 pub trait PtrWrapper: Sized {
     type Pointer;
 
+    /// # Safety
+    ///
+    /// This function called extern C api, and should not be called directly.
     unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer;
+
+    /// # Safety
+    ///
+    /// This function called extern C api, and should not be called directly.
     unsafe fn release(ptr: *mut Self::Pointer);
 
     /// Wraps the pointer into a **owned** wrapper.
-    ///
-    /// # Safety
-    ///
-    /// Pointer must be valid.
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn from_raw(raw: *mut Self::Pointer) -> Option<Self> {
         unsafe { Self::from_raw_unchecked(Self::get_ref(raw)) }
     }
@@ -23,6 +27,11 @@ pub trait PtrWrapper: Sized {
     unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self>;
 
     /// Returns the inner pointer.
+    ///
+    /// # Safety
+    ///
+    /// This function would return a pointer not managed, should only called
+    /// when interacting with extern C api.
     unsafe fn as_ptr(&self) -> *const Self::Pointer;
 
     /// Consumes the wrapper and transfers ownershop to the pointer
@@ -35,6 +44,11 @@ pub trait PtrWrapper: Sized {
     }
 
     /// Returns the inner pointer (mutable version).
+    ///
+    /// # Safety
+    ///
+    /// This function would return a pointer not managed, should only called
+    /// when interacting with extern C api.
     unsafe fn as_ptr_mut(&self) -> *mut Self::Pointer {
         self.as_ptr() as *mut _
     }

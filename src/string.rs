@@ -66,6 +66,7 @@ impl TryIntoObsString for String {
     }
 }
 impl TryIntoObsString for *const std::os::raw::c_char {
+    #[allow(clippy::not_unsafe_ptr_arg_deref)]
     fn try_into_obs_string(self) -> Result<ObsString> {
         if self.is_null() {
             return Err(crate::Error::NulPointer("ObsString"));
@@ -89,8 +90,8 @@ impl<E> DisplayExt for Result<ObsString, E> {}
 impl std::fmt::Display for DisplayStr<'_, ObsString> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DisplayStr(ObsString::Static(s)) => return write!(f, "{}", &s[..s.len() - 1]),
-            DisplayStr(ObsString::Dynamic(s)) => return write!(f, "{}", s.to_string_lossy()),
+            DisplayStr(ObsString::Static(s)) => write!(f, "{}", &s[..s.len() - 1]),
+            DisplayStr(ObsString::Dynamic(s)) => write!(f, "{}", s.to_string_lossy()),
         }
     }
 }

@@ -37,7 +37,7 @@
 //!
 //! // The module that will handle creating the source.
 //! struct TestModule {
-//!     context: ModuleContext
+//!     context: ModuleRef
 //! };
 //!
 //! // The source that will be shown inside OBS.
@@ -73,11 +73,11 @@
 //! // Implement the Module trait for TestModule. This will handle the creation
 //! // of the source and has some methods for telling OBS a bit about itself.
 //! impl Module for TestModule {
-//!     fn new(context: ModuleContext) -> Self {
+//!     fn new(context: ModuleRef) -> Self {
 //!         Self { context }
 //!     }
 //!
-//!     fn get_ctx(&self) -> &ModuleContext {
+//!     fn get_ctx(&self) -> &ModuleRef {
 //!         &self.context
 //!     }
 //!

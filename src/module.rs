@@ -169,7 +169,7 @@ impl std::fmt::Debug for ModuleRef {
 
 impl ModuleRef {
     /// # Safety
-    /// Creates a ModuleContext from a pointer to the raw obs_module data which
+    /// Creates a ModuleRef from a pointer to the raw obs_module data which
     /// if modified could cause UB.
     pub fn from_raw(raw: *mut obs_module_t) -> Result<Self> {
         if raw.is_null() {

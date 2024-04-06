@@ -55,13 +55,15 @@ pub struct SceneItemRef {
     inner: *mut obs_sceneitem_t,
 }
 
+unsafe fn scene_item_get_ref(ptr: *mut obs_sceneitem_t) -> *mut obs_sceneitem_t {
+    obs_sceneitem_addref(ptr);
+    ptr
+}
+
 impl_ptr_wrapper!(
     SceneItemRef,
     obs_sceneitem_t,
-    |ptr| {
-        obs_sceneitem_addref(ptr);
-        ptr
-    },
+    scene_item_get_ref,
     obs_sceneitem_release
 );
 

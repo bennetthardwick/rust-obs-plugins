@@ -1,3 +1,5 @@
+pub mod display;
+
 use crate::{Error, Result};
 use core::convert::TryFrom;
 use core::ptr::null_mut;

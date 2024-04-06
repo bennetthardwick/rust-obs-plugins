@@ -114,7 +114,7 @@ macro_rules! impl_ptr_wrapper {
         }
     };
     (@__impl.trait.wrapper $ref:ty, $ptr:ty, $get_ref:item, $release:expr) => {
-        impl PtrWrapper for $ref {
+        impl $crate::wrapper::PtrWrapper for $ref {
             type Pointer = $ptr;
 
             unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
@@ -148,6 +148,7 @@ macro_rules! impl_ptr_wrapper {
     (@__impl.trait.drop $ref:ty, $ptr:ty) => {
         impl Drop for $ref {
             fn drop(&mut self) {
+                use $crate::wrapper::PtrWrapper;
                 unsafe { Self::release(self.as_ptr_mut()) }
             }
         }

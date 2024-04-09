@@ -52,12 +52,12 @@
 //!     }
 //!
 //!     fn get_type() -> SourceType {
-//!         SourceType::FILTER
+//!         SourceType::Filter
 //!     }
 //!
 //!     fn create(
 //!         create: &mut CreatableSourceContext<Self>,
-//!         _source: SourceContext
+//!         _source: SourceRef
 //!     ) -> Self {
 //!         Self
 //!     }

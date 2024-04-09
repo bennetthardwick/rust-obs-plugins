@@ -62,7 +62,7 @@ impl Sourceable for TestSource {
     }
 
     fn get_type() -> SourceType {
-        SourceType::FILTER
+        SourceType::Filter
     }
 
     fn create(create: &mut CreatableSourceContext<Self>, source: SourceContext) -> Self {

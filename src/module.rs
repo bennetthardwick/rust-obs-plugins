@@ -152,6 +152,9 @@ macro_rules! obs_register_module {
     };
 }
 
+#[deprecated = "use `ModuleRef` instead"]
+pub type ModuleContext = ModuleRef;
+
 pub struct ModuleRef {
     raw: *mut obs_module_t,
 }

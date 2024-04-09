@@ -8,8 +8,8 @@ pub trait PtrWrapperInternal: PtrWrapper {
     unsafe fn new_internal(ptr: *mut Self::Pointer) -> Self;
     /// # Safety
     ///
-    /// This function should not be called directly, use `from_raw` and
-    /// `from_raw_unchecked` instead.
+    /// This function should not be called directly, use `as_ptr`,
+    /// `as_ptr_mut` and `into_raw` instead.
     unsafe fn get_internal(&self) -> *mut Self::Pointer;
 }
 

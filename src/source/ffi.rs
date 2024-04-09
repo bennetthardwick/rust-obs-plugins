@@ -87,7 +87,8 @@ pub unsafe extern "C" fn create<D: Sourceable>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut global = GlobalContext;
-    let settings = DataObj::from_raw(settings).unwrap();
+    // this is later forgotten
+    let settings = DataObj::from_raw_unchecked(settings).unwrap();
     let mut context = CreatableSourceContext::from_raw(settings, &mut global);
     let source_context = SourceRef::from_raw(source).expect("create");
 
@@ -115,7 +116,7 @@ pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
 pub unsafe extern "C" fn update<D: UpdateSource>(data: *mut c_void, settings: *mut obs_data_t) {
     let mut global = GlobalContext;
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = DataObj::from_raw(settings).unwrap();
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::update(&mut data.data, &mut settings, &mut global);
     forget(settings);
 }
@@ -252,7 +253,8 @@ impl_media!(
 );
 
 pub unsafe extern "C" fn get_defaults<D: GetDefaultsSource>(settings: *mut obs_data_t) {
-    let mut settings = DataObj::from_raw(settings).unwrap();
+    // this is later forgotten
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::get_defaults(&mut settings);
     forget(settings);
 }

@@ -125,6 +125,7 @@ impl SourceRef {
     pub fn do_with_target<F: FnOnce(&mut SourceRef)>(&mut self, func: F) {
         unsafe {
             if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
+                // doc says "Does not increment the reference."
                 let target = obs_filter_get_target(self.inner);
                 if let Some(mut context) = SourceRef::from_raw(target) {
                     func(&mut context);

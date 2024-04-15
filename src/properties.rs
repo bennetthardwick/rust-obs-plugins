@@ -29,32 +29,32 @@ use std::{marker::PhantomData, ops::RangeBounds, os::raw::c_int};
 native_enum!(TextType, obs_text_type {
     Default => OBS_TEXT_DEFAULT,
     Password => OBS_TEXT_PASSWORD,
-    Multiline => OBS_TEXT_MULTILINE
+    Multiline => OBS_TEXT_MULTILINE,
 });
 
 native_enum!(PathType, obs_path_type {
     File => OBS_PATH_FILE,
     FileSave => OBS_PATH_FILE_SAVE,
-    Directory => OBS_PATH_DIRECTORY
+    Directory => OBS_PATH_DIRECTORY,
 });
 
 native_enum!(ComboFormat, obs_combo_format {
     Invalid => OBS_COMBO_FORMAT_INVALID,
     Int => OBS_COMBO_FORMAT_INT,
     Float => OBS_COMBO_FORMAT_FLOAT,
-    String => OBS_COMBO_FORMAT_STRING
+    String => OBS_COMBO_FORMAT_STRING,
 });
 
 native_enum!(ComboType, obs_combo_type {
     Invalid => OBS_COMBO_TYPE_INVALID,
     Editable => OBS_COMBO_TYPE_EDITABLE,
-    List => OBS_COMBO_TYPE_LIST
+    List => OBS_COMBO_TYPE_LIST,
 });
 
 native_enum!(EditableListType, obs_editable_list_type {
     Strings => OBS_EDITABLE_LIST_TYPE_STRINGS,
     Files => OBS_EDITABLE_LIST_TYPE_FILES,
-    FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS
+    FilesAndUrls => OBS_EDITABLE_LIST_TYPE_FILES_AND_URLS,
 });
 
 /// Wrapper around [`obs_properties_t`], which is used by
@@ -63,16 +63,12 @@ pub struct Properties {
     pointer: *mut obs_properties_t,
 }
 
-impl PtrWrapper for Properties {
-    type Pointer = obs_properties_t;
-
-    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
-        Self { pointer: raw }
-    }
-
-    fn as_ptr(&self) -> *const Self::Pointer {
-        self.pointer
-    }
+impl_ptr_wrapper! {
+    @ptr: pointer,
+    Properties,
+    obs_properties_t,
+    @identity,
+    obs_properties_destroy
 }
 
 impl Default for Properties {
@@ -85,7 +81,7 @@ impl Properties {
     pub fn new() -> Self {
         unsafe {
             let ptr = obs_properties_create();
-            Self::from_raw(ptr)
+            Self::from_raw_unchecked(ptr).expect("obs_properties_create")
         }
     }
 
@@ -120,14 +116,8 @@ impl Properties {
                 .into(),
                 T::format().into(),
             );
-            ListProp::from_raw(raw)
+            ListProp::from_raw(raw).expect("obs_properties_add_list")
         }
-    }
-}
-
-impl Drop for Properties {
-    fn drop(&mut self) {
-        unsafe { obs_properties_destroy(self.pointer) }
     }
 }
 
@@ -142,17 +132,27 @@ pub struct ListProp<'props, T> {
 impl<T> PtrWrapper for ListProp<'_, T> {
     type Pointer = obs_property_t;
 
-    unsafe fn from_raw(raw: *mut Self::Pointer) -> Self {
-        Self {
-            raw,
-            _props: PhantomData,
-            _type: PhantomData,
+    unsafe fn from_raw_unchecked(raw: *mut Self::Pointer) -> Option<Self> {
+        if raw.is_null() {
+            None
+        } else {
+            Some(Self {
+                raw,
+                _props: PhantomData,
+                _type: PhantomData,
+            })
         }
     }
 
-    fn as_ptr(&self) -> *const Self::Pointer {
+    unsafe fn as_ptr(&self) -> *const Self::Pointer {
         self.raw
     }
+
+    unsafe fn get_ref(ptr: *mut Self::Pointer) -> *mut Self::Pointer {
+        ptr
+    }
+
+    unsafe fn release(_ptr: *mut Self::Pointer) {}
 }
 
 impl<T: ListType> ListProp<'_, T> {

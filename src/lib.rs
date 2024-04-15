@@ -37,7 +37,7 @@
 //!
 //! // The module that will handle creating the source.
 //! struct TestModule {
-//!     context: ModuleContext
+//!     context: ModuleRef
 //! };
 //!
 //! // The source that will be shown inside OBS.
@@ -52,12 +52,12 @@
 //!     }
 //!
 //!     fn get_type() -> SourceType {
-//!         SourceType::FILTER
+//!         SourceType::Filter
 //!     }
 //!
 //!     fn create(
 //!         create: &mut CreatableSourceContext<Self>,
-//!         _source: SourceContext
+//!         _source: SourceRef
 //!     ) -> Self {
 //!         Self
 //!     }
@@ -73,11 +73,11 @@
 //! // Implement the Module trait for TestModule. This will handle the creation
 //! // of the source and has some methods for telling OBS a bit about itself.
 //! impl Module for TestModule {
-//!     fn new(context: ModuleContext) -> Self {
+//!     fn new(context: ModuleRef) -> Self {
 //!         Self { context }
 //!     }
 //!
-//!     fn get_ctx(&self) -> &ModuleContext {
+//!     fn get_ctx(&self) -> &ModuleRef {
 //!         &self.context
 //!     }
 //!
@@ -123,6 +123,9 @@
 /// Raw bindings of OBS C API
 pub use obs_sys;
 
+/// FFI pointer wrapper
+#[macro_use]
+pub mod wrapper;
 /// `obs_data_t` handling
 pub mod data;
 /// Tools required for manipulating graphics in OBS
@@ -138,12 +141,12 @@ pub mod module;
 pub mod output;
 /// Tools for creating properties
 pub mod properties;
+/// Error handling
+pub mod result;
 /// Tools for creating sources
 pub mod source;
 /// String macros
 pub mod string;
-/// FFI pointer wrapper
-pub mod wrapper;
 
 mod native_enum;
 
@@ -155,15 +158,4 @@ pub mod prelude {
     pub use crate::string::*;
 }
 
-#[derive(Debug)]
-pub struct Error;
-
-impl std::error::Error for Error {}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "OBS Error")
-    }
-}
-
-pub type Result<T> = std::result::Result<T, Error>;
+pub use result::{Error, Result};

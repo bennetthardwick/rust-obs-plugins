@@ -1,4 +1,4 @@
-use super::{traits::*, CreatableOutputContext, OutputContext};
+use super::{traits::*, CreatableOutputContext, OutputRef};
 use crate::hotkey::{Hotkey, HotkeyCallbacks};
 use crate::{data::DataObj, wrapper::PtrWrapper};
 use obs_sys::{
@@ -53,9 +53,10 @@ pub unsafe extern "C" fn create<D: Outputable>(
     settings: *mut obs_data_t,
     output: *mut obs_output_t,
 ) -> *mut c_void {
-    let settings = DataObj::from_raw(settings);
+    // this is later forgotten
+    let settings = DataObj::from_raw_unchecked(settings).unwrap();
     let mut context = CreatableOutputContext::from_raw(settings);
-    let output_context = OutputContext::from_raw(output);
+    let output_context = OutputRef::from_raw(output).expect("create");
 
     let data = D::create(&mut context, output_context);
     let wrapper = Box::new(DataWrapper::from(data));
@@ -129,13 +130,15 @@ pub unsafe extern "C" fn encoded_packet<D: EncodedPacketOutput>(
 
 pub unsafe extern "C" fn update<D: UpdateOutput>(data: *mut c_void, settings: *mut obs_data_t) {
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = DataObj::from_raw(settings);
+    // this is later forgotten
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::update(&mut data.data, &mut settings);
     forget(settings);
 }
 
 pub unsafe extern "C" fn get_defaults<D: GetDefaultsOutput>(settings: *mut obs_data_t) {
-    let mut settings = DataObj::from_raw(settings);
+    // this is later forgotten
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::get_defaults(&mut settings);
     forget(settings);
 }

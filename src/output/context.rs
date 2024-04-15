@@ -14,38 +14,28 @@ use obs_sys::{
 
 use crate::hotkey::HotkeyCallbacks;
 use crate::media::{audio::AudioRef, video::VideoRef};
+use crate::string::TryIntoObsString;
 use crate::{hotkey::Hotkey, prelude::DataObj, string::ObsString, wrapper::PtrWrapper};
+use crate::{Error, Result};
+
+#[deprecated = "use `OutputRef` instead"]
+pub type OutputContext = OutputRef;
 
 /// Context wrapping an OBS output - video / audio elements which are displayed
 /// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-outputs.html#c.obs_output_t)
-pub struct OutputContext {
+pub struct OutputRef {
     pub(crate) inner: *mut obs_output_t,
 }
 
-impl OutputContext {
-    /// # Safety
-    ///
-    /// Pointer must be valid.
-    pub unsafe fn from_raw(output: *mut obs_output_t) -> Self {
-        Self {
-            inner: obs_output_get_ref(output),
-        }
-    }
-}
-
-impl Clone for OutputContext {
-    fn clone(&self) -> Self {
-        unsafe { Self::from_raw(self.inner) }
-    }
-}
-
-impl Drop for OutputContext {
-    fn drop(&mut self) {
-        unsafe { obs_output_release(self.inner) }
-    }
-}
+impl_ptr_wrapper!(
+    @ptr: inner,
+    OutputRef,
+    obs_output_t,
+    obs_output_get_ref,
+    obs_output_release
+);
 
 extern "C" fn enum_proc(params: *mut std::ffi::c_void, output: *mut obs_output_t) -> bool {
     let mut v = unsafe { Box::<Vec<*mut obs_output_t>>::from_raw(params as *mut _) };
@@ -54,28 +44,29 @@ extern "C" fn enum_proc(params: *mut std::ffi::c_void, output: *mut obs_output_t
     true
 }
 
-impl OutputContext {
-    pub fn new(id: ObsString, name: ObsString, settings: Option<DataObj<'_>>) -> Self {
+impl OutputRef {
+    pub fn new(id: ObsString, name: ObsString, settings: Option<DataObj<'_>>) -> Result<Self> {
         let settings = match settings {
-            Some(mut data) => data.as_ptr_mut(),
+            Some(data) => unsafe { data.as_ptr_mut() },
             None => std::ptr::null_mut(),
         };
         let output = unsafe {
             obs_output_create(id.as_ptr(), name.as_ptr(), settings, std::ptr::null_mut())
         };
 
-        unsafe { Self::from_raw(output) }
+        unsafe { Self::from_raw_unchecked(output) }.ok_or(Error::NulPointer("obs_output_cretae"))
     }
     pub fn all_outputs() -> Vec<Self> {
         let outputs = Vec::<*mut obs_output_t>::new();
         let params = Box::into_raw(Box::new(outputs));
         unsafe {
+            // `obs_enum_outputs` would return `weak_ref`, so `get_ref` needed
             obs_enum_outputs(Some(enum_proc), params as *mut _);
         }
         let outputs = unsafe { Box::from_raw(params) };
         outputs
             .into_iter()
-            .map(|i| unsafe { OutputContext::from_raw(i) })
+            .filter_map(OutputRef::from_raw)
             .collect()
     }
     pub fn all_types() -> Vec<String> {
@@ -96,26 +87,12 @@ impl OutputContext {
         types
     }
 
-    pub fn output_id(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_output_get_id(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn output_id(&self) -> Result<ObsString> {
+        unsafe { obs_output_get_id(self.inner) }.try_into_obs_string()
     }
 
-    pub fn name(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_output_get_name(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn name(&self) -> Result<ObsString> {
+        unsafe { obs_output_get_name(self.inner) }.try_into_obs_string()
     }
 
     pub fn start(&mut self) -> bool {

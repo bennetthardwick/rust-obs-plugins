@@ -2,9 +2,14 @@ use paste::item;
 
 pub mod context;
 mod ffi;
+pub mod scene;
 pub mod traits;
 
-use crate::media::state::MediaState;
+use crate::{
+    media::state::MediaState,
+    string::{DisplayExt as _, TryIntoObsString},
+    Result,
+};
 
 pub use context::*;
 pub use traits::*;
@@ -31,8 +36,8 @@ use obs_sys::{
     obs_source_set_name, obs_source_showing, obs_source_skip_video_filter, obs_source_t,
     obs_source_type, obs_source_type_OBS_SOURCE_TYPE_FILTER, obs_source_type_OBS_SOURCE_TYPE_INPUT,
     obs_source_type_OBS_SOURCE_TYPE_SCENE, obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-    obs_source_update, obs_text_type, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA,
-    OBS_SOURCE_INTERACTION, OBS_SOURCE_VIDEO,
+    obs_source_update, OBS_SOURCE_AUDIO, OBS_SOURCE_CONTROLLABLE_MEDIA, OBS_SOURCE_INTERACTION,
+    OBS_SOURCE_VIDEO,
 };
 
 use super::{
@@ -43,15 +48,12 @@ use super::{
 };
 use crate::{data::DataObj, native_enum, wrapper::PtrWrapper};
 
-use std::{
-    ffi::{CStr, CString},
-    marker::PhantomData,
-};
+use std::{ffi::CString, marker::PhantomData};
 
 native_enum!(MouseButton, obs_mouse_button_type {
     Left => MOUSE_LEFT,
     Middle => MOUSE_MIDDLE,
-    Right => MOUSE_RIGHT
+    Right => MOUSE_RIGHT,
 });
 
 native_enum!(Icon, obs_icon_type {
@@ -68,85 +70,66 @@ native_enum!(Icon, obs_icon_type {
     Text => OBS_ICON_TYPE_TEXT,
     Media => OBS_ICON_TYPE_MEDIA,
     Browser => OBS_ICON_TYPE_BROWSER,
-    Custom => OBS_ICON_TYPE_CUSTOM
+    Custom => OBS_ICON_TYPE_CUSTOM,
 });
 
+native_enum!(
 /// OBS source type
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_get_type)
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum SourceType {
-    INPUT,
-    SCENE,
-    FILTER,
-    TRANSITION,
-}
+SourceType, obs_source_type {
+    Input => OBS_SOURCE_TYPE_INPUT,
+    Scene => OBS_SOURCE_TYPE_SCENE,
+    Filter => OBS_SOURCE_TYPE_FILTER,
+    Transition => OBS_SOURCE_TYPE_TRANSITION,
+});
 
-impl SourceType {
-    #[allow(non_upper_case_globals)]
-    pub(crate) fn from_native(source_type: obs_source_type) -> Option<SourceType> {
-        match source_type {
-            obs_source_type_OBS_SOURCE_TYPE_INPUT => Some(SourceType::INPUT),
-            obs_source_type_OBS_SOURCE_TYPE_SCENE => Some(SourceType::SCENE),
-            obs_source_type_OBS_SOURCE_TYPE_FILTER => Some(SourceType::FILTER),
-            obs_source_type_OBS_SOURCE_TYPE_TRANSITION => Some(SourceType::TRANSITION),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn to_native(self) -> obs_source_type {
-        match self {
-            SourceType::INPUT => obs_source_type_OBS_SOURCE_TYPE_INPUT,
-            SourceType::SCENE => obs_source_type_OBS_SOURCE_TYPE_SCENE,
-            SourceType::FILTER => obs_source_type_OBS_SOURCE_TYPE_FILTER,
-            SourceType::TRANSITION => obs_source_type_OBS_SOURCE_TYPE_TRANSITION,
-        }
-    }
-}
+#[deprecated = "use `SourceRef` instead"]
+pub type SourceContext = SourceRef;
 
 /// Context wrapping an OBS source - video / audio elements which are displayed
 /// to the screen.
 ///
 /// See [OBS documentation](https://obsproject.com/docs/reference-sources.html#c.obs_source_t)
-pub struct SourceContext {
+pub struct SourceRef {
     inner: *mut obs_source_t,
 }
 
-impl SourceContext {
-    /// # Safety
-    ///
-    /// Must call with a valid pointer.
-    pub unsafe fn from_raw(source: *mut obs_source_t) -> Self {
-        Self {
-            inner: obs_source_get_ref(source),
-        }
+impl std::fmt::Debug for SourceRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SourceRef")
+            .field("id", &self.id())
+            .field("name", &self.name().display())
+            .field("source_id", &self.source_id().display())
+            .field("width", &self.width())
+            .field("height", &self.height())
+            .field("showing", &self.showing())
+            .field("active", &self.active())
+            .field("enabled", &self.enabled())
+            .finish()
     }
 }
 
-impl Clone for SourceContext {
-    fn clone(&self) -> Self {
-        unsafe { Self::from_raw(self.inner) }
-    }
-}
+impl_ptr_wrapper!(
+    @ptr: inner,
+    SourceRef,
+    obs_source_t,
+    obs_source_get_ref,
+    obs_source_release
+);
 
-impl Drop for SourceContext {
-    fn drop(&mut self) {
-        unsafe { obs_source_release(self.inner) }
-    }
-}
-
-impl SourceContext {
+impl SourceRef {
     /// Run a function on the next source in the filter chain.
     ///
     /// Note: only works with sources that are filters.
-    pub fn do_with_target<F: FnOnce(&mut SourceContext)>(&mut self, func: F) {
+    pub fn do_with_target<F: FnOnce(&mut SourceRef)>(&mut self, func: F) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
+                // doc says "Does not increment the reference."
                 let target = obs_filter_get_target(self.inner);
-                let mut context = SourceContext::from_raw(target);
-                func(&mut context);
+                if let Some(mut context) = SourceRef::from_raw(target) {
+                    func(&mut context);
+                }
             }
         }
     }
@@ -180,26 +163,12 @@ impl SourceContext {
         unsafe { obs_source_set_enabled(self.inner, enabled) }
     }
 
-    pub fn source_id(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_source_get_id(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn source_id(&self) -> Result<ObsString> {
+        unsafe { obs_source_get_id(self.inner) }.try_into_obs_string()
     }
 
-    pub fn name(&self) -> Option<&str> {
-        unsafe {
-            let ptr = obs_source_get_name(self.inner);
-            if ptr.is_null() {
-                None
-            } else {
-                Some(CStr::from_ptr(ptr).to_str().unwrap())
-            }
-        }
+    pub fn name(&self) -> Result<ObsString> {
+        unsafe { obs_source_get_name(self.inner) }.try_into_obs_string()
     }
 
     pub fn set_name(&mut self, name: &str) {
@@ -261,7 +230,7 @@ impl SourceContext {
 
     pub fn media_state(&self) -> MediaState {
         let ret = unsafe { obs_source_media_get_state(self.inner) };
-        MediaState::from_native(ret).expect("Invalid media state value")
+        MediaState::from_raw(ret).expect("Invalid media state value")
     }
 
     pub fn media_started(&mut self) {
@@ -300,9 +269,7 @@ impl SourceContext {
         func: F,
     ) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
                 if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
@@ -324,9 +291,7 @@ impl SourceContext {
         func: F,
     ) {
         unsafe {
-            if let Some(SourceType::FILTER) =
-                SourceType::from_native(obs_source_get_type(self.inner))
-            {
+            if let Ok(SourceType::Filter) = SourceType::from_raw(obs_source_get_type(self.inner)) {
                 if obs_source_process_filter_begin(self.inner, format.as_raw(), direct.as_raw()) {
                     let mut context = GraphicsEffectContext::new();
                     func(&mut context, effect);
@@ -404,7 +369,7 @@ impl<D: Sourceable> SourceInfoBuilder<D> {
             __data: PhantomData,
             info: obs_source_info {
                 id: D::get_id().as_ptr(),
-                type_: D::get_type().to_native(),
+                type_: D::get_type().as_raw(),
                 create: Some(ffi::create::<D>),
                 destroy: Some(ffi::destroy::<D>),
                 type_data: std::ptr::null_mut(),

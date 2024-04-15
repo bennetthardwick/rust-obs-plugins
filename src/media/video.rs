@@ -1,5 +1,3 @@
-use std::mem;
-
 use obs_sys::{
     obs_source_frame, video_data, video_format, video_format_VIDEO_FORMAT_AYUV,
     video_format_VIDEO_FORMAT_BGR3, video_format_VIDEO_FORMAT_BGRA, video_format_VIDEO_FORMAT_BGRX,
@@ -13,98 +11,57 @@ use obs_sys::{
     video_output_get_width, video_t,
 };
 
-#[derive(Debug, Clone, Copy, Eq)]
-pub enum VideoFormat {
-    Unknown,
-    None,
+use crate::native_enum;
+
+native_enum!(VideoFormat, video_format {
+    None => VIDEO_FORMAT_NONE,
     /// planar 4:2:0 formats, three-plane
-    I420,
+    I420 => VIDEO_FORMAT_I420,
     /// planar 4:2:0 formats, two-plane, luma and packed chroma
-    NV12,
+    NV12 => VIDEO_FORMAT_NV12,
 
     /// packed 4:2:2 formats
-    YVYU,
+    YVYU => VIDEO_FORMAT_YVYU,
     /// packed 4:2:2 formats, YUYV
-    YUY2,
+    YUY2 => VIDEO_FORMAT_YUY2,
     /// packed 4:2:2 formats
-    UYVY,
+    UYVY => VIDEO_FORMAT_UYVY,
 
     /// packed uncompressed formats
-    RGBA,
+    RGBA => VIDEO_FORMAT_RGBA,
     /// packed uncompressed formats
-    BGRA,
+    BGRA => VIDEO_FORMAT_BGRA,
     /// packed uncompressed formats
-    BGRX,
+    BGRX => VIDEO_FORMAT_BGRX,
     /// packed uncompressed formats, grayscale
-    Y800,
+    Y800 => VIDEO_FORMAT_Y800,
 
     /// planar 4:4:4
-    I444,
+    I444 => VIDEO_FORMAT_I444,
     /// more packed uncompressed formats
-    BGR3,
+    BGR3 => VIDEO_FORMAT_BGR3,
     /// planar 4:2:2
-    I422,
+    I422 => VIDEO_FORMAT_I422,
     /// planar 4:2:0 with alpha
-    I40A,
+    I40A => VIDEO_FORMAT_I40A,
     /// planar 4:2:2 with alpha
-    I42A,
+    I42A => VIDEO_FORMAT_I42A,
     /// planar 4:4:4 with alpha
-    YUVA,
+    YUVA => VIDEO_FORMAT_YUVA,
     /// packed 4:4:4 with alpha
-    AYUV,
+    AYUV => VIDEO_FORMAT_AYUV,
 
     /// planar 4:2:0 format, 10 bpp, three-plane
-    I010,
+    I010 => VIDEO_FORMAT_I010,
     /// planar 4:2:0 format, 10 bpp, two-plane, luma and packed chroma
-    P010,
+    P010 => VIDEO_FORMAT_P010,
     /// planar 4:2:2 10 bits, Little Endian
-    I210,
+    I210 => VIDEO_FORMAT_I210,
     /// planar 4:4:4 12 bits, Little Endian
-    I412,
+    I412 => VIDEO_FORMAT_I412,
     /// planar 4:4:4 12 bits with alpha, Little Endian
-    YA2L,
-}
-
-impl PartialEq for VideoFormat {
-    fn eq(&self, other: &Self) -> bool {
-        if matches!(self, VideoFormat::Unknown) || matches!(other, VideoFormat::Unknown) {
-            false
-        } else {
-            mem::discriminant(self) == mem::discriminant(other)
-        }
-    }
-}
-
-impl From<video_format> for VideoFormat {
-    #[allow(non_upper_case_globals)]
-    fn from(raw: video_format) -> Self {
-        match raw {
-            video_format_VIDEO_FORMAT_NONE => VideoFormat::None,
-            video_format_VIDEO_FORMAT_I420 => VideoFormat::I420,
-            video_format_VIDEO_FORMAT_NV12 => VideoFormat::NV12,
-            video_format_VIDEO_FORMAT_YVYU => VideoFormat::YVYU,
-            video_format_VIDEO_FORMAT_YUY2 => VideoFormat::YUY2,
-            video_format_VIDEO_FORMAT_UYVY => VideoFormat::UYVY,
-            video_format_VIDEO_FORMAT_RGBA => VideoFormat::RGBA,
-            video_format_VIDEO_FORMAT_BGRA => VideoFormat::BGRA,
-            video_format_VIDEO_FORMAT_BGRX => VideoFormat::BGRX,
-            video_format_VIDEO_FORMAT_Y800 => VideoFormat::Y800,
-            video_format_VIDEO_FORMAT_I444 => VideoFormat::I444,
-            video_format_VIDEO_FORMAT_BGR3 => VideoFormat::BGR3,
-            video_format_VIDEO_FORMAT_I422 => VideoFormat::I422,
-            video_format_VIDEO_FORMAT_I40A => VideoFormat::I40A,
-            video_format_VIDEO_FORMAT_I42A => VideoFormat::I42A,
-            video_format_VIDEO_FORMAT_YUVA => VideoFormat::YUVA,
-            video_format_VIDEO_FORMAT_AYUV => VideoFormat::AYUV,
-            video_format_VIDEO_FORMAT_I010 => VideoFormat::I010,
-            video_format_VIDEO_FORMAT_P010 => VideoFormat::P010,
-            video_format_VIDEO_FORMAT_I210 => VideoFormat::I210,
-            video_format_VIDEO_FORMAT_I412 => VideoFormat::I412,
-            video_format_VIDEO_FORMAT_YA2L => VideoFormat::YA2L,
-            _ => VideoFormat::Unknown,
-        }
-    }
-}
+    YA2L => VIDEO_FORMAT_YA2L,
+});
 
 pub struct VideoDataSourceContext {
     pointer: *mut obs_source_frame,
@@ -115,10 +72,10 @@ impl VideoDataSourceContext {
         Self { pointer }
     }
 
-    pub fn format(&self) -> VideoFormat {
+    pub fn format(&self) -> Option<VideoFormat> {
         let raw = unsafe { (*self.pointer).format };
 
-        VideoFormat::from(raw)
+        VideoFormat::from_raw(raw).ok()
     }
 
     pub fn width(&self) -> u32 {
@@ -170,7 +127,7 @@ pub struct VideoInfo {
     pub width: u32,
     pub height: u32,
     pub frame_rate: f64,
-    pub format: VideoFormat,
+    pub format: Option<VideoFormat>,
 }
 
 pub enum FrameSize {
@@ -193,10 +150,10 @@ impl VideoInfo {
         let full_size = width * height;
         let half_size = half_width * height;
         let quarter_size = half_width * half_height;
-        if self.format == VideoFormat::Unknown {
+        let Some(format) = self.format else {
             return FrameSize::Unknown;
         };
-        match self.format {
+        match format {
             VideoFormat::None => FrameSize::Planes { size: 0, count: 0 },
             I420 => FrameSize::ThreePlane(full_size, quarter_size, quarter_size),
             NV12 => FrameSize::TwoPlane(full_size, half_size * 2),
@@ -226,7 +183,6 @@ impl VideoInfo {
             },
             I010 => FrameSize::ThreePlane(full_size * 2, quarter_size * 2, quarter_size * 2),
             P010 => FrameSize::TwoPlane(full_size * 2, quarter_size * 4),
-            Unknown => FrameSize::Unknown,
         }
     }
 }
@@ -263,9 +219,9 @@ impl VideoRef {
         unsafe { video_output_get_frame_rate(self.pointer) }
     }
 
-    pub fn format(&self) -> VideoFormat {
+    pub fn format(&self) -> Option<VideoFormat> {
         let raw = unsafe { video_output_get_format(self.pointer) };
 
-        VideoFormat::from(raw)
+        VideoFormat::from_raw(raw).ok()
     }
 }

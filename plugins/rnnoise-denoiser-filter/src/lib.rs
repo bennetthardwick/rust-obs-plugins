@@ -29,7 +29,7 @@ struct RnnoiseDenoiserFilter {
 }
 
 struct TheModule {
-    context: ModuleContext,
+    context: ModuleRef,
 }
 
 impl Sourceable for RnnoiseDenoiserFilter {
@@ -37,9 +37,9 @@ impl Sourceable for RnnoiseDenoiserFilter {
         obs_string!("rnnoise_noise_suppression_filter")
     }
     fn get_type() -> SourceType {
-        SourceType::FILTER
+        SourceType::Filter
     }
-    fn create(create: &mut CreatableSourceContext<Self>, _source: SourceContext) -> Self {
+    fn create(create: &mut CreatableSourceContext<Self>, _source: SourceRef) -> Self {
         let (sample_rate, channels) =
             create.with_audio(|audio| (audio.sample_rate(), audio.channels()));
 
@@ -172,10 +172,10 @@ impl FilterAudioSource for RnnoiseDenoiserFilter {
 }
 
 impl Module for TheModule {
-    fn new(context: ModuleContext) -> Self {
+    fn new(context: ModuleRef) -> Self {
         Self { context }
     }
-    fn get_ctx(&self) -> &ModuleContext {
+    fn get_ctx(&self) -> &ModuleRef {
         &self.context
     }
 

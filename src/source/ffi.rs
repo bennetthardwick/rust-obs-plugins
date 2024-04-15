@@ -1,5 +1,5 @@
 use super::context::{CreatableSourceContext, GlobalContext, VideoRenderContext};
-use super::{traits::*, SourceContext};
+use super::{traits::*, SourceRef};
 use super::{EnumActiveContext, EnumAllContext};
 use crate::media::{audio::AudioDataContext, video::VideoDataSourceContext};
 use crate::{
@@ -87,9 +87,10 @@ pub unsafe extern "C" fn create<D: Sourceable>(
     source: *mut obs_source_t,
 ) -> *mut c_void {
     let mut global = GlobalContext;
-    let settings = DataObj::from_raw(settings);
+    // this is later forgotten
+    let settings = DataObj::from_raw_unchecked(settings).unwrap();
     let mut context = CreatableSourceContext::from_raw(settings, &mut global);
-    let source_context = SourceContext::from_raw(source);
+    let source_context = SourceRef::from_raw(source).expect("create");
 
     let data = D::create(&mut context, source_context);
 
@@ -115,7 +116,7 @@ pub unsafe extern "C" fn destroy<D>(data: *mut c_void) {
 pub unsafe extern "C" fn update<D: UpdateSource>(data: *mut c_void, settings: *mut obs_data_t) {
     let mut global = GlobalContext;
     let data: &mut DataWrapper<D> = &mut *(data as *mut DataWrapper<D>);
-    let mut settings = DataObj::from_raw(settings);
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::update(&mut data.data, &mut settings, &mut global);
     forget(settings);
 }
@@ -218,7 +219,7 @@ pub unsafe extern "C" fn media_get_state<D: MediaGetStateSource>(
     data: *mut std::os::raw::c_void,
 ) -> obs_media_state {
     let wrapper = &mut *(data as *mut DataWrapper<D>);
-    D::get_state(&mut wrapper.data).to_native()
+    D::get_state(&mut wrapper.data).as_raw()
 }
 
 pub unsafe extern "C" fn media_set_time<D: MediaSetTimeSource>(
@@ -252,7 +253,8 @@ impl_media!(
 );
 
 pub unsafe extern "C" fn get_defaults<D: GetDefaultsSource>(settings: *mut obs_data_t) {
-    let mut settings = DataObj::from_raw(settings);
+    // this is later forgotten
+    let mut settings = DataObj::from_raw_unchecked(settings).unwrap();
     D::get_defaults(&mut settings);
     forget(settings);
 }
